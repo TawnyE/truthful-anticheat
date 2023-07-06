@@ -1,0 +1,9 @@
+name: VoitAC
+version: '1'
+main: org.voitac.anticheat.AnticheatPlugin
+api-version: 1.8
+authors: [Tawny]
+description: E
+load: POSTWORLD
+depend:
+  [ ProtocolLib ]
