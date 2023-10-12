@@ -5,6 +5,7 @@ Yes
 
 EA
 
+Quick little note, I'm not too sure about this. I think I was working with someone else but couldn't remember but I said it to make it public if you wanna look at the code and understand certain things this is some thing that I was working on long time ago, but I kind of just gave up on it but I mean there is some code that is valuable . 
 
 
 
