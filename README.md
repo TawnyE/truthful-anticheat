@@ -12,7 +12,7 @@ There were many more checks, but I deleted most of them. I only deleted the good
 
 
 
-
+contact: TawnyE(discord) (for any more info)
 
 
 
