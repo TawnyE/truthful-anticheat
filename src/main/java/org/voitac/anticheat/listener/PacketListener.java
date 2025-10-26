@@ -9,10 +9,8 @@ import org.voitac.anticheat.AntiCheat;
 import org.voitac.anticheat.checks.registry.CheckRegistry;
 import org.voitac.anticheat.data.PlayerData;
 import org.voitac.anticheat.wrapper.impl.client.position.RelMovePacketWrapper;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 
 public final class PacketListener {
@@ -27,10 +25,12 @@ public final class PacketListener {
                 PacketType.Play.Client.ABILITIES,
                 PacketType.Play.Client.BLOCK_DIG,
                 PacketType.Play.Client.BLOCK_PLACE,
+                PacketType.Play.Client.USE_ITEM,
                 PacketType.Play.Client.CUSTOM_PAYLOAD,
                 PacketType.Play.Client.ENTITY_ACTION,
                 // PacketPlayer
                 PacketType.Play.Client.GROUND,
+                PacketType.Play.Client.FLYING,
                 PacketType.Play.Client.POSITION,
                 PacketType.Play.Client.POSITION_LOOK,
                 PacketType.Play.Client.LOOK,
@@ -67,11 +67,6 @@ public final class PacketListener {
                     checkManager.getCollection().forEach(check -> check.onRelMove(relMovePacketWrapper));
                 }
 
-                if(event.getPacketType() == PacketType.Play.Client.BLOCK_PLACE) {
-                    for(final Field field : event.getPacket().getBlockData().getFields()) {
-                        Bukkit.getServer().broadcastMessage(field.getName());
-                    }
-                }
             }
 
             @Override

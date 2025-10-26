@@ -1,5 +1,6 @@
 package org.voitac.anticheat.listener;
 
+import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketEvent;
 import org.voitac.anticheat.AntiCheat;
 import org.voitac.anticheat.data.DataManager;
@@ -50,22 +51,22 @@ public final class PlayerListener implements Listener {
         final Player player = packetEvent.getPlayer();
         final PlayerData playerData = AntiCheat.getInstance().getDataManager().getPlayerData(player);
 
-        if(packetEvent.getPacketType().isClient()) {
-            switch(packetEvent.getPacketID()) {
-                case 0x28: // INCOMING_ITEM_CHANGE
-                    final PlayerItemSwitchPacketWrapper itemSwitchPacketWrapper = new PlayerItemSwitchPacketWrapper(packetEvent);
+        if(playerData == null)
+            return;
 
-                    playerData.setLastSlot(playerData.getCurrentSlot());
-                    playerData.setCurrentSlot(itemSwitchPacketWrapper.getSlot());
-                    break;
+        if(packetEvent.getPacketType().isClient()) {
+            if(packetEvent.getPacketType().equals(PacketType.Play.Client.HELD_ITEM_SLOT)) {
+                final PlayerItemSwitchPacketWrapper itemSwitchPacketWrapper = new PlayerItemSwitchPacketWrapper(packetEvent);
+
+                playerData.setLastSlot(playerData.getCurrentSlot());
+                playerData.setCurrentSlot(itemSwitchPacketWrapper.getSlot());
             }
         }else {
-            switch(packetEvent.getPacketID()) {
-                case 0x64: // OUTGOING_SET_POSITION
-                    final SetPositionPacketWrapper setPositionPacketWrapper = new SetPositionPacketWrapper(packetEvent);
+            if(packetEvent.getPacketType().equals(PacketType.Play.Server.POSITION) ||
+                    packetEvent.getPacketType().equals(PacketType.Play.Server.POSITION_LOOK)) {
+                final SetPositionPacketWrapper setPositionPacketWrapper = new SetPositionPacketWrapper(packetEvent);
 
-                    playerData.acceptTeleport(setPositionPacketWrapper);
-                    break;
+                playerData.acceptTeleport(setPositionPacketWrapper);
             }
         }
     }

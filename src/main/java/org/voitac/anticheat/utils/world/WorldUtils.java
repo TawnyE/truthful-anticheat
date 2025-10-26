@@ -8,7 +8,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.voitac.anticheat.utils.SafeLocation;
 
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
 
 public final class WorldUtils {
@@ -36,11 +36,11 @@ public final class WorldUtils {
     public static boolean safeGround(final Player player) {
         final SafeLocation location = new SafeLocation(player.getLocation()).add(new SafeLocation(null, 0, -0.1, 0));
 
-        if(ground(player.getWorld().getBlockAt(location)))
+        if(BlockUtils.isWholeBlock(player.getWorld().getBlockAt(location)))
             return true;
 
         for(final SafeLocation safeLocation : OFFSETS)
-            if (ground(player.getWorld().getBlockAt(location.add(safeLocation))))
+            if (BlockUtils.isWholeBlock(player.getWorld().getBlockAt(location.add(safeLocation))))
                 return true;
 
         return false;
@@ -70,18 +70,18 @@ public final class WorldUtils {
      * @return Predicted block facing for player
      */
     public static BlockFace getBlockFace(final Player player) {
-        final List<Block> lastTwoTargetBlocks = player.getLastTwoTargetBlocks((HashSet<Byte>) null, 100);
+        final List<Block> lastTwoTargetBlocks = player.getLastTwoTargetBlocks(Collections.emptySet(), 100);
         return lastTwoTargetBlocks.get(1).getFace(lastTwoTargetBlocks.get(0));
     }
 
     public static boolean nearBlock(final Player player) {
         final SafeLocation location = new SafeLocation(player.getLocation()).add(new SafeLocation(null, 0, -0.1, 0));
-        if(ground(player.getWorld().getBlockAt(location).getType()))
+        if(BlockUtils.isWholeBlock(player.getWorld().getBlockAt(location).getType()))
             return true;
 
         for(final SafeLocation safeLocation : OFFSETS) {
             for(int i = -1; i < 0; ++i) {
-                if (ground(player.getWorld().getBlockAt(location.add(safeLocation))))
+                if (BlockUtils.isWholeBlock(player.getWorld().getBlockAt(location.add(safeLocation))))
                     return true;
             }
         }
@@ -94,7 +94,7 @@ public final class WorldUtils {
                 if(water)
                     continue;
                 final Material material = player.getWorld().getBlockAt(player.getLocation().add(i, -0.1, j)).getType();
-                if(ground(material)) {
+                if(BlockUtils.isWholeBlock(material) || material.isSolid()) {
                     return true;
                 }
             }
@@ -103,7 +103,37 @@ public final class WorldUtils {
     }
 
     public static boolean ground(final Material material) {
-        return (material != Material.AIR && material != Material.LAVA && material != Material.WATER);
+        return BlockUtils.isWholeBlock(material) || material.isSolid();
+    }
+
+    public static boolean isLiquid(final Player player) {
+        return player.getLocation().getBlock().isLiquid() || player.getEyeLocation().getBlock().isLiquid();
+    }
+
+    public static boolean hasLowFrictionBelow(final Player player) {
+        final Location base = player.getLocation();
+        for (int y = -1; y <= 0; ++y) {
+            final Block block = player.getWorld().getBlockAt(base.clone().add(0, y, 0));
+            if (BlockUtils.isLowFriction(block.getType())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean hasClimbableNearby(final Player player) {
+        final Location base = player.getLocation();
+        for (int x = -1; x <= 1; ++x) {
+            for (int y = -1; y <= 1; ++y) {
+                for (int z = -1; z <= 1; ++z) {
+                    final Block block = player.getWorld().getBlockAt(base.clone().add(x, y, z));
+                    if (BlockUtils.isClimbable(block.getType())) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     // TODO
