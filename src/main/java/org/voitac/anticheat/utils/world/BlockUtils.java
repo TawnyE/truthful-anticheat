@@ -1,111 +1,123 @@
 package org.voitac.anticheat.utils.world;
 
 import org.bukkit.Material;
+import org.bukkit.Tag;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.util.BlockIterator;
+import org.bukkit.util.Vector;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 
 public final class BlockUtils {
     private BlockUtils() {}
 
     // I was unable to find a method in bukkit that allows you to easily check a blocks bounds so fuck it
-    private static final List<Material> NORMAL_BOUNDS = new ArrayList<>();
+    private static final Set<Material> NORMAL_BOUNDS = EnumSet.noneOf(Material.class);
 
     /**
      *
      * @return Iterates through each block in line of site and distance until a block that meets our qualifications are found
      * If no block is found we return null
      */
-    public static Block getFirstBlockInSight(final Player player, final double length, final Material...materials) {
-        BlockIterator bit = new BlockIterator(player.getLocation(), length);
-        final Block blockOut;
+    public static Block getFirstBlockInSight(final Player player, final double length, final Material... materials) {
+        final Vector direction = player.getEyeLocation().getDirection();
+        final BlockIterator iterator = new BlockIterator(player.getWorld(), player.getEyeLocation().toVector(), direction, 0, (int) Math.ceil(length));
 
-        iterator: {
-            // Iterates through each Block in until the block meets our specifications
-            // If no blocks meet we will return null
-            while (bit.hasNext()) {
-                final Block block = bit.next();
-                final Material mat = block.getType();
-                for (final Material material : materials)
-                    if (mat.equals(material))
-                        continue;
+        final Set<Material> filter = materials == null || materials.length == 0
+                ? Collections.emptySet()
+                : new HashSet<>(Arrays.asList(materials));
 
-                blockOut = bit.next();
-                break iterator;
+        while (iterator.hasNext()) {
+            final Block block = iterator.next();
+            final Material type = block.getType();
+
+            if (type == Material.AIR)
+                continue;
+
+            if (!filter.isEmpty()) {
+                if (filter.contains(type)) {
+                    return block;
+                }
+                continue;
             }
-            blockOut = null;
+
+            if (isWholeBlock(type) || type.isSolid()) {
+                return block;
+            }
         }
-        return blockOut;
+
+        return null;
     }
 
     public static boolean isWholeBlock(final Block block) {
-        return NORMAL_BOUNDS.contains(block.getType());
+        return isWholeBlock(block.getType());
     }
 
     public static boolean isAbnormal(final Block block) {
-        return !NORMAL_BOUNDS.contains(block.getType());
+        return !isWholeBlock(block.getType());
+    }
+
+    public static boolean isWholeBlock(final Material material) {
+        return NORMAL_BOUNDS.contains(material);
+    }
+
+    public static boolean isLowFriction(final Material material) {
+        final String name = material.name().toUpperCase(Locale.ROOT);
+        return name.contains("ICE") || name.contains("SLIME");
+    }
+
+    public static boolean isClimbable(final Material material) {
+        try {
+            if (Tag.CLIMBABLE.isTagged(material)) {
+                return true;
+            }
+        } catch (final NoClassDefFoundError | NoSuchMethodError ignored) {
+        }
+
+        final String name = material.name();
+        return name.equals("LADDER") || name.equals("VINE") || name.equals("SCAFFOLDING")
+                || name.equals("TWISTING_VINES") || name.equals("TWISTING_VINES_PLANT")
+                || name.equals("WEEPING_VINES") || name.equals("WEEPING_VINES_PLANT");
+    }
+
+    public static Block getRelativeBlock(final Block anchor, final BlockFace face) {
+        return face == null ? anchor : anchor.getRelative(face);
+    }
+
+    public static Collection<Material> getNormalBounds() {
+        return Collections.unmodifiableSet(NORMAL_BOUNDS);
     }
 
     static {
-        NORMAL_BOUNDS.add(Material.BEACON);
-        NORMAL_BOUNDS.add(Material.COBBLESTONE);
-        NORMAL_BOUNDS.add(Material.GLOWSTONE);
-        NORMAL_BOUNDS.add(Material.FURNACE);
-        NORMAL_BOUNDS.add(Material.SANDSTONE);
-        NORMAL_BOUNDS.add(Material.SAND);
-        NORMAL_BOUNDS.add(Material.SPONGE);
-        NORMAL_BOUNDS.add(Material.ENDER_STONE);
-        NORMAL_BOUNDS.add(Material.GOLD_ORE);
-        NORMAL_BOUNDS.add(Material.DIAMOND_ORE);
-        NORMAL_BOUNDS.add(Material.COAL_ORE);
-        NORMAL_BOUNDS.add(Material.IRON_ORE);
-        NORMAL_BOUNDS.add(Material.LAPIS_ORE);
-        NORMAL_BOUNDS.add(Material.EMERALD_ORE);
-        NORMAL_BOUNDS.add(Material.REDSTONE_ORE);
-        NORMAL_BOUNDS.add(Material.PACKED_ICE);
-        NORMAL_BOUNDS.add(Material.PUMPKIN);
-        NORMAL_BOUNDS.add(Material.QUARTZ_ORE);
-        NORMAL_BOUNDS.add(Material.MOSSY_COBBLESTONE);
-        NORMAL_BOUNDS.add(Material.WOOD);
-        NORMAL_BOUNDS.add(Material.RED_SANDSTONE);
-        NORMAL_BOUNDS.add(Material.BEDROCK);
-        NORMAL_BOUNDS.add(Material.CLAY);
-        NORMAL_BOUNDS.add(Material.GLOWING_REDSTONE_ORE);
-        NORMAL_BOUNDS.add(Material.BOOKSHELF);
-        NORMAL_BOUNDS.add(Material.STAINED_GLASS);
-        NORMAL_BOUNDS.add(Material.BRICK);
-        NORMAL_BOUNDS.add(Material.COMMAND);
-        NORMAL_BOUNDS.add(Material.DIRT);
-        NORMAL_BOUNDS.add(Material.DROPPER);
-        NORMAL_BOUNDS.add(Material.EMERALD_BLOCK);
-        NORMAL_BOUNDS.add(Material.GOLD_BLOCK);
-        NORMAL_BOUNDS.add(Material.GRAVEL);
-        NORMAL_BOUNDS.add(Material.IRON_BLOCK);
-        NORMAL_BOUNDS.add(Material.LAPIS_BLOCK);
-        NORMAL_BOUNDS.add(Material.HARD_CLAY);
-        NORMAL_BOUNDS.add(Material.HAY_BLOCK);
-        NORMAL_BOUNDS.add(Material.LEAVES);
-        NORMAL_BOUNDS.add(Material.LEAVES_2);
-        NORMAL_BOUNDS.add(Material.MELON_BLOCK);
-        NORMAL_BOUNDS.add(Material.MOB_SPAWNER);
-        NORMAL_BOUNDS.add(Material.MYCEL);
-        NORMAL_BOUNDS.add(Material.NETHER_BRICK);
-        NORMAL_BOUNDS.add(Material.NETHERRACK);
-        NORMAL_BOUNDS.add(Material.OBSIDIAN);
-        NORMAL_BOUNDS.add(Material.QUARTZ_BLOCK);
-        NORMAL_BOUNDS.add(Material.REDSTONE_BLOCK);
-        NORMAL_BOUNDS.add(Material.REDSTONE_LAMP_OFF);
-        NORMAL_BOUNDS.add(Material.REDSTONE_LAMP_ON);
-        NORMAL_BOUNDS.add(Material.SLIME_BLOCK);
-        NORMAL_BOUNDS.add(Material.SNOW_BLOCK);
-        NORMAL_BOUNDS.add(Material.SOUL_SAND);
-        NORMAL_BOUNDS.add(Material.STAINED_CLAY);
-        NORMAL_BOUNDS.add(Material.WORKBENCH);
-        NORMAL_BOUNDS.add(Material.STONE);
-        NORMAL_BOUNDS.add(Material.GLASS);
-        NORMAL_BOUNDS.add(Material.COAL_BLOCK);
+        for (final Material material : Material.values()) {
+            boolean legacy = false;
+            try {
+                legacy = material.isLegacy();
+            } catch (final NoSuchMethodError ignored) {
+            }
+
+            if (legacy || !material.isBlock()) {
+                continue;
+            }
+
+            boolean occluding = false;
+            try {
+                occluding = material.isOccluding();
+            } catch (final NoSuchMethodError ignored) {
+                occluding = material.isSolid();
+            }
+
+            if (occluding) {
+                NORMAL_BOUNDS.add(material);
+            }
+        }
     }
 }

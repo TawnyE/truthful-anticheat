@@ -29,30 +29,43 @@ public final class Scheduler {
 
     public void onPacket(final PacketEvent packetEvent) {
         if(RelMovePacketWrapper.isRelMove(packetEvent.getPacketType())) {
-            for(final PacketType packetType : dispatchers.keySet()) {
+            for(final PacketType packetType : new ArrayList<>(dispatchers.keySet())) {
                 if(packetType == null)
                     continue;
-                final List<PacketEvent> packetEvents = this.events.get(packetType);
-                if(packetEvents == null)
-                    continue;
-                final List<Consumer<PacketEvent>> consumers = this.dispatchers.get(packetType);
 
-                final int size = consumers.size();
-                final int eventSize = packetEvents.size();
-                for(int i = 0; i < size; ++i) {
-                    final PacketEvent packet = packetEvents.get(i);
-                    if(packet.getPlayer() != packetEvent.getPlayer())
-                        continue;
-                    final Consumer<PacketEvent> consumer = consumers.get(i);
-                    for(int l = 0; l < eventSize; ++l)
-                        consumer.accept(packet);
+                final List<PacketEvent> packetEvents = this.events.get(packetType);
+                if(packetEvents == null || packetEvents.isEmpty())
+                    continue;
+
+                final List<PacketEvent> matchingEvents = new ArrayList<>();
+                for(final PacketEvent queued : packetEvents) {
+                    if(queued.getPlayer() == packetEvent.getPlayer()) {
+                        matchingEvents.add(queued);
+                    }
+                }
+
+                if(matchingEvents.isEmpty())
+                    continue;
+
+                final List<Consumer<PacketEvent>> consumers = this.dispatchers.get(packetType);
+                if(consumers == null || consumers.isEmpty())
+                    continue;
+
+                for(final Consumer<PacketEvent> consumer : consumers) {
+                    for(final PacketEvent queued : matchingEvents) {
+                        consumer.accept(queued);
+                    }
+                }
+
+                packetEvents.removeAll(matchingEvents);
+                if(packetEvents.isEmpty()) {
+                    this.events.remove(packetType);
                 }
             }
 
             return;
         }
-        this.events.putIfAbsent(packetEvent.getPacketType(), new ArrayList<>());
-        this.events.get(packetEvent.getPacketType()).add(packetEvent);
+        this.events.computeIfAbsent(packetEvent.getPacketType(), key -> new ArrayList<>()).add(packetEvent);
     }
 
     public void registerDispatcher(final Consumer<PacketEvent> consumer, final PacketType packetType) {
