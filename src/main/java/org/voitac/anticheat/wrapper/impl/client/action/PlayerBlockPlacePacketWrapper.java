@@ -2,6 +2,7 @@ package org.voitac.anticheat.wrapper.impl.client.action;
 
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.wrappers.BlockPosition;
+import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.google.common.base.Objects;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -41,9 +42,7 @@ public final class PlayerBlockPlacePacketWrapper extends PacketWrapper {
 
         this.hitVec = new Vector(hitX, hitY, hitZ);
 
-        final List<Integer> faces = this.packetContainer.getIntegers().getValues();
-        final int faceIndex = faces.isEmpty() ? 255 : faces.get(0);
-        this.blockFace = faceFromIndex(faceIndex);
+        this.blockFace = resolveFace();
 
         final List<BlockPosition> positions = this.packetContainer.getBlockPositionModifier().getValues();
         if(positions.isEmpty()) {
@@ -56,6 +55,29 @@ public final class PlayerBlockPlacePacketWrapper extends PacketWrapper {
 
         this.block = this.player.getWorld().getBlockAt(this.blockPosition.getX(),
                 this.blockPosition.getY(), this.blockPosition.getZ());
+    }
+
+    private BlockFace resolveFace() {
+        final EnumWrappers.Direction direction = readDirection();
+        if(direction != null) {
+            return direction.toBukkitDirection();
+        }
+
+        final List<Integer> faces = this.packetContainer.getIntegers().getValues();
+        final int faceIndex = faces.isEmpty() ? 255 : faces.get(0);
+        return faceFromIndex(faceIndex);
+    }
+
+    private EnumWrappers.Direction readDirection() {
+        try {
+            return this.packetContainer.getEnumModifier(EnumWrappers.Direction.class, 0).readSafely(0);
+        } catch (final Throwable ignored) {
+            try {
+                return this.packetContainer.getDirections().readSafely(0);
+            } catch (final Throwable ignored2) {
+                return null;
+            }
+        }
     }
 
     private static BlockFace faceFromIndex(final int index) {

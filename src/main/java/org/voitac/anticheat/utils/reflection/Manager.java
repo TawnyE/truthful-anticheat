@@ -34,11 +34,9 @@ public abstract class Manager<K, V> {
                 }
             }
             try {
-                final V v = (V) clazz.newInstance();
-
-                this.map.put((K) clazz, v);
-            } catch (final InstantiationException | IllegalAccessException e) {
-                // TODO Auto-generated catch block
+                final V instance = (V) clazz.getDeclaredConstructor().newInstance();
+                this.map.put((K) clazz, instance);
+            } catch (final ReflectiveOperationException e) {
                 e.printStackTrace();
             }
         }
