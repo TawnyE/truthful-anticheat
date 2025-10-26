@@ -8,7 +8,7 @@ import org.bukkit.Bukkit;
 
 public final class CheckRegistry extends Manager<Class<? extends Check>, Check> {
     public CheckRegistry() {
-        this.register(Check.class, "org.faithful.anticheat.checks.impl", CheckData.class);
+        this.register(Check.class, "org.voitac.anticheat.checks.impl", CheckData.class);
     }
 
     public void init() {

@@ -40,9 +40,9 @@ public final class AntiCheat {
     public void start(final Plugin plugin) {
         this.plugin = plugin;
         this.playerListener = new PlayerListener();
+        this.transactionListener = new TransactionListener();
         this.checkManager.init();
         new PacketListener(this.checkManager);
-        this.transactionListener = new TransactionListener();
     }
 
     /**

@@ -1,9 +1,9 @@
 name: VoitAC
-version: '1'
+version: '1.0'
 main: org.voitac.anticheat.AnticheatPlugin
-api-version: 1.8
+api-version: '1.16'
 authors: [Tawny]
-description: E
+description: Multi-version anti-cheat with modernized movement and combat checks
 load: POSTWORLD
 depend:
-  [ ProtocolLib ]
+  - ProtocolLib

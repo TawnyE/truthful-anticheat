@@ -35,7 +35,7 @@ public abstract class Check implements Listener {
     }
 
     protected static void formattedFlag(final Check check, final PlayerData player, final Object message) {
-        Bukkit.getServer().broadcastMessage(format(check) + player.getPlayer().getName() + " VL[" + player.increment() + "], Ping[" + player.getPing() + ", " + message);
+        Bukkit.getServer().broadcastMessage(format(check) + player.getPlayer().getName() + " VL[" + player.increment() + "] Ping[" + player.getPing() + "] " + message);
     }
 
     private static String format(final Check check) {

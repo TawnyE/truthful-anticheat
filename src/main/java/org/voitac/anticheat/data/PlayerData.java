@@ -40,7 +40,7 @@ public final class PlayerData {
      * How many extra packets we can expect
      * This will be decremented on the acceptance of the corresponding teleport
      */
-    private final List teleportUpdateBuffers = new ArrayList<TeleportQueue.TeleportBuffer>();
+    private final List<TeleportQueue.TeleportBuffer> teleportUpdateBuffers = new ArrayList<>();
 
     private double x, lastX, deltaX, lastDeltaX,
     y, lastY, deltaY, lastDeltaY,
@@ -97,7 +97,7 @@ public final class PlayerData {
     /**
      *
      */
-    private boolean inLiquid;
+    private boolean inLiquid, lastInLiquid;
     /**
      * Players consumption state, blocking, eating, drawing a bow, etc
      */
@@ -141,6 +141,7 @@ public final class PlayerData {
         if(event.getPlayer() != this.player)
             throw new IllegalArgumentException("Tried to update player with another players data");
         ++this.ticksTracked;
+        ++this.ticksSinceTeleport;
 
         if(event.getPlayer().isFlying()) {
             this.ticksSinceAbility = 0;
@@ -174,6 +175,7 @@ public final class PlayerData {
 
         this.lastGround = this.onGround;
         this.lastClientGround = this.clientGround;
+        this.lastInLiquid = this.inLiquid;
 
         // New
         this.x = this.location.getX();
@@ -192,6 +194,7 @@ public final class PlayerData {
 
         this.onGround = WorldUtils.safeGround(this.player);
         this.clientGround = this.player.isOnGround();
+        this.inLiquid = WorldUtils.isLiquid(this.player);
 
         // Bunch of retarded code, should do this better
         if(this.deltaY < 0 && !this.onGround && !this.falling) {
@@ -213,6 +216,7 @@ public final class PlayerData {
             this.lastTarget = null;
         }
 
+        this.collidedHorizontally = false;
         scan: {
             for (int i = -1; i < 1; ++i) {
                 for (int l = 0; l < 1; ++l) {
@@ -517,6 +521,14 @@ public final class PlayerData {
         return this.deltaXZ > 0;
     }
 
+    public boolean isInLiquid() {
+        return this.inLiquid;
+    }
+
+    public boolean wasInLiquid() {
+        return this.lastInLiquid;
+    }
+
 
     /**
      *
@@ -579,12 +591,7 @@ public final class PlayerData {
                 this.velocities.clear();
                 this.teleports.remove(teleport);
 
-                final int bufferCount = this.teleportUpdateBuffers.size();
-                for(int l = 0; l < bufferCount; ++l) {
-                    final TeleportQueue.TeleportBuffer teleportBuffer = (TeleportQueue.TeleportBuffer) this.teleportUpdateBuffers.get(l);
-                    if(teleportBuffer.tick())
-                        this.teleportUpdateBuffers.remove(teleportBuffer);
-                }
+                this.teleportUpdateBuffers.removeIf(TeleportQueue.TeleportBuffer::tick);
                 this.teleportUpdateBuffers.add(new TeleportQueue.TeleportBuffer(this.player.getWorld()));
             }
         }

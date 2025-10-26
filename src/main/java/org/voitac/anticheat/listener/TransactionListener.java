@@ -43,7 +43,7 @@ public final class TransactionListener {
 
     private void handleInTransaction(final PacketEvent transaction) {
         final Player player = transaction.getPlayer();
-        final PlayerPingManager playerPingManager = this.playerPingManagerHashMap.get(player);
+        final PlayerPingManager playerPingManager = this.playerPingManagerHashMap.computeIfAbsent(player, key -> new PlayerPingManager());
 
         final TransactionWrapper transactionWrapper = playerPingManager.accept(transaction.getPacket().getShorts().getValues().get(0));
 
@@ -55,7 +55,8 @@ public final class TransactionListener {
 
     private void handleOutTransaction(final PacketEvent transaction) {
         final Player player = transaction.getPlayer();
-        final PlayerPingManager playerPingManager = this.playerPingManagerHashMap.get(player);
+        final PlayerPingManager playerPingManager = this.playerPingManagerHashMap.computeIfAbsent(player, key -> new PlayerPingManager());
+        this.playerTransactionMap.computeIfAbsent(player, key -> new HashMap<>());
         final TransactionWrapper transactionWrapper = this.constructTransaction(player);
         playerPingManager.publish(transactionWrapper);
     }
@@ -66,7 +67,7 @@ public final class TransactionListener {
     }
 
     private TransactionWrapper constructTransaction(final Player player) {
-        final PlayerPingManager playerPingManager = this.playerPingManagerHashMap.get(player);
+        final PlayerPingManager playerPingManager = this.playerPingManagerHashMap.computeIfAbsent(player, key -> new PlayerPingManager());
         final PacketContainer transaction = new PacketContainer(PacketType.Play.Server.TRANSACTION);
         this.playerPingManagerHashMap.putIfAbsent(player, new PlayerPingManager());
         final short id = this.playerPingManagerHashMap.get(player).getExpectedID();
@@ -79,7 +80,8 @@ public final class TransactionListener {
     }
 
     private void deliverPreConstructedTransaction(final Player player) {
-        final PlayerPingManager playerPingManager = this.playerPingManagerHashMap.get(player);
+        final PlayerPingManager playerPingManager = this.playerPingManagerHashMap.computeIfAbsent(player, key -> new PlayerPingManager());
+        this.playerTransactionMap.computeIfAbsent(player, key -> new HashMap<>());
         final TransactionWrapper transactionWrapper = this.constructTransaction(player);
         final PacketContainer trans = transactionWrapper.packetContainer;
 

@@ -28,19 +28,22 @@ public final class RelMovePacketWrapper extends PacketWrapper {
         super(packetEvent);
         final List<Double> doublesIn = packetContainer.getDoubles().getValues();
         final List<Float> floatsIn = packetContainer.getFloat().getValues();
-        this.x = doublesIn.get(0);
-        this.y = doublesIn.get(1);
-        this.z = doublesIn.get(2);
+        final List<Boolean> booleansIn = packetContainer.getBooleans().getValues();
 
-        this.yaw = floatsIn.get(0);
-        this.pitch = floatsIn.get(1);
+        this.x = doublesIn.size() > 0 ? doublesIn.get(0) : this.player.getLocation().getX();
+        this.y = doublesIn.size() > 1 ? doublesIn.get(1) : this.player.getLocation().getY();
+        this.z = doublesIn.size() > 2 ? doublesIn.get(2) : this.player.getLocation().getZ();
 
-        this.ground = packetContainer.getBooleans().getValues().get(0);
+        this.yaw = floatsIn.size() > 0 ? floatsIn.get(0) : this.player.getLocation().getYaw();
+        this.pitch = floatsIn.size() > 1 ? floatsIn.get(1) : this.player.getLocation().getPitch();
+
+        this.ground = !booleansIn.isEmpty() && booleansIn.get(0);
     }
 
     public static boolean isRelMove(final PacketType packetType) {
         return packetType.equals(PacketType.Play.Client.POSITION) || packetType.equals(PacketType.Play.Client.POSITION_LOOK) ||
-                packetType.equals(PacketType.Play.Client.GROUND) || packetType.equals(PacketType.Play.Client.LOOK);
+                packetType.equals(PacketType.Play.Client.GROUND) || packetType.equals(PacketType.Play.Client.LOOK) ||
+                packetType.equals(PacketType.Play.Client.FLYING);
     }
 
     /**
@@ -100,7 +103,7 @@ public final class RelMovePacketWrapper extends PacketWrapper {
      */
     @Deprecated
     public boolean isStillFlying() {
-        return this.type.equals(PacketType.Play.Client.GROUND);
+        return this.type.equals(PacketType.Play.Client.GROUND) || this.type.equals(PacketType.Play.Client.FLYING);
     }
 
     /**
