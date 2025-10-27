@@ -1,21 +1,25 @@
-# AC
-A highly advanced packet based anticheat for 1.8! ig
+# Hello people.  
+If you’re reading this, you’re probably still interested in this project — **TruthfulAC**.  
 
-Yes
+This is one of my oldest anti-cheats I ever made, started way back in **2019**, and released about two years ago. I kinda missed working on it, honestly. Now there’s a newer one, **CodeControlAC**, which is one of my best anti-cheats so far, but that one isn’t going to be fully open-source.  
+This one though, **Truthful**, will always stay open-sourced.  
 
-EA
+I’ve had a few people message me saying they’ve used the base, updated it, added their own stuff, and honestly that’s really cool to see.  
+It’s become a great learning tool for people, and I seriously appreciate that.  
 
-Quick little note, I'm not too sure about this. I think I was working with someone else but couldn't remember but I set it to make it public if you wanna look at the code and understand certain things this is some thing that I was working on long time ago, but I kind of just gave up on it but I mean there is some code that is valuable . 
+As for updates, this project will get them every now and then.  
+I can’t promise anything consistent since I’m not getting paid to work on it, but I just don’t want to let it sit and collect dust.  
+So I’m revamping a lot of things. You’ve probably already noticed from the commits that I’ve been working on it for almost a month now.  
 
-There were many more checks, but I deleted most of them. I only deleted the good ones and the bad ones, but I kept a few so you can't say I didn't give you all of them. If you complain, fuCk you.
+Getting it working on modern versions after being locked on 1.8 is like talking to a brick wall.  
+And it’s not doing anything because it’s a **fucking brick wall**.  
 
+Anyway, if you want to support the project, you can **contribute**, open **pull requests**, or join the **Discord**.  
+I’ll eventually put it on multiple platforms once I’m done testing everything properly.  
 
+So yeah, stay tuned, I guess.  
 
-
-contact: TawnyE(discord) (for any more info)
-
-
-
+**– Tawny :D**
 
 
 
