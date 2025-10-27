@@ -22,7 +22,10 @@ So yeah, stay tuned, I guess.
 **– Tawny :D**
 
 
-
+# My Rules
+1. keep updates flowing.
+2. this is an old predecessor this will not be deserved to be paid this will be continued as open source.
+3. will not acknowledge the trolls.
 
 
 
