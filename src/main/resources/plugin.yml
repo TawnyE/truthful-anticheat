@@ -1,7 +1,7 @@
-name: VoitAC
-version: '1.0'
-main: org.voitac.anticheat.AnticheatPlugin
-api-version: '1.16'
+name: Truthful
+version: '2.0'
+main: ret.tawny.truthful.TruthfulPlugin
+api-version: '1.21'
 authors: [Tawny]
 description: Multi-version anti-cheat with modernized movement and combat checks
 load: POSTWORLD
