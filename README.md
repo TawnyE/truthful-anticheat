@@ -15,73 +15,21 @@
 3. **Don’t complain about issues.**  
    > **Report them** responsibly without creating drama.
 
-   
-# Hello people.  
-If you’re reading this, you’re probably still interested in this project — **TruthfulAC**.  
+# TruthfulAC
+## description: 2019 anticheat being recalled to duty and being updated from 1.8 to the latest version well maintaining 1.8 support.
 
-This is one of my oldest anti-cheats I ever made, started way back in **2019**, and released about two years ago. I kinda missed working on it, honestly. Now there’s a newer one, **CodeControlAC**, which is one of my best anti-cheats so far, but that one isn’t going to be fully open-source.  
-This one though, **Truthful**, will always stay open-sourced.  
+## Features:
+### disclaimer these may be pertaining bugs that's not seen. 
 
-I’ve had a few people message me saying they’ve used the base, updated it, added their own stuff, and honestly that’s really cool to see.  
-It’s become a great learning tool for people, and I seriously appreciate that.  
+- very easy to read documented code
+- a few checks flyA, speedA,speedB, jesusA, scaffoldA-G
+- now supports most versions
 
-As for updates, this project will get them every now and then.  
-I can’t promise anything consistent since I’m not getting paid to work on it, but I just don’t want to let it sit and collect dust.  
-So I’m revamping a lot of things. You’ve probably already noticed from the commits that I’ve been working on it for almost a month now.  
+## Soon features
+- GUI system
+- a lot more checks
+- multi language support
+- revamping the recast system.
 
-Getting it working on modern versions after being locked on 1.8 is like talking to a brick wall.  
-And it’s not doing anything because it’s a **fucking brick wall**.  
-
-Anyway, if you want to support the project, you can **contribute**, open **pull requests**, or join the **Discord**.  
-I’ll eventually put it on multiple platforms once I’m done testing everything properly.  
-
-So yeah, stay tuned, I guess.  
-
-**– Tawny :D**
-
-
-# My Rules
-1. keep updates flowing.
-2. this is an old predecessor this will not be deserved to be paid this will be continued as open source.
-3. will not acknowledge the trolls.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# support & community 
+## Discord: https://discord.gg/xRchyJFkBG
