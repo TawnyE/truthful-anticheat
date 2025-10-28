@@ -1,9 +1,21 @@
-> ⚠️ **Warning**
+# ⚠️ **Warning**
 > 
 > Do **not** use this on a production server.  
 > This anti-cheat was originally built for **Minecraft 1.8** and is now being **ported to newer versions**.  
 > Expect **unknown issues, bugs, or bypasses** until further testing.
 
+## 🧩 Community Rules
+
+1. **Do not beg for support.**  
+   > This is a **free anti-cheat** — don’t expect a constant flow of updates.
+
+2. **Pull Requests.**  
+   > No **rebranding** or unauthorized forks.
+
+3. **Don’t complain about issues.**  
+   > **Report them** responsibly without creating drama.
+
+   
 # Hello people.  
 If you’re reading this, you’re probably still interested in this project — **TruthfulAC**.  
 
