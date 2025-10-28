@@ -1,35 +1,49 @@
 # ⚠️ **Warning**
-> 
-> Do **not** use this on a production server.  
-> This anti-cheat was originally built for **Minecraft 1.8** and is now being **ported to newer versions**.  
-> Expect **unknown issues, bugs, or bypasses** until further testing.
+> **Do not use this on a production server.**  
+> TruthfulAC was originally built for **Minecraft 1.8** and is now being **ported to modern versions**.  
+> Expect **bugs, bypasses, or odd behavior** until further testing is complete.
 
-## 🧩 Community Rules
+---
 
-1. **Do not beg for support.**  
-   > This is a **free anti-cheat** — don’t expect a constant flow of updates.
+## 🧩 **Community Rules**
+
+1. **No support begging.**  
+   > This is a **free anti-cheat** — updates and support come when they come.
 
 2. **Pull Requests.**  
-   > No **rebranding** or unauthorized forks.
+   > No **rebranding**, **private forks**, or claiming ownership.
 
-3. **Don’t complain about issues.**  
-   > **Report them** responsibly without creating drama.
+3. **Don’t complain — report.**  
+   > If something breaks, **open an issue** instead of creating drama.
 
-# TruthfulAC
-## description: 2019 anticheat being recalled to duty and being updated from 1.8 to the latest version well maintaining 1.8 support.
+---
 
-## Features:
-### disclaimer these may be pertaining bugs that's not seen. 
+# 🛡️ **TruthfulAC**
 
-- very easy to read documented code
-- a few checks flyA, speedA,speedB, jesusA, scaffoldA-G
-- now supports most versions
+### Description
+Originally written in **2019**, TruthfulAC is being **revived and updated** — maintaining **1.8 support** while bringing compatibility to **newer Minecraft versions**.
 
-## Soon features
-- GUI system
-- a lot more checks
-- multi language support
-- revamping the recast system.
+---
 
-# support & community 
-## Discord: https://discord.gg/xRchyJFkBG
+## ⚙️ **Current Features**
+> ⚠️ Some detections may still have unseen bugs or edge-case behavior.
+
+- Clean, easy-to-read, and well-documented code  
+- Core detections: `FlyA`, `SpeedA`, `SpeedB`, `JesusA`, `ScaffoldA–G`  
+- Supports **multiple Minecraft versions**
+
+---
+
+## 🔮 **Planned Additions**
+
+- Full **GUI interface**  
+- Expanded **check library**  
+- **Multi-language** support  
+- Rewritten **recast system** for accuracy and performance
+
+---
+
+## 💬 **Support & Community**
+
+Join the Discord for updates, reports, and development chat:  
+👉 [**https://discord.gg/xRchyJFkBG**](https://discord.gg/xRchyJFkBG)
