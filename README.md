@@ -31,6 +31,7 @@ Originally written in **2019**, TruthfulAC is being **revived and updated** — 
 - Clean, easy-to-read, and well-documented code  
 - Core detections: `FlyA`, `SpeedA`, `SpeedB`, `JesusA`, `ScaffoldA–G`  
 - Supports **multiple Minecraft versions**
+   1.8 to 1.21.10
 
 ---
 
