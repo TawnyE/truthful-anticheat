@@ -11,17 +11,10 @@ import ret.tawny.truthful.checks.api.data.CheckType;
 import ret.tawny.truthful.data.PlayerData;
 import ret.tawny.truthful.utils.world.WorldUtils;
 import ret.tawny.truthful.wrapper.impl.client.action.PlayerBlockPlacePacketWrapper;
-import ret.tawny.truthful.wrapper.impl.client.position.RelMovePacketWrapper;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 
 @CheckData(order = 'A', type = CheckType.SCAFFOLD)
 @SuppressWarnings("unused")
 public final class ScaffoldA extends Check {
-
-    // Using a list to delay checks is unreliable. We will check instantly but with better logic.
 
     @Override
     public void handlePacketPlayerReceive(final PacketEvent event) {
@@ -35,22 +28,22 @@ public final class ScaffoldA extends Check {
         final BlockFace placedFace = blockPlacePacketWrapper.getBlockFace();
         final BlockFace lookedFace = WorldUtils.getBlockFace(player);
 
-        // If the player is looking at the face they placed on, or if we can't determine a face, it's valid.
         if (placedFace == null || lookedFace == BlockFace.SELF || placedFace == lookedFace) {
             return;
         }
 
-        // --- EXEMPTION LOGIC ---
-        // If the player is rapidly changing their yaw or pitch, it's highly likely they are
-        // "flicking" their mouse to place a block. We should exempt this to prevent false flags.
-        float deltaYaw = Math.abs(playerData.getDeltaYaw());
-        float deltaPitch = Math.abs(playerData.getDeltaPitch());
-
-        if (deltaYaw > 15.0F || deltaPitch > 15.0F) {
-            return; // Exempt high-rotation movements.
+        // REFINED EXEMPTION: Exempt players who are looking nearly straight up or down,
+        // as this is common in legitimate speed-bridging techniques.
+        float pitch = player.getLocation().getPitch();
+        if (pitch > 80.0F || pitch < -80.0F) {
+            return;
         }
 
-        // If the faces don't match AND the player is not turning quickly, it's a suspicious placement.
+        // Also exempt rapid mouse movements
+        if (Math.abs(playerData.getDeltaYaw()) > 20.0F || Math.abs(playerData.getDeltaPitch()) > 20.0F) {
+            return;
+        }
+
         flag(playerData, "Placed on an un-faced block. Looked: " + lookedFace + ", Placed: " + placedFace);
     }
 }

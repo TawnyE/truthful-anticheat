@@ -41,24 +41,14 @@ public abstract class Check implements Listener {
         }
     }
 
-    public final char getOrder() {
-        return this.order;
-    }
+    public final char getOrder() { return this.order; }
+    public final String getFormattedName() { return this.formattedName; }
+    public final boolean isEnabled() { return this.enabled; }
 
-    public final String getFormattedName() {
-        return this.formattedName;
-    }
+    public void onPacketPlaySend(PacketEvent event) { if (enabled && !Truthful.getInstance().isBedrockPlayer(event.getPlayer())) handlePacketPlaySend(event); }
+    public void onPacketPlayerReceive(PacketEvent event) { if (enabled && !Truthful.getInstance().isBedrockPlayer(event.getPlayer())) handlePacketPlayerReceive(event); }
+    public void onRelMove(RelMovePacketWrapper event) { if (enabled && !Truthful.getInstance().isBedrockPlayer(event.getPlayer())) handleRelMove(event); }
 
-    public final boolean isEnabled() {
-        return this.enabled;
-    }
-
-    // These methods automatically check if the check is enabled before calling the handler
-    public void onPacketPlaySend(PacketEvent event) { if(enabled) handlePacketPlaySend(event); }
-    public void onPacketPlayerReceive(PacketEvent event) { if(enabled) handlePacketPlayerReceive(event); }
-    public void onRelMove(RelMovePacketWrapper event) { if(enabled) handleRelMove(event); }
-
-    // Abstract handlers for subclasses to implement their specific logic
     public void handlePacketPlaySend(final PacketEvent event) {}
     public void handlePacketPlayerReceive(final PacketEvent event) {}
     public void handleRelMove(final RelMovePacketWrapper event) {}

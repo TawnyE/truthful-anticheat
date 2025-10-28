@@ -9,7 +9,6 @@ import ret.tawny.truthful.checks.api.data.CheckData;
 import ret.tawny.truthful.checks.api.data.CheckType;
 import ret.tawny.truthful.data.PlayerData;
 import ret.tawny.truthful.wrapper.impl.client.position.RelMovePacketWrapper;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -18,68 +17,43 @@ import java.util.UUID;
 @SuppressWarnings("unused")
 public final class TimerA extends Check {
 
-    private final Map<UUID, PlayerTimerData> timerDataMap = new HashMap<>();
-    private static final double EXPECTED_DELAY = 50.0; // Minecraft ticks at 20TPS, so 1000ms / 20 = 50ms per tick.
+    private final Map<UUID, Long> lastPacketTimeMap = new HashMap<>();
 
     @Override
     public void handleRelMove(final RelMovePacketWrapper relMovePacketWrapper) {
         final Player player = relMovePacketWrapper.getPlayer();
-        final PlayerData playerData = Truthful.getInstance().getDataManager().getPlayerData(player);
-        if (playerData == null || playerData.isTeleportTick()) {
+        final PlayerData data = Truthful.getInstance().getDataManager().getPlayerData(player);
+
+        // Add a grace period for when the player first joins the server.
+        if (data == null || data.isTeleportTick() || data.getTicksTracked() < 100) {
             return;
         }
 
-        PlayerTimerData timerData = timerDataMap.computeIfAbsent(player.getUniqueId(), id -> new PlayerTimerData());
-        final long now = System.currentTimeMillis();
-        final long delay = now - timerData.lastPacketTime;
+        long now = System.currentTimeMillis();
+        long last = lastPacketTimeMap.computeIfAbsent(player.getUniqueId(), id -> now - 50L);
+        long delay = now - last;
 
-        // If the delay is unusually long, the player was likely lagging or standing still.
-        // We reset their balance to prevent extreme values and give them a fresh start.
-        if (delay > 150) {
-            timerData.balance = 0.0;
-            timerData.lastPacketTime = now;
-            return;
+        // CRITICAL FIX: Prevent division by zero if packets arrive in the same millisecond.
+        if (delay <= 0) {
+            delay = 1; // Treat it as 1ms to avoid infinity
         }
 
-        // The core balance calculation:
-        // Add the time we expect to pass (50ms) and subtract the time that actually passed.
-        // - If lagging (delay > 50), balance goes down.
-        // - If speeding (delay < 50), balance goes up.
-        timerData.balance += EXPECTED_DELAY - delay;
+        data.timerSpeed.add(50.0 / delay);
 
-        // Clamp the negative balance. This prevents a player who lags a lot from building
-        // up a huge buffer that they could "spend" to cheat later.
-        timerData.balance = Math.max(-500.0, timerData.balance);
+        if (data.timerSpeed.isFull()) {
+            double averageSpeed = data.timerSpeed.getAverage();
 
-        // A consistently positive balance means the player is sending packets faster than the server expects.
-        // A threshold of +200 allows for natural network fluctuations.
-        if (timerData.balance > 200.0) {
-            timerData.violations++;
-            if (timerData.violations > 5) {
-                double speed = (delay > 0) ? (EXPECTED_DELAY / delay) : 50.0; // Calculate speed multiplier
-                flag(playerData, String.format("Speed %.2fx, Balance: %.2f", speed, timerData.balance));
+            // Be more lenient, only flag for speeds consistently above 130%
+            if (averageSpeed > 1.3) {
+                flag(data, String.format("Average speed is too high. Speed: %.2fx", averageSpeed));
             }
-            // After a flag, we reset the balance to prevent a single spike from causing a flag spam.
-            timerData.balance = 0.0;
-        } else {
-            // If the player is behaving, slowly forgive past violations.
-            timerData.violations = Math.max(0, timerData.violations - 0.05);
         }
 
-        timerData.lastPacketTime = now;
+        lastPacketTimeMap.put(player.getUniqueId(), now);
     }
 
     @EventHandler
     public void onQuit(final PlayerQuitEvent event) {
-        timerDataMap.remove(event.getPlayer().getUniqueId());
-    }
-
-    /**
-     * Helper class to store timer-related data for each player.
-     */
-    private static class PlayerTimerData {
-        long lastPacketTime = System.currentTimeMillis();
-        double balance = 0.0;
-        double violations = 0.0;
+        lastPacketTimeMap.remove(event.getPlayer().getUniqueId());
     }
 }

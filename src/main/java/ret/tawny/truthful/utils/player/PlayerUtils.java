@@ -23,6 +23,18 @@ public final class PlayerUtils {
         return null;
     }
 
+    public static float[] to(final PlayerData data, final PlayerData target) {
+        final double x = data.getX(), z = data.getZ();
+        final double targetX = target.getX(), targetZ = target.getZ();
+        final double targetLastX = target.getLastLocation().getX(), targetLastZ = target.getLastLocation().getZ();
+
+        final double intpX = targetX + (targetX - targetLastX) - x;
+        final double intpZ = targetZ + (targetZ - targetLastZ) - z;
+
+        final float yaw = (float) Math.toDegrees(Math.atan2(intpZ, intpX)) - 90;
+        return new float[]{yaw, Math.abs(yaw - data.getYaw())};
+    }
+
     /**
      * Calculates the horizontal (XZ plane) distance between a player and an entity.
      * @param playerData The data of the attacking player.

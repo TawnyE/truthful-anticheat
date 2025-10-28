@@ -4,8 +4,8 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import ret.tawny.truthful.Truthful;
 import ret.tawny.truthful.checks.api.Check;
 import ret.tawny.truthful.checks.api.CheckBuffer;
@@ -15,23 +15,25 @@ import ret.tawny.truthful.data.PlayerData;
 import ret.tawny.truthful.utils.player.PlayerUtils;
 
 @CheckData(order = 'A', type = CheckType.HITBOX)
+@SuppressWarnings("unused")
 public final class ReachA extends Check {
 
     private final CheckBuffer buffer = new CheckBuffer(3.0);
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onAttack(final EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player)) return;
+        if (!isEnabled()) return;
+        if (!(event.getDamager() instanceof Player player)) return;
 
-        final Player player = (Player) event.getDamager();
+        // Exempt Bedrock players
+        if (Truthful.getInstance().isBedrockPlayer(player)) return;
+
         final PlayerData playerData = Truthful.getInstance().getDataManager().getPlayerData(player);
-
         if (playerData == null) return;
 
         final Entity target = event.getEntity();
         final double horizontal = PlayerUtils.getDistanceHz(playerData, target);
 
-        // 1.8 has slightly longer reach
         double maxReach = Truthful.getInstance().getVersionManager().getAdapter().getServerVersion() <= 8 ? 3.2D : 3.0D;
 
         if (player.isSprinting()) maxReach += 0.2D;

@@ -6,36 +6,27 @@ import ret.tawny.truthful.wrapper.api.PacketWrapper;
 import java.util.List;
 
 public final class SetPositionPacketWrapper extends PacketWrapper {
-    /**
-     * Player Location Coordinates
-     */
     private final double x, y, z;
-
-    /**
-     * Player Rotation Data
-     */
     private final float yaw, pitch;
-
-    /**
-     * Client Ground State, unreliable and can be spoofed
-     */
-    @Deprecated
     private final boolean ground;
 
     public SetPositionPacketWrapper(final PacketEvent packetEvent) {
         super(packetEvent);
+
+        // This is the robust, correct way to safely read from ProtocolLib's structure modifiers.
+        // We get the list of values and check the size before accessing an index.
         final List<Double> doublesIn = packetContainer.getDoubles().getValues();
         final List<Float> floatsIn = packetContainer.getFloat().getValues();
+        final List<Boolean> booleansIn = packetContainer.getBooleans().getValues();
 
-        this.x = doublesIn.get(0);
-        this.y = doublesIn.get(1);
-        this.z = doublesIn.get(2);
+        this.x = !doublesIn.isEmpty() ? doublesIn.get(0) : player.getLocation().getX();
+        this.y = doublesIn.size() > 1 ? doublesIn.get(1) : player.getLocation().getY();
+        this.z = doublesIn.size() > 2 ? doublesIn.get(2) : player.getLocation().getZ();
 
-        this.yaw = floatsIn.get(0);
-        this.pitch = floatsIn.get(1);
+        this.yaw = !floatsIn.isEmpty() ? floatsIn.get(0) : player.getLocation().getYaw();
+        this.pitch = floatsIn.size() > 1 ? floatsIn.get(1) : player.getLocation().getPitch();
 
-        // This value is still read for legacy purposes but marked as deprecated.
-        this.ground = packetContainer.getBooleans().getValues().get(0);
+        this.ground = !booleansIn.isEmpty() && booleansIn.get(0);
     }
 
     /**
@@ -84,7 +75,6 @@ public final class SetPositionPacketWrapper extends PacketWrapper {
 
     @Override
     public String toString() {
-        // Replaced the removed Objects.toStringHelper with standard Java String.format
         return String.format("SetPositionPacket[X=%.2f, Y=%.2f, Z=%.2f, Yaw=%.2f, Pitch=%.2f]",
                 this.x, this.y, this.z, this.yaw, this.pitch);
     }

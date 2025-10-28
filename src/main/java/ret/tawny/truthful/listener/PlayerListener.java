@@ -36,28 +36,33 @@ public final class PlayerListener implements Listener {
 
     @EventHandler
     public void onAttack(final EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player))
-            return;
-        final PlayerData data = this.dataManager.getPlayerData((Player) event.getDamager());
-        if (data == null)
-            return;
+        if (!(event.getDamager() instanceof Player damager)) return;
+        if (Truthful.getInstance().isBedrockPlayer(damager)) return;
+
+        final PlayerData data = this.dataManager.getPlayerData(damager);
+        if (data == null) return;
         data.setLastTarget(event.getEntity());
     }
 
     public void onPacket(final PacketEvent packetEvent) {
+        if (Truthful.getInstance().isBedrockPlayer(packetEvent.getPlayer())) return;
+
         Truthful.getInstance().getScheduler().onPacket(packetEvent);
 
         final Player player = packetEvent.getPlayer();
         final PlayerData playerData = Truthful.getInstance().getDataManager().getPlayerData(player);
 
-        if (playerData == null)
-            return;
+        if (playerData == null) return;
 
         if (packetEvent.getPacketType().isClient()) {
             if (packetEvent.getPacketType().equals(PacketType.Play.Client.HELD_ITEM_SLOT)) {
                 final PlayerItemSwitchPacketWrapper itemSwitchPacketWrapper = new PlayerItemSwitchPacketWrapper(packetEvent);
                 playerData.setLastSlot(playerData.getCurrentSlot());
                 playerData.setCurrentSlot(itemSwitchPacketWrapper.getSlot());
+                playerData.setLastSlotSwitchTime(System.currentTimeMillis());
+            } else if (packetEvent.getPacketType().equals(PacketType.Play.Client.BLOCK_PLACE)) {
+                playerData.setLastBlockPlaceTime(System.currentTimeMillis());
+                playerData.setLastBlockPlaceTick(playerData.getTicksTracked());
             }
         } else {
             if (packetEvent.getPacketType().equals(PacketType.Play.Server.POSITION)) {

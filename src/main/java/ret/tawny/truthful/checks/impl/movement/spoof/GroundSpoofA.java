@@ -13,9 +13,10 @@ import ret.tawny.truthful.utils.world.WorldUtils;
 import ret.tawny.truthful.wrapper.impl.client.position.RelMovePacketWrapper;
 
 @CheckData(order = 'A', type = CheckType.SPOOF)
+@SuppressWarnings("unused")
 public final class GroundSpoofA extends Check {
 
-    private final CheckBuffer buffer = new CheckBuffer(4.0);
+    private final CheckBuffer buffer = new CheckBuffer(5.0); // Increased buffer slightly
 
     @Override
     public void handleRelMove(final RelMovePacketWrapper relMovePacketWrapper) {
@@ -31,13 +32,13 @@ public final class GroundSpoofA extends Check {
         final boolean clientGround = relMovePacketWrapper.isGround();
         final boolean serverGround = playerData.isOnGround();
 
-        if (clientGround && !serverGround && playerData.getTicksInAir() > 3) {
-            if (buffer.increase(player, 1.0) > 4.0) {
+        if (clientGround && !serverGround && playerData.getTicksInAir() > 4) { // Increased ticks in air
+            if (buffer.increase(player, 1.0) > 5.0) {
                 flag(playerData, "Client claims onGround without server-side support");
-                buffer.reset(player, 2.0);
+                buffer.reset(player, 2.5);
             }
         } else {
-            buffer.decrease(player, 0.75);
+            buffer.decrease(player, 0.5); // Made forgiveness more generous
         }
     }
 

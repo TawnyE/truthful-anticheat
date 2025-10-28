@@ -16,12 +16,15 @@ public final class MathHelper {
         return value;
     }
 
-    // Math Util Section of stuff I just stole from my client :thumbs_up:
-    public static double getGCD(final double yaw, final double lastYaw) {
-        if(lastYaw == 0)
-            return yaw;
-        else
-            return getGCD(lastYaw, yaw % lastYaw);
+    /**
+     * Calculates the greatest common divisor (GCD) of two numbers using the Euclidean algorithm.
+     * This is essential for heuristic aim analysis in ScaffoldG.
+     * @param a The first number.
+     * @param b The second number.
+     * @return The GCD of a and b.
+     */
+    public static long gcd(long a, long b) {
+        return (b == 0) ? a : gcd(b, a % b);
     }
 
     /**
@@ -30,13 +33,11 @@ public final class MathHelper {
      * @return Returns base to the power of exponent.
      */
     public static double pow(final double base, final double exponent) {
-        // Define base
         double result = 1;
-        // 1 divided by the base to the power of the absolute value of the exponent
-        if(exponent < 0)
+        if (exponent < 0)
             return result / pow(base, -exponent);
 
-        for(int i = 0; i < exponent; ++i)
+        for (int i = 0; i < exponent; ++i)
             result *= base;
 
         return result;
@@ -48,13 +49,11 @@ public final class MathHelper {
      * @return Returns base to the power of exponent.
      */
     public static float pow(final float base, final float exponent) {
-        // Define base
         float result = 1;
-        // 1 divided by the base to the power of the absolute value of the exponent
-        if(exponent < 0)
+        if (exponent < 0)
             return result / pow(base, -exponent);
 
-        for(int i = 0; i < exponent; ++i)
+        for (int i = 0; i < exponent; ++i)
             result *= base;
 
         return result;
@@ -65,28 +64,26 @@ public final class MathHelper {
         final double[] weighted = new double[size];
 
         double sum = 0;
-        for(final double d : values) sum+=d;
-        for(int i = 0; i < size; ++i)
+        for (final double d : values) sum += d;
+        for (int i = 0; i < size; ++i)
             weighted[i] = base * (values[i] / (sum * 100.0F));
         return weighted;
     }
 
     /**
-     *
      * @param start
      * @param end
-     * @param t - progress
+     * @param t     - progress
      */
     public static float lerp(final float start, final float end, final float t) {
         return start * (1 - t) + end * t;
     }
 
     /**
-     *
      * @param p0 - origin
      * @param p1 - inter
      * @param p2 - goal
-     * @param t - progress
+     * @param t  - progress
      */
     public static Vector2f quadraticBezier(final Vector2f p0, final Vector2f p1, final Vector2f p2, final float t) {
         if (t < 0 || t > 1)
@@ -97,11 +94,10 @@ public final class MathHelper {
     }
 
     /**
-     *
      * @param p0 - origin
      * @param p1 - inter
      * @param p2 - goal
-     * @param t - progress
+     * @param t  - progress
      */
     public static float quadraticBezierPoint(final float p0, final float p1, final float p2, final float t) {
         if (t < 0 || t > 1)
@@ -111,13 +107,14 @@ public final class MathHelper {
 
     /**
      * Allows you to create a bezier curve without knowing how many points there will be
-     * @param t - progress
+     *
+     * @param t          - progress
      * @param ctrlPoints
      */
-    public static Vector2f dynamicBezier(final float t, final Vector2f...ctrlPoints) {
+    public static Vector2f dynamicBezier(final float t, final Vector2f... ctrlPoints) {
         final int size = ctrlPoints.length;
-        if(size < 2)
-            throw new IllegalArgumentException("A beziur curve requires atleast 2 control points");
+        if (size < 2)
+            throw new IllegalArgumentException("A bezier curve requires at least 2 control points");
         if (t < 0 || t > 1)
             throw new IllegalArgumentException("t must be between 0 and 1");
 

@@ -14,6 +14,7 @@ public enum CheckType {
     HITBOX("Hit Box"),
     AIM("Aim"),
     RAYCAST("Raycast"),
+    STRAFE("Strafe"),
     PACKET_ORDER("Packet Order");
 
     private final String name;

@@ -13,35 +13,41 @@ import ret.tawny.truthful.utils.world.WorldUtils;
 import ret.tawny.truthful.wrapper.impl.client.position.RelMovePacketWrapper;
 
 @CheckData(order = 'A', type = CheckType.JESUS)
+@SuppressWarnings("unused")
 public final class JesusA extends Check {
 
-    private final CheckBuffer buffer = new CheckBuffer(5.0);
+    private final CheckBuffer buffer = new CheckBuffer(10.0);
 
     @Override
     public void handleRelMove(final RelMovePacketWrapper relMovePacketWrapper) {
         if (!relMovePacketWrapper.isPositionUpdate()) return;
 
         final Player player = relMovePacketWrapper.getPlayer();
-        final PlayerData playerData = Truthful.getInstance().getDataManager().getPlayerData(player);
+        final PlayerData data = Truthful.getInstance().getDataManager().getPlayerData(player);
 
-        if (playerData == null) return;
-        if (player.getAllowFlight() || player.isFlying() || player.isGliding() || player.isInsideVehicle() || player.isSwimming()) return;
-
-        if (!playerData.isInLiquid()) {
-            buffer.decrease(player, 1.0);
+        if (data == null || player.getAllowFlight() || player.isFlying() || data.isTeleportTick() || player.isSwimming()) {
             return;
         }
 
-        final double deltaY = playerData.getDeltaY();
-        boolean suspicious = deltaY > -0.02D && deltaY < 0.05D && playerData.getTicksInAir() > 6 && !WorldUtils.nearBlock(player);
+        if (!data.isInLiquid() || WorldUtils.nearBlock(player)) {
+            buffer.decrease(player, 0.5);
+            return;
+        }
+
+        final double deltaY = data.getDeltaY();
+        final int airTicks = data.getTicksInAir();
+
+        // A player legitimately bobbing on the water's surface will have small, fluctuating deltaY values.
+        // A "Jesus" cheat often results in a perfectly static deltaY of 0, or small positive "hops".
+        boolean suspicious = (Math.abs(deltaY) < 0.001D && airTicks > 2) || (deltaY > 0 && deltaY < 0.1 && data.getLastDeltaY() <= 0);
 
         if (suspicious) {
-            if (buffer.increase(player, 1.0) > 5.0) {
-                flag(playerData, String.format("Liquid walk. dY: %.3f", deltaY));
-                buffer.reset(player, 2.5);
+            if (buffer.increase(player, 1.0) > 10.0) {
+                flag(data, String.format("Unnatural vertical motion in liquid. dY: %.4f, AT: %d", deltaY, airTicks));
+                buffer.reset(player, 5.0);
             }
         } else {
-            buffer.decrease(player, 0.75);
+            buffer.decrease(player, 0.25);
         }
     }
 

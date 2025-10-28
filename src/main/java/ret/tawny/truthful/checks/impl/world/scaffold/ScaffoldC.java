@@ -2,6 +2,7 @@ package ret.tawny.truthful.checks.impl.world.scaffold;
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketEvent;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import ret.tawny.truthful.Truthful;
 import ret.tawny.truthful.checks.api.Check;
@@ -11,7 +12,7 @@ import ret.tawny.truthful.data.PlayerData;
 import ret.tawny.truthful.wrapper.impl.client.action.PlayerBlockPlacePacketWrapper;
 
 @CheckData(order = 'C', type = CheckType.SCAFFOLD)
-@SuppressWarnings("unused") // Suppress "never used" warning, as this class is instantiated by reflection.
+@SuppressWarnings("unused")
 public final class ScaffoldC extends Check {
 
     @Override
@@ -22,13 +23,16 @@ public final class ScaffoldC extends Check {
         if (player.isFlying()) return;
 
         final PlayerData data = Truthful.getInstance().getDataManager().getPlayerData(player);
-        if (data == null) return;
-
-        if (!player.isSprinting()) return;
+        if (data == null || !player.isSprinting()) return;
 
         final PlayerBlockPlacePacketWrapper blockPlacePacketWrapper = new PlayerBlockPlacePacketWrapper(event);
+        final BlockFace face = blockPlacePacketWrapper.getBlockFace();
 
-        final boolean flag = switch (blockPlacePacketWrapper.getBlockFace()) {
+        if (face == null) {
+            return;
+        }
+
+        final boolean flag = switch (face) {
             case EAST -> data.getDeltaX() > 0;
             case SOUTH -> data.getDeltaZ() > 0;
             case WEST -> data.getDeltaX() < 0;

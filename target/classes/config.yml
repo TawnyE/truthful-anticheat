@@ -1,0 +1,63 @@
+# ----------------------------------------------------------------------------------- #
+# Truthful Anti-Cheat Configuration
+#
+# This file allows you to enable or disable individual checks.
+# To disable a check, simply change 'enabled: true' to 'enabled: false'.
+# ----------------------------------------------------------------------------------- #
+
+# General options for the anti-cheat.
+options:
+  # If true, the plugin will attempt to lag players back when they fail certain movement checks.
+  lagback: true
+
+# Configuration for all checks.
+checks:
+  # Movement related detections
+  FLY:
+    A:
+      enabled: true
+  SPEED:
+    A:
+      enabled: true
+  JESUS:
+    A:
+      enabled: true
+  SPOOF:
+    A: # Ground Spoof
+      enabled: true
+  TIMER:
+    A:
+      enabled: true
+
+  # Combat related detections
+  AIM:
+    A: # Rotation Snap
+      enabled: true
+    B: # Rotation Acceleration
+      enabled: true
+  HITBOX:
+    A: # Reach
+      enabled: true
+  RAYCAST:
+    A: # Block Reach/Raycast
+      enabled: true
+
+  # World interaction detections
+  SCAFFOLD:
+    A: # Tower/Face Check
+      enabled: true
+    B: # Bad Hit Vector
+      enabled: true
+    C: # Sprinting Scaffold
+      enabled: true
+
+  # Packet and protocol violation detections
+  BAD_PACKET:
+    A: # Invalid Pitch
+      enabled: true
+    B: # Invalid Slot Switch
+      enabled: true
+    C: # Invalid Payload
+      enabled: true
+    D: # Invalid Entity Action
+      enabled: true
