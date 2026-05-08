@@ -1,6 +1,6 @@
 # TruthfulAC
 
-> Movement-first. No bullshit. Open source.
+> Movement-first. Open source.
 
 TruthfulAC is a Minecraft anti-cheat focused on simulation-based movement detection. It's not trying to be the best anti-cheat ever made, it's trying to be a solid, honest one that actually works and that the community can build on together.
 
