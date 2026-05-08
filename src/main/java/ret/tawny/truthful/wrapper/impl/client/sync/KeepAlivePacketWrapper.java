@@ -1,28 +1,33 @@
 package ret.tawny.truthful.wrapper.impl.client.sync;
 
-import com.comphenix.protocol.events.PacketEvent;
+import com.github.retrooper.packetevents.protocol.packettype.PacketType;
+import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientKeepAlive;
+import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPong;
+import org.bukkit.entity.Player;
 import ret.tawny.truthful.wrapper.api.PacketWrapper;
 
 public final class KeepAlivePacketWrapper extends PacketWrapper {
     /**
-     * Keep Alive Response Key
+     * Unique keep-alive identifier
      */
-    private final int key;
+    private final long timestamp;
 
     /**
-     *
-     * @param packetEvent - Inbound Keep Alive Packet Event
+     * @param wrapper - Inbound Keep Alive/Pong Packet
      */
-    public KeepAlivePacketWrapper(final PacketEvent packetEvent) {
-        super(packetEvent);
-        this.key = this.packetContainer.getIntegers().getValues().get(0);
+    public KeepAlivePacketWrapper(Object wrapper, Player player, PacketType.Play.Client type) {
+        super(wrapper, player, type);
+
+        if (wrapper instanceof WrapperPlayClientKeepAlive) {
+            this.timestamp = ((WrapperPlayClientKeepAlive) wrapper).getId();
+        } else if (wrapper instanceof WrapperPlayClientPong) {
+            this.timestamp = ((WrapperPlayClientPong) wrapper).getId();
+        } else {
+            this.timestamp = -1;
+        }
     }
 
-    /**
-     *
-     * @return Keep Alive Key
-     */
-    public int getKey() {
-        return key;
+    public long getTimestamp() {
+        return timestamp;
     }
 }

@@ -4,16 +4,26 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import ret.tawny.truthful.Truthful;
 import ret.tawny.truthful.data.PlayerData;
-import ret.tawny.truthful.database.LogManager;
-import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
+import ret.tawny.truthful.debug.DebugManager;
 
-public class CommandManager implements CommandExecutor {
+import java.io.File;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
+public class CommandManager implements CommandExecutor, TabCompleter {
+
+    public static final Set<UUID> debuggers = ConcurrentHashMap.newKeySet();
+
+    private static final List<String> SUBCOMMANDS = Arrays.asList(
+            "menu", "gui", "exempt", "info", "debug", "logs", "history", "export", "reload", "record");
+
+    private static final List<String> PLAYER_SUBCOMMANDS = Arrays.asList(
+            "exempt", "info", "logs", "history", "record");
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -27,133 +37,202 @@ public class CommandManager implements CommandExecutor {
             return true;
         }
 
-        switch (args[0].toLowerCase()) {
+        String sub = args[0].toLowerCase();
+
+        switch (sub) {
+            case "reload":
+                Truthful.getInstance().reload();
+                sender.sendMessage("§aTruthfulAC reloaded.");
+                return true;
+
+            case "debug":
+                handleDebug(sender, args);
+                return true;
+
+            case "export":
+                handleExport(sender);
+                return true;
+
+            case "logs":
+            case "history":
+                handleLogs(sender, args);
+                return true;
+
+            case "exempt":
+                handleExempt(sender, args);
+                return true;
+
+            case "info":
+                handleInfo(sender, args);
+                return true;
+
+            case "record":
+                handleRecord(sender, args);
+                return true;
+
             case "menu":
             case "gui":
                 if (sender instanceof Player) {
                     Truthful.getInstance().getGuiManager().openMainMenu((Player) sender);
                 } else {
-                    sender.sendMessage("§cPlayers only.");
+                    sender.sendMessage("§cOnly players can use the GUI.");
                 }
-                break;
-
-            case "exempt":
-                if (args.length < 2) {
-                    sender.sendMessage("§cUsage: /truthful exempt <player>");
-                    return true;
-                }
-                Player target = Bukkit.getPlayer(args[1]);
-                if (target == null) {
-                    sender.sendMessage("§cPlayer not found.");
-                    return true;
-                }
-                PlayerData data = Truthful.getInstance().getDataManager().getPlayerData(target);
-                if (data != null) {
-                    boolean newState = !data.isExempt();
-                    data.setExempt(newState);
-                    sender.sendMessage(newState ? "§aPlayer is now exempt." : "§cPlayer is no longer exempt.");
-                }
-                break;
-
-            // --- NEW: ATTRIBUTE/INFO COMMAND ---
-            case "info":
-            case "attributes":
-            case "attr":
-                if (args.length < 2) {
-                    sender.sendMessage("§cUsage: /truthful info <player>");
-                    return true;
-                }
-                handleInfo(sender, args[1]);
-                break;
-
-            case "logs":
-            case "history":
-                if (args.length < 2) {
-                    sender.sendMessage("§cUsage: /truthful logs <player>");
-                    return true;
-                }
-                handleLogs(sender, args[1]);
-                break;
-
-            case "export":
-                sender.sendMessage("§7Exporting database to CSV...");
-                Bukkit.getScheduler().runTaskAsynchronously(Truthful.getInstance().getPlugin(), () -> {
-                    File file = Truthful.getInstance().getLogManager().exportToCsv();
-                    if (file != null) {
-                        sender.sendMessage("§aExport successful!");
-                        sender.sendMessage("§7File: §f" + file.getAbsolutePath());
-                    } else {
-                        sender.sendMessage("§cExport failed. Check console.");
-                    }
-                });
-                break;
+                return true;
 
             default:
                 sendHelp(sender);
-                break;
+                return true;
         }
-        return true;
     }
 
-    private void handleInfo(CommandSender sender, String targetName) {
-        Player target = Bukkit.getPlayer(targetName);
+    private void sendHelp(CommandSender sender) {
+        sender.sendMessage("§8§m----------------------------------");
+        sender.sendMessage("§bTruthfulAC §7Commands:");
+        sender.sendMessage("§7/truthful reload §8- §fReload config");
+        sender.sendMessage("§7/truthful debug <check> §8- §fToggle debug");
+        sender.sendMessage("§7/truthful record <player> §8- §fStart/Stop debug logging");
+        sender.sendMessage("§7/truthful export §8- §fExport debug logs folder path");
+        sender.sendMessage("§7/truthful logs <player> [limit] §8- §fView recent logs");
+        sender.sendMessage("§7/truthful exempt <player> §8- §fToggle exempt");
+        sender.sendMessage("§7/truthful info <player> §8- §fShow live player info");
+        sender.sendMessage("§7/truthful gui §8- §fOpen GUI");
+        sender.sendMessage("§8§m----------------------------------");
+    }
+
+    private void handleRecord(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage("§cOnly players can start debug logging.");
+            return;
+        }
+
+        if (args.length < 2) {
+            sender.sendMessage("§cUsage: /truthful record <player>");
+            return;
+        }
+
+        Player target = Bukkit.getPlayer(args[1]);
         if (target == null) {
             sender.sendMessage("§cPlayer not found.");
             return;
         }
-        PlayerData data = Truthful.getInstance().getDataManager().getPlayerData(target);
-        if (data == null) {
-            sender.sendMessage("§cNo data found for player.");
+
+        Truthful.getInstance().getDebugLoggingManager().toggleLogging((Player) sender, target);
+    }
+
+    private void handleExempt(CommandSender sender, String[] args) {
+        if (args.length < 2) {
+            sender.sendMessage("§cUsage: /truthful exempt <player>");
             return;
         }
 
-        boolean isBedrock = Truthful.getInstance().isBedrockPlayer(target);
+        Player target = Bukkit.getPlayer(args[1]);
+        if (target == null) {
+            sender.sendMessage("§cPlayer not found.");
+            return;
+        }
 
-        sender.sendMessage("§8§m--------------------------------");
-        sender.sendMessage("§c§lPlayer Attributes: §f" + target.getName());
-        sender.sendMessage("");
-        sender.sendMessage(" §8» §7Brand: §c" + (data.getClientBrand() == null ? "Unknown" : data.getClientBrand()));
-        sender.sendMessage(" §8» §7Platform: §f" + (isBedrock ? "Bedrock" : "Java"));
-        sender.sendMessage(" §8» §7Ping: §f" + data.getPing() + "ms");
-        sender.sendMessage(" §8» §7Violations: §f" + data.getVl());
-        sender.sendMessage("");
-        sender.sendMessage(" §8» §7Physics State:");
-        sender.sendMessage("    §7Ground: " + (data.isOnGround() ? "§aTrue" : "§cFalse"));
-        sender.sendMessage("    §7Liquid: " + (data.isInLiquid() ? "§aTrue" : "§cFalse"));
-        sender.sendMessage("    §7Climbable: " + (data.isOnClimbable() ? "§aTrue" : "§cFalse"));
-        sender.sendMessage("    §7Near Vehicle: " + (data.isNearVehicle() ? "§aTrue" : "§cFalse"));
-        sender.sendMessage("    §7Webs: " + (data.isInWeb() ? "§aTrue" : "§cFalse"));
-        sender.sendMessage("§8§m--------------------------------");
+        PlayerData data = Truthful.getInstance().getDataManager().getPlayerData(target);
+        if (data == null) {
+            sender.sendMessage("§cNo data for player.");
+            return;
+        }
+
+        data.setExempt(!data.isExempt());
+        sender.sendMessage("§aExempt for " + target.getName() + ": §f" + data.isExempt());
     }
 
-    private void handleLogs(CommandSender sender, String targetName) {
-        sender.sendMessage("§7Fetching logs for §c" + targetName + "§7...");
-        Bukkit.getScheduler().runTaskAsynchronously(Truthful.getInstance().getPlugin(), () -> {
-            List<LogManager.LogEntry> logs = Truthful.getInstance().getLogManager().getLogs(targetName, 10);
-            if (logs.isEmpty()) {
-                sender.sendMessage("§cNo logs found.");
-                return;
-            }
-            SimpleDateFormat sdf = new SimpleDateFormat("MM-dd HH:mm");
-            sender.sendMessage("§8§m---------------------------");
-            for (LogManager.LogEntry log : logs) {
-                sender.sendMessage(String.format("§8[§7%s§8] §c%s §8(§fVL:%d§8) §7%s",
-                        sdf.format(new Date(log.timestamp)),
-                        log.check,
-                        log.vl,
-                        log.data
-                ));
-            }
-            sender.sendMessage("§8§m---------------------------");
-        });
+    private void handleInfo(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage("§cOnly players can view the info GUI.");
+            return;
+        }
+
+        if (args.length < 2) {
+            sender.sendMessage("§cUsage: /truthful info <player>");
+            return;
+        }
+
+        Player target = Bukkit.getPlayer(args[1]);
+        if (target == null) {
+            sender.sendMessage("§cPlayer not found.");
+            return;
+        }
+
+        PlayerData data = Truthful.getInstance().getDataManager().getPlayerData(target);
+        if (data == null) {
+            sender.sendMessage("§cNo data for player.");
+            return;
+        }
+
+        Truthful.getInstance().getGuiManager().openPlayerInfoGui((Player) sender, target);
     }
 
-    private void sendHelp(CommandSender sender) {
-        sender.sendMessage("§c§lTruthful Anti-Cheat");
-        sender.sendMessage("§7/truthful info <player> §8- §fView Client Brand & Attributes");
-        sender.sendMessage("§7/truthful menu §8- §fOpen GUI");
-        sender.sendMessage("§7/truthful exempt <player> §8- §fToggle check exemption");
-        sender.sendMessage("§7/truthful logs <player> §8- §fView recent violations");
-        sender.sendMessage("§7/truthful export §8- §fSave all logs to CSV file");
+    private void handleDebug(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage("§cOnly players can use this command.");
+            return;
+        }
+        Player debugger = (Player) sender;
+
+        if (debuggers.contains(debugger.getUniqueId())) {
+            debuggers.remove(debugger.getUniqueId());
+            sender.sendMessage("§cDebug disabled.");
+        } else {
+            debuggers.add(debugger.getUniqueId());
+            sender.sendMessage("§aDebug enabled.");
+        }
+
+        DebugManager dm = Truthful.getInstance().getDebugManager();
+        if (args.length >= 2) {
+            String checkName = args[1];
+            dm.startDebuggingCheck(debugger, checkName);
+            sender.sendMessage("§7Debugging check: §f" + checkName);
+        } else {
+            dm.stopDebuggingCheck(debugger);
+        }
+    }
+
+    private void handleLogs(CommandSender sender, String[] args) {
+        if (args.length < 2) {
+            sender.sendMessage("§cUsage: /truthful logs <player> [limit]");
+            return;
+        }
+
+        if (sender instanceof Player) {
+            Truthful.getInstance().getGuiManager().openLogs((Player) sender, args[1]);
+        } else {
+            sender.sendMessage("§cLogs only viewable via GUI currently.");
+        }
+    }
+
+    private void handleExport(CommandSender sender) {
+        File dataFolder = Truthful.getInstance().getPlugin().getDataFolder();
+        File debugLogs = new File(dataFolder, "debug_logs");
+        sender.sendMessage("§7Debug Logs folder: §f" + debugLogs.getAbsolutePath());
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (!sender.hasPermission("truthful.admin")) return Collections.emptyList();
+
+        if (args.length == 1) {
+            String partial = args[0].toLowerCase();
+            return SUBCOMMANDS.stream()
+                    .filter(s -> s.startsWith(partial))
+                    .collect(Collectors.toList());
+        }
+
+        if (args.length == 2) {
+            String sub = args[0].toLowerCase();
+            if (PLAYER_SUBCOMMANDS.contains(sub)) {
+                String partial = args[1].toLowerCase();
+                return Bukkit.getOnlinePlayers().stream()
+                        .map(Player::getName)
+                        .filter(n -> n.toLowerCase().startsWith(partial))
+                        .collect(Collectors.toList());
+            }
+        }
+
+        return Collections.emptyList();
     }
 }

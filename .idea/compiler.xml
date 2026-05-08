@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.40/398c6d2d7c42c96b65e78d2ddc9be0058c163453/lombok-1.18.40.jar" />
+        </processorPath>
+        <module name="TruthfulAC.bukkit.main" />
+        <module name="TruthfulAC.bukkit.test" />
+        <module name="TruthfulAC.common.test" />
+        <module name="TruthfulAC.common.main" />
+      </profile>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <option name="defaultObfuscationEnv" value="named:intermediary" />
+        <option name="inMapFileNamedIntermediary" value="C:\Users\t0922\.gradle\caches\fabric-loom\1.16.1\net.fabricmc.yarn.1_16_1.1.16.1+build.21\mappings.tiny" />
+        <option name="outMapFileNamedIntermediary" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\build\loom-cache\mixin-map-net.fabricmc.yarn.1_16_1.1.16.1+build.21.main.tiny" />
+        <option name="outRefMapFile" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\build\classes\java\main\fabric-refmap.json" />
+        <option name="quiet" value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.40/398c6d2d7c42c96b65e78d2ddc9be0058c163453/lombok-1.18.40.jar" />
+        </processorPath>
+        <module name="TruthfulAC.fabric.main" />
+      </profile>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <option name="defaultObfuscationEnv" value="named:intermediary" />
+        <option name="inMapFileNamedIntermediary" value="C:\Users\t0922\.gradle\caches\fabric-loom\1.16.1\net.fabricmc.yarn.1_16_1.1.16.1+build.21\mappings.tiny" />
+        <option name="outMapFileNamedIntermediary" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\build\loom-cache\mixin-map-net.fabricmc.yarn.1_16_1.1.16.1+build.21.test.tiny" />
+        <option name="outRefMapFile" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\build\classes\java\test\test-fabric-refmap.json" />
+        <option name="quiet" value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.40/398c6d2d7c42c96b65e78d2ddc9be0058c163453/lombok-1.18.40.jar" />
+        </processorPath>
+        <module name="TruthfulAC.fabric.test" />
+      </profile>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <option name="defaultObfuscationEnv" value="named:intermediary" />
+        <option name="inMapFileNamedIntermediary" value="C:\Users\t0922\.gradle\caches\fabric-loom\1.16.1\net.fabricmc.yarn.1_16_1.1.16.1+build.21-v2\mappings.tiny" />
+        <option name="outMapFileNamedIntermediary" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1161\build\loom-cache\mixin-map-net.fabricmc.yarn.1_16_1.1.16.1+build.21-v2.main.tiny" />
+        <option name="outRefMapFile" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1161\build\classes\java\main\mc1161-refmap.json" />
+        <option name="quiet" value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.40/398c6d2d7c42c96b65e78d2ddc9be0058c163453/lombok-1.18.40.jar" />
+        </processorPath>
+        <module name="TruthfulAC.fabric.mc1161.main" />
+      </profile>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <option name="defaultObfuscationEnv" value="named:intermediary" />
+        <option name="inMapFileNamedIntermediary" value="C:\Users\t0922\.gradle\caches\fabric-loom\1.16.1\net.fabricmc.yarn.1_16_1.1.16.1+build.21-v2\mappings.tiny" />
+        <option name="outMapFileNamedIntermediary" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1161\build\loom-cache\mixin-map-net.fabricmc.yarn.1_16_1.1.16.1+build.21-v2.test.tiny" />
+        <option name="outRefMapFile" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1161\build\classes\java\test\test-mc1161-refmap.json" />
+        <option name="quiet" value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.40/398c6d2d7c42c96b65e78d2ddc9be0058c163453/lombok-1.18.40.jar" />
+        </processorPath>
+        <module name="TruthfulAC.fabric.mc1161.test" />
+      </profile>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <option name="defaultObfuscationEnv" value="named:intermediary" />
+        <option name="inMapFileNamedIntermediary" value="C:\Users\t0922\.gradle\caches\fabric-loom\1.17.1\net.fabricmc.yarn.1_17_1.1.17.1+build.65-v2\mappings.tiny" />
+        <option name="outMapFileNamedIntermediary" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1171\build\loom-cache\mixin-map-net.fabricmc.yarn.1_17_1.1.17.1+build.65-v2.main.tiny" />
+        <option name="outRefMapFile" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1171\build\classes\java\main\mc1171-refmap.json" />
+        <option name="quiet" value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.40/398c6d2d7c42c96b65e78d2ddc9be0058c163453/lombok-1.18.40.jar" />
+        </processorPath>
+        <module name="TruthfulAC.fabric.mc1171.main" />
+      </profile>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <option name="defaultObfuscationEnv" value="named:intermediary" />
+        <option name="inMapFileNamedIntermediary" value="C:\Users\t0922\.gradle\caches\fabric-loom\1.17.1\net.fabricmc.yarn.1_17_1.1.17.1+build.65-v2\mappings.tiny" />
+        <option name="outMapFileNamedIntermediary" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1171\build\loom-cache\mixin-map-net.fabricmc.yarn.1_17_1.1.17.1+build.65-v2.test.tiny" />
+        <option name="outRefMapFile" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1171\build\classes\java\test\test-mc1171-refmap.json" />
+        <option name="quiet" value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.40/398c6d2d7c42c96b65e78d2ddc9be0058c163453/lombok-1.18.40.jar" />
+        </processorPath>
+        <module name="TruthfulAC.fabric.mc1171.test" />
+      </profile>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <option name="defaultObfuscationEnv" value="named:intermediary" />
+        <option name="inMapFileNamedIntermediary" value="C:\Users\t0922\.gradle\caches\fabric-loom\1.19.4\net.fabricmc.yarn.1_19_4.1.19.4+build.2-v2\mappings.tiny" />
+        <option name="outMapFileNamedIntermediary" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1194\build\loom-cache\mixin-map-net.fabricmc.yarn.1_19_4.1.19.4+build.2-v2.main.tiny" />
+        <option name="outRefMapFile" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1194\build\classes\java\main\mc1194-refmap.json" />
+        <option name="quiet" value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.40/398c6d2d7c42c96b65e78d2ddc9be0058c163453/lombok-1.18.40.jar" />
+        </processorPath>
+        <module name="TruthfulAC.fabric.mc1194.main" />
+      </profile>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <option name="defaultObfuscationEnv" value="named:intermediary" />
+        <option name="inMapFileNamedIntermediary" value="C:\Users\t0922\.gradle\caches\fabric-loom\1.19.4\net.fabricmc.yarn.1_19_4.1.19.4+build.2-v2\mappings.tiny" />
+        <option name="outMapFileNamedIntermediary" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1194\build\loom-cache\mixin-map-net.fabricmc.yarn.1_19_4.1.19.4+build.2-v2.test.tiny" />
+        <option name="outRefMapFile" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1194\build\classes\java\test\test-mc1194-refmap.json" />
+        <option name="quiet" value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.40/398c6d2d7c42c96b65e78d2ddc9be0058c163453/lombok-1.18.40.jar" />
+        </processorPath>
+        <module name="TruthfulAC.fabric.mc1194.test" />
+      </profile>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <option name="defaultObfuscationEnv" value="named:intermediary" />
+        <option name="inMapFileNamedIntermediary" value="C:\Users\t0922\.gradle\caches\fabric-loom\1.20.5\net.fabricmc.yarn.1_20_5.1.20.5+build.1-v2\mappings.tiny" />
+        <option name="outMapFileNamedIntermediary" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1205\build\loom-cache\mixin-map-net.fabricmc.yarn.1_20_5.1.20.5+build.1-v2.main.tiny" />
+        <option name="outRefMapFile" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1205\build\classes\java\main\mc1205-refmap.json" />
+        <option name="quiet" value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.40/398c6d2d7c42c96b65e78d2ddc9be0058c163453/lombok-1.18.40.jar" />
+        </processorPath>
+        <module name="TruthfulAC.fabric.mc1205.main" />
+      </profile>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <option name="defaultObfuscationEnv" value="named:intermediary" />
+        <option name="inMapFileNamedIntermediary" value="C:\Users\t0922\.gradle\caches\fabric-loom\1.20.5\net.fabricmc.yarn.1_20_5.1.20.5+build.1-v2\mappings.tiny" />
+        <option name="outMapFileNamedIntermediary" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1205\build\loom-cache\mixin-map-net.fabricmc.yarn.1_20_5.1.20.5+build.1-v2.test.tiny" />
+        <option name="outRefMapFile" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1205\build\classes\java\test\test-mc1205-refmap.json" />
+        <option name="quiet" value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.40/398c6d2d7c42c96b65e78d2ddc9be0058c163453/lombok-1.18.40.jar" />
+        </processorPath>
+        <module name="TruthfulAC.fabric.mc1205.test" />
+      </profile>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <option name="defaultObfuscationEnv" value="named:intermediary" />
+        <option name="inMapFileNamedIntermediary" value="C:\Users\t0922\.gradle\caches\fabric-loom\1.21.6\net.fabricmc.yarn.1_21_6.1.21.6+build.1-v2\mappings.tiny" />
+        <option name="outMapFileNamedIntermediary" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1216\build\loom-cache\mixin-map-net.fabricmc.yarn.1_21_6.1.21.6+build.1-v2.main.tiny" />
+        <option name="outRefMapFile" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1216\build\classes\java\main\mc1216-refmap.json" />
+        <option name="quiet" value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.40/398c6d2d7c42c96b65e78d2ddc9be0058c163453/lombok-1.18.40.jar" />
+        </processorPath>
+        <module name="TruthfulAC.fabric.mc1216.main" />
+      </profile>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <option name="defaultObfuscationEnv" value="named:intermediary" />
+        <option name="inMapFileNamedIntermediary" value="C:\Users\t0922\.gradle\caches\fabric-loom\1.21.6\net.fabricmc.yarn.1_21_6.1.21.6+build.1-v2\mappings.tiny" />
+        <option name="outMapFileNamedIntermediary" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1216\build\loom-cache\mixin-map-net.fabricmc.yarn.1_21_6.1.21.6+build.1-v2.test.tiny" />
+        <option name="outRefMapFile" value="C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1216\build\classes\java\test\test-mc1216-refmap.json" />
+        <option name="quiet" value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.40/398c6d2d7c42c96b65e78d2ddc9be0058c163453/lombok-1.18.40.jar" />
+        </processorPath>
+        <module name="TruthfulAC.fabric.mc1216.test" />
+      </profile>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="untitled" />
+        <module name="truthful" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel target="21">
+      <module name="grimac.bukkit.main" target="17" />
+      <module name="grimac.bukkit.test" target="17" />
+      <module name="grimac.common.main" target="17" />
+      <module name="grimac.common.test" target="17" />
+      <module name="grimac.fabric.main" target="17" />
+      <module name="grimac.fabric.mc1161.main" target="17" />
+      <module name="grimac.fabric.mc1161.test" target="17" />
+      <module name="grimac.fabric.mc1171.main" target="17" />
+      <module name="grimac.fabric.mc1171.test" target="17" />
+      <module name="grimac.fabric.mc1194.main" target="17" />
+      <module name="grimac.fabric.mc1194.test" target="17" />
+      <module name="grimac.fabric.mc1205.main" target="17" />
+      <module name="grimac.fabric.mc1205.test" target="17" />
+      <module name="grimac.fabric.mc1216.test" target="17" />
+      <module name="grimac.fabric.test" target="17" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="TruthfulAC.bukkit" options="-Xlint:-processing" />
+      <module name="TruthfulAC.bukkit.main" options="-Xlint:-processing" />
+      <module name="TruthfulAC.bukkit.test" options="-Xlint:-processing" />
+      <module name="TruthfulAC.common" options="-Xlint:-processing" />
+      <module name="TruthfulAC.common.main" options="-Xlint:-processing" />
+      <module name="TruthfulAC.common.test" options="-Xlint:-processing" />
+      <module name="TruthfulAC.fabric" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\build\classes\java\main\fabric-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\build\loom-cache\mixin-map-net.fabricmc.yarn.1_16_1.1.16.1+build.21.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.16.1\net.fabricmc.yarn.1_16_1.1.16.1+build.21\mappings.tiny" />
+      <module name="TruthfulAC.fabric.main" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\build\classes\java\main\fabric-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\build\loom-cache\mixin-map-net.fabricmc.yarn.1_16_1.1.16.1+build.21.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.16.1\net.fabricmc.yarn.1_16_1.1.16.1+build.21\mappings.tiny" />
+      <module name="TruthfulAC.fabric.mc1161" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1161\build\classes\java\main\mc1161-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1161\build\loom-cache\mixin-map-net.fabricmc.yarn.1_16_1.1.16.1+build.21-v2.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.16.1\net.fabricmc.yarn.1_16_1.1.16.1+build.21-v2\mappings.tiny" />
+      <module name="TruthfulAC.fabric.mc1161.main" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1161\build\classes\java\main\mc1161-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1161\build\loom-cache\mixin-map-net.fabricmc.yarn.1_16_1.1.16.1+build.21-v2.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.16.1\net.fabricmc.yarn.1_16_1.1.16.1+build.21-v2\mappings.tiny" />
+      <module name="TruthfulAC.fabric.mc1161.test" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1161\build\classes\java\test\test-mc1161-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1161\build\loom-cache\mixin-map-net.fabricmc.yarn.1_16_1.1.16.1+build.21-v2.test.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.16.1\net.fabricmc.yarn.1_16_1.1.16.1+build.21-v2\mappings.tiny" />
+      <module name="TruthfulAC.fabric.mc1171" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1171\build\classes\java\main\mc1171-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1171\build\loom-cache\mixin-map-net.fabricmc.yarn.1_17_1.1.17.1+build.65-v2.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.17.1\net.fabricmc.yarn.1_17_1.1.17.1+build.65-v2\mappings.tiny" />
+      <module name="TruthfulAC.fabric.mc1171.main" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1171\build\classes\java\main\mc1171-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1171\build\loom-cache\mixin-map-net.fabricmc.yarn.1_17_1.1.17.1+build.65-v2.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.17.1\net.fabricmc.yarn.1_17_1.1.17.1+build.65-v2\mappings.tiny" />
+      <module name="TruthfulAC.fabric.mc1171.test" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1171\build\classes\java\test\test-mc1171-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1171\build\loom-cache\mixin-map-net.fabricmc.yarn.1_17_1.1.17.1+build.65-v2.test.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.17.1\net.fabricmc.yarn.1_17_1.1.17.1+build.65-v2\mappings.tiny" />
+      <module name="TruthfulAC.fabric.mc1194" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1194\build\classes\java\main\mc1194-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1194\build\loom-cache\mixin-map-net.fabricmc.yarn.1_19_4.1.19.4+build.2-v2.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.19.4\net.fabricmc.yarn.1_19_4.1.19.4+build.2-v2\mappings.tiny" />
+      <module name="TruthfulAC.fabric.mc1194.main" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1194\build\classes\java\main\mc1194-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1194\build\loom-cache\mixin-map-net.fabricmc.yarn.1_19_4.1.19.4+build.2-v2.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.19.4\net.fabricmc.yarn.1_19_4.1.19.4+build.2-v2\mappings.tiny" />
+      <module name="TruthfulAC.fabric.mc1194.test" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1194\build\classes\java\test\test-mc1194-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1194\build\loom-cache\mixin-map-net.fabricmc.yarn.1_19_4.1.19.4+build.2-v2.test.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.19.4\net.fabricmc.yarn.1_19_4.1.19.4+build.2-v2\mappings.tiny" />
+      <module name="TruthfulAC.fabric.mc1205" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1205\build\classes\java\main\mc1205-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1205\build\loom-cache\mixin-map-net.fabricmc.yarn.1_20_5.1.20.5+build.1-v2.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.20.5\net.fabricmc.yarn.1_20_5.1.20.5+build.1-v2\mappings.tiny" />
+      <module name="TruthfulAC.fabric.mc1205.main" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1205\build\classes\java\main\mc1205-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1205\build\loom-cache\mixin-map-net.fabricmc.yarn.1_20_5.1.20.5+build.1-v2.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.20.5\net.fabricmc.yarn.1_20_5.1.20.5+build.1-v2\mappings.tiny" />
+      <module name="TruthfulAC.fabric.mc1205.test" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1205\build\classes\java\test\test-mc1205-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1205\build\loom-cache\mixin-map-net.fabricmc.yarn.1_20_5.1.20.5+build.1-v2.test.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.20.5\net.fabricmc.yarn.1_20_5.1.20.5+build.1-v2\mappings.tiny" />
+      <module name="TruthfulAC.fabric.mc1216" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1216\build\classes\java\main\mc1216-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1216\build\loom-cache\mixin-map-net.fabricmc.yarn.1_21_6.1.21.6+build.1-v2.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.21.6\net.fabricmc.yarn.1_21_6.1.21.6+build.1-v2\mappings.tiny" />
+      <module name="TruthfulAC.fabric.mc1216.main" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1216\build\classes\java\main\mc1216-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1216\build\loom-cache\mixin-map-net.fabricmc.yarn.1_21_6.1.21.6+build.1-v2.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.21.6\net.fabricmc.yarn.1_21_6.1.21.6+build.1-v2\mappings.tiny" />
+      <module name="TruthfulAC.fabric.mc1216.test" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1216\build\classes\java\test\test-mc1216-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1216\build\loom-cache\mixin-map-net.fabricmc.yarn.1_21_6.1.21.6+build.1-v2.test.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.21.6\net.fabricmc.yarn.1_21_6.1.21.6+build.1-v2\mappings.tiny" />
+      <module name="TruthfulAC.fabric.test" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\build\classes\java\test\test-fabric-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\build\loom-cache\mixin-map-net.fabricmc.yarn.1_16_1.1.16.1+build.21.test.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.16.1\net.fabricmc.yarn.1_16_1.1.16.1+build.21\mappings.tiny" />
+      <module name="grimac.bukkit" options="-Xlint:-processing" />
+      <module name="grimac.bukkit.main" options="-Xlint:-processing" />
+      <module name="grimac.bukkit.test" options="-Xlint:-processing" />
+      <module name="grimac.common" options="-Xlint:-processing" />
+      <module name="grimac.common.main" options="-Xlint:-processing" />
+      <module name="grimac.common.test" options="-Xlint:-processing" />
+      <module name="grimac.fabric" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\build\classes\java\main\fabric-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\build\loom-cache\mixin-map-net.fabricmc.yarn.1_16_1.1.16.1+build.21.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.16.1\net.fabricmc.yarn.1_16_1.1.16.1+build.21\mappings.tiny" />
+      <module name="grimac.fabric.main" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\build\classes\java\main\fabric-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\build\loom-cache\mixin-map-net.fabricmc.yarn.1_16_1.1.16.1+build.21.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.16.1\net.fabricmc.yarn.1_16_1.1.16.1+build.21\mappings.tiny" />
+      <module name="grimac.fabric.mc1161" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1161\build\classes\java\main\mc1161-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1161\build\loom-cache\mixin-map-net.fabricmc.yarn.1_16_1.1.16.1+build.21-v2.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.16.1\net.fabricmc.yarn.1_16_1.1.16.1+build.21-v2\mappings.tiny" />
+      <module name="grimac.fabric.mc1161.main" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1161\build\classes\java\main\mc1161-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1161\build\loom-cache\mixin-map-net.fabricmc.yarn.1_16_1.1.16.1+build.21-v2.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.16.1\net.fabricmc.yarn.1_16_1.1.16.1+build.21-v2\mappings.tiny" />
+      <module name="grimac.fabric.mc1161.test" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1161\build\classes\java\test\test-mc1161-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1161\build\loom-cache\mixin-map-net.fabricmc.yarn.1_16_1.1.16.1+build.21-v2.test.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.16.1\net.fabricmc.yarn.1_16_1.1.16.1+build.21-v2\mappings.tiny" />
+      <module name="grimac.fabric.mc1171" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1171\build\classes\java\main\mc1171-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1171\build\loom-cache\mixin-map-net.fabricmc.yarn.1_17_1.1.17.1+build.65-v2.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.17.1\net.fabricmc.yarn.1_17_1.1.17.1+build.65-v2\mappings.tiny" />
+      <module name="grimac.fabric.mc1171.main" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1171\build\classes\java\main\mc1171-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1171\build\loom-cache\mixin-map-net.fabricmc.yarn.1_17_1.1.17.1+build.65-v2.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.17.1\net.fabricmc.yarn.1_17_1.1.17.1+build.65-v2\mappings.tiny" />
+      <module name="grimac.fabric.mc1171.test" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1171\build\classes\java\test\test-mc1171-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1171\build\loom-cache\mixin-map-net.fabricmc.yarn.1_17_1.1.17.1+build.65-v2.test.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.17.1\net.fabricmc.yarn.1_17_1.1.17.1+build.65-v2\mappings.tiny" />
+      <module name="grimac.fabric.mc1194" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1194\build\classes\java\main\mc1194-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1194\build\loom-cache\mixin-map-net.fabricmc.yarn.1_19_4.1.19.4+build.2-v2.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.19.4\net.fabricmc.yarn.1_19_4.1.19.4+build.2-v2\mappings.tiny" />
+      <module name="grimac.fabric.mc1194.main" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1194\build\classes\java\main\mc1194-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1194\build\loom-cache\mixin-map-net.fabricmc.yarn.1_19_4.1.19.4+build.2-v2.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.19.4\net.fabricmc.yarn.1_19_4.1.19.4+build.2-v2\mappings.tiny" />
+      <module name="grimac.fabric.mc1194.test" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1194\build\classes\java\test\test-mc1194-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1194\build\loom-cache\mixin-map-net.fabricmc.yarn.1_19_4.1.19.4+build.2-v2.test.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.19.4\net.fabricmc.yarn.1_19_4.1.19.4+build.2-v2\mappings.tiny" />
+      <module name="grimac.fabric.mc1205" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1205\build\classes\java\main\mc1205-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1205\build\loom-cache\mixin-map-net.fabricmc.yarn.1_20_5.1.20.5+build.1-v2.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.20.5\net.fabricmc.yarn.1_20_5.1.20.5+build.1-v2\mappings.tiny" />
+      <module name="grimac.fabric.mc1205.main" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1205\build\classes\java\main\mc1205-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1205\build\loom-cache\mixin-map-net.fabricmc.yarn.1_20_5.1.20.5+build.1-v2.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.20.5\net.fabricmc.yarn.1_20_5.1.20.5+build.1-v2\mappings.tiny" />
+      <module name="grimac.fabric.mc1205.test" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1205\build\classes\java\test\test-mc1205-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1205\build\loom-cache\mixin-map-net.fabricmc.yarn.1_20_5.1.20.5+build.1-v2.test.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.20.5\net.fabricmc.yarn.1_20_5.1.20.5+build.1-v2\mappings.tiny" />
+      <module name="grimac.fabric.mc1216" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1216\build\classes\java\main\mc1216-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1216\build\loom-cache\mixin-map-net.fabricmc.yarn.1_21_6.1.21.6+build.1-v2.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.21.6\net.fabricmc.yarn.1_21_6.1.21.6+build.1-v2\mappings.tiny" />
+      <module name="grimac.fabric.mc1216.main" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1216\build\classes\java\main\mc1216-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1216\build\loom-cache\mixin-map-net.fabricmc.yarn.1_21_6.1.21.6+build.1-v2.main.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.21.6\net.fabricmc.yarn.1_21_6.1.21.6+build.1-v2\mappings.tiny" />
+      <module name="grimac.fabric.mc1216.test" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1216\build\classes\java\test\test-mc1216-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\mc1216\build\loom-cache\mixin-map-net.fabricmc.yarn.1_21_6.1.21.6+build.1-v2.test.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.21.6\net.fabricmc.yarn.1_21_6.1.21.6+build.1-v2\mappings.tiny" />
+      <module name="grimac.fabric.test" options="-Xlint:-processing -AoutRefMapFile=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\build\classes\java\test\test-fabric-refmap.json -AdefaultObfuscationEnv=named:intermediary -Aquiet=true -AoutMapFileNamedIntermediary=C:\Users\t0922\IdeaProjects\Truthful-reborn\fabric\build\loom-cache\mixin-map-net.fabricmc.yarn.1_16_1.1.16.1+build.21.test.tiny -AinMapFileNamedIntermediary=C:\Users\t0922\.gradle\caches\fabric-loom\1.16.1\net.fabricmc.yarn.1_16_1.1.16.1+build.21\mappings.tiny" />
+    </option>
+  </component>
+</project>

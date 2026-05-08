@@ -1,6 +1,8 @@
 package ret.tawny.truthful.database;
 
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
+
 import java.io.File;
 import java.io.PrintWriter;
 import java.sql.*;
@@ -8,153 +10,281 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Queue;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
 public final class LogManager {
 
-    private Connection connection;
+    private static final int FLUSH_BATCH_SIZE = 500;
+    private static final int MAX_LOG_ROWS = 250_000;
+    private static final int RETENTION_DAYS = 14;
+    private static final int MAX_PENDING_QUEUE = 20_000;
+
     private final Plugin plugin;
+    private Connection connection;
 
-    public LogManager(Plugin plugin) {
+    private final Queue<LogEntry> pending = new ConcurrentLinkedQueue<>();
+    private final AtomicInteger pendingSize = new AtomicInteger();
+    private final AtomicInteger droppedLogs = new AtomicInteger();
+    private final ReentrantLock lock = new ReentrantLock();
+
+    public LogManager(final Plugin plugin) {
         this.plugin = plugin;
-        initialize();
+        setup();
+        startFlushTask();
     }
 
-    private void initialize() {
+    private void setup() {
         try {
-            File dataFolder = new File(plugin.getDataFolder(), "database.db");
-            if (!dataFolder.getParentFile().exists()) {
-                dataFolder.getParentFile().mkdirs();
+            File folder = plugin.getDataFolder();
+            if (!folder.exists()) {
+                //noinspection ResultOfMethodCallIgnored
+                folder.mkdirs();
             }
 
-            Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:" + dataFolder.getAbsolutePath());
+            File dbFile = new File(folder, "logs.db");
+            String url = "jdbc:sqlite:" + dbFile.getAbsolutePath();
 
-            try (Statement statement = connection.createStatement()) {
-                statement.execute("CREATE TABLE IF NOT EXISTS violations (" +
-                        "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                        "uuid VARCHAR(36), " +
-                        "player VARCHAR(16), " +
-                        "check_name VARCHAR(64), " +
-                        "vl INTEGER, " +
-                        "ping INTEGER, " +
-                        "data TEXT, " +
-                        "timestamp LONG);");
+            this.connection = DriverManager.getConnection(url);
+            try (Statement pragmas = connection.createStatement()) {
+                pragmas.execute("PRAGMA journal_mode=WAL");
+                pragmas.execute("PRAGMA synchronous=NORMAL");
+                pragmas.execute("PRAGMA temp_store=MEMORY");
             }
-        } catch (Exception e) {
-            plugin.getLogger().severe("Failed to initialize SQLite database!");
-            e.printStackTrace();
-        }
-    }
 
-    public void log(UUID uuid, String playerName, String checkName, int vl, long ping, String debug) {
-        // Standard Insert (Async run handled by caller or here if needed)
-        // Note: Since we call this from async check threads often, direct execution is fine
-        // if connection is thread-safe (SQLite single connection is usually fine for low volume)
-        // But ideally, wrap in scheduler. For brevity in this snippet:
-        try (PreparedStatement ps = connection.prepareStatement(
-                "INSERT INTO violations (uuid, player, check_name, vl, ping, data, timestamp) VALUES(?,?,?,?,?,?,?);")) {
-            ps.setString(1, uuid.toString());
-            ps.setString(2, playerName);
-            ps.setString(3, checkName);
-            ps.setInt(4, vl);
-            ps.setLong(5, ping);
-            ps.setString(6, debug);
-            ps.setLong(7, System.currentTimeMillis());
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public List<LogEntry> getLogs(String playerName, int limit) {
-        List<LogEntry> logs = new ArrayList<>();
-        try (PreparedStatement ps = connection.prepareStatement(
-                "SELECT * FROM violations WHERE player = ? ORDER BY timestamp DESC LIMIT ?;")) {
-            ps.setString(1, playerName);
-            ps.setInt(2, limit);
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                logs.add(new LogEntry(
-                        rs.getString("player"),
-                        rs.getString("check_name"),
-                        rs.getInt("vl"),
-                        rs.getString("data"),
-                        rs.getLong("timestamp")
-                ));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return logs;
-    }
-
-    // --- NEW EXPORT FEATURE ---
-    public File exportToCsv() {
-        File exportFolder = new File(plugin.getDataFolder(), "exports");
-        if (!exportFolder.exists()) exportFolder.mkdirs();
-
-        String fileName = "logs-" + new SimpleDateFormat("yyyy-MM-dd-HH-mm").format(new Date()) + ".csv";
-        File file = new File(exportFolder, fileName);
-
-        try (PrintWriter writer = new PrintWriter(file);
-             Statement statement = connection.createStatement();
-             ResultSet rs = statement.executeQuery("SELECT * FROM violations ORDER BY timestamp DESC;")) {
-
-            // CSV Header
-            writer.println("ID,UUID,Player,Check,VL,Ping,Data,Timestamp,Date");
-
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-            while (rs.next()) {
-                long time = rs.getLong("timestamp");
-                String dateStr = sdf.format(new Date(time));
-
-                // Escape commas in data
-                String safeData = rs.getString("data").replace(",", ";");
-
-                writer.printf("%d,%s,%s,%s,%d,%d,%s,%d,%s%n",
-                        rs.getInt("id"),
-                        rs.getString("uuid"),
-                        rs.getString("player"),
-                        rs.getString("check_name"),
-                        rs.getInt("vl"),
-                        rs.getLong("ping"),
-                        safeData,
-                        time,
-                        dateStr
+            try (Statement st = connection.createStatement()) {
+                st.executeUpdate(
+                        "CREATE TABLE IF NOT EXISTS logs (" +
+                                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                                "uuid TEXT NOT NULL," +
+                                "player TEXT NOT NULL," +
+                                "check_name TEXT NOT NULL," +
+                                "vl INTEGER NOT NULL," +
+                                "ping INTEGER NOT NULL," +
+                                "data TEXT," +
+                                "ts BIGINT NOT NULL" +
+                                ")"
                 );
+                st.executeUpdate("CREATE INDEX IF NOT EXISTS idx_logs_uuid_ts ON logs(uuid, ts DESC)");
+                st.executeUpdate("CREATE INDEX IF NOT EXISTS idx_logs_ts ON logs(ts DESC)");
             }
-            return file;
+        } catch (Exception e) {
+            plugin.getLogger().severe("Failed to initialize LogManager database.");
+            e.printStackTrace();
+        }
+    }
 
+    private void startFlushTask() {
+        // Batch insert asynchronously to keep main thread clean.
+        Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> {
+            if (pending.isEmpty()) {
+                return;
+            }
+            flushNow();
+        }, 20L, 20L);
+
+        // Housekeeping: keep database growth bounded on busy servers.
+        Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::pruneOldLogs, 20L * 300L, 20L * 300L);
+    }
+
+    private void flushNow() {
+        if (this.connection == null) {
+            return;
+        }
+
+        lock.lock();
+        try {
+            List<LogEntry> batch = new ArrayList<>();
+            while (!pending.isEmpty() && batch.size() < FLUSH_BATCH_SIZE) {
+                LogEntry e = pending.poll();
+                if (e != null) {
+                    batch.add(e);
+                    pendingSize.decrementAndGet();
+                }
+            }
+            if (batch.isEmpty()) return;
+
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT INTO logs (uuid, player, check_name, vl, ping, data, ts) VALUES (?,?,?,?,?,?,?)"
+            )) {
+                for (LogEntry e : batch) {
+                    ps.setString(1, e.uuid.toString());
+                    ps.setString(2, e.player);
+                    ps.setString(3, e.check);
+                    ps.setInt(4, e.vl);
+                    ps.setLong(5, e.ping);
+                    ps.setString(6, e.data);
+                    ps.setLong(7, e.timestamp);
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+        } catch (SQLException ex) {
+            plugin.getLogger().severe("Failed to flush detection logs.");
+            ex.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private void pruneOldLogs() {
+        if (this.connection == null) {
+            return;
+        }
+
+        lock.lock();
+        try {
+            long cutoff = System.currentTimeMillis() - (RETENTION_DAYS * 24L * 60L * 60L * 1000L);
+            try (PreparedStatement deleteOld = connection.prepareStatement("DELETE FROM logs WHERE ts < ?")) {
+                deleteOld.setLong(1, cutoff);
+                deleteOld.executeUpdate();
+            }
+
+            try (PreparedStatement trimRows = connection.prepareStatement(
+                    "DELETE FROM logs WHERE id NOT IN (SELECT id FROM logs ORDER BY ts DESC LIMIT ?)")) {
+                trimRows.setInt(1, MAX_LOG_ROWS);
+                trimRows.executeUpdate();
+            }
+
+            try (Statement optimize = connection.createStatement()) {
+                optimize.execute("PRAGMA optimize");
+            }
+        } catch (SQLException ex) {
+            plugin.getLogger().warning("Failed to prune detection logs: " + ex.getMessage());
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void log(final UUID uuid, final String player, final String check, final int vl, final long ping, final String data) {
+        final int size = pendingSize.incrementAndGet();
+        if (size > MAX_PENDING_QUEUE) {
+            pendingSize.decrementAndGet();
+            droppedLogs.incrementAndGet();
+            if (droppedLogs.get() % 500 == 1) {
+                plugin.getLogger().warning("Log queue overflow: dropping detection logs to protect memory (dropped=" + droppedLogs.get() + ").");
+            }
+            return;
+        }
+
+        pending.add(new LogEntry(uuid, player, check, vl, ping, data, System.currentTimeMillis()));
+    }
+
+    public List<LogEntry> getLogs(final UUID uuid, final int limit) {
+        List<LogEntry> out = new ArrayList<>();
+        if (this.connection == null) return out;
+
+        lock.lock();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT uuid, player, check_name, vl, ping, data, ts FROM logs WHERE uuid=? ORDER BY ts DESC LIMIT ?"
+        )) {
+            ps.setString(1, uuid.toString());
+            ps.setInt(2, Math.max(1, limit));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    UUID id = UUID.fromString(rs.getString("uuid"));
+                    String p = rs.getString("player");
+                    String c = rs.getString("check_name");
+                    int v = rs.getInt("vl");
+                    long pg = rs.getLong("ping");
+                    String d = rs.getString("data");
+                    long ts = rs.getLong("ts");
+                    out.add(new LogEntry(id, p, c, v, pg, d, ts));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+
+        return out;
+    }
+
+    public void exportToCsv(final File outFile) {
+        if (this.connection == null) return;
+
+        lock.lock();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT uuid, player, check_name, vl, ping, data, ts FROM logs ORDER BY ts DESC"
+        );
+             ResultSet rs = ps.executeQuery();
+             PrintWriter pw = new PrintWriter(outFile)) {
+
+            pw.println("uuid,player,check,vl,ping,data,timestamp");
+
+            while (rs.next()) {
+                String uuid = rs.getString("uuid");
+                String player = csv(rs.getString("player"));
+                String check = csv(rs.getString("check_name"));
+                int vl = rs.getInt("vl");
+                long ping = rs.getLong("ping");
+                String data = csv(rs.getString("data"));
+                long ts = rs.getLong("ts");
+
+                pw.println(uuid + "," + player + "," + check + "," + vl + "," + ping + "," + data + "," + ts);
+            }
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+        } finally {
+            lock.unlock();
         }
+    }
+
+    private static String csv(String in) {
+        if (in == null) return "";
+        String s = in.replace("\r", " ").replace("\n", " ").replace("\"", "\"\"");
+        if (s.contains(",") || s.contains("\"")) {
+            return "\"" + s + "\"";
+        }
+        return s;
     }
 
     public void shutdown() {
+        flushNow();
+
+        lock.lock();
         try {
-            if (connection != null && !connection.isClosed()) {
+            if (connection != null) {
                 connection.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            lock.unlock();
         }
     }
 
     public static class LogEntry {
+        public final UUID uuid;
         public final String player, check, data;
         public final int vl;
-        public final long timestamp;
+        public final long ping, timestamp;
 
-        public LogEntry(String player, String check, int vl, String data, long timestamp) {
+        public LogEntry(UUID uuid, String player, String check, int vl, long ping, String data, long timestamp) {
+            this.uuid = uuid;
             this.player = player;
             this.check = check;
             this.vl = vl;
+            this.ping = ping;
             this.data = data;
             this.timestamp = timestamp;
+        }
+
+        public String toDisplayString() {
+            final String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(this.timestamp));
+            String extra = this.data == null ? "" : this.data.replace('\n', ' ').replace('\r', ' ');
+            if (extra.length() > 120) {
+                extra = extra.substring(0, 117) + "...";
+            }
+
+            return "§8[" + time + "] §f" + this.check + " §7VL:§c" + this.vl +
+                    " §7Ping:§f" + this.ping + "ms" +
+                    (extra.isEmpty() ? "" : " §8» §7" + extra);
         }
     }
 }

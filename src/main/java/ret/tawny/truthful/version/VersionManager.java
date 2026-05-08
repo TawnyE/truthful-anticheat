@@ -1,7 +1,6 @@
 package ret.tawny.truthful.version;
 
 import org.bukkit.Bukkit;
-import ret.tawny.truthful.version.impl.VersionAdapter_1_8;
 import ret.tawny.truthful.version.impl.VersionAdapter_Modern;
 
 import java.util.regex.Matcher;
@@ -18,27 +17,32 @@ public final class VersionManager {
             if (matcher.find()) {
                 int minorVersion = Integer.parseInt(matcher.group(1));
 
-                if (minorVersion <= 8) {
-                    this.adapter = new VersionAdapter_1_8();
-                    Bukkit.getLogger().info("[Truthful] Loaded Version Adapter for Minecraft 1.8 compatibility.");
-                } else {
-                    this.adapter = new VersionAdapter_Modern(minorVersion);
-                    Bukkit.getLogger().info("[Truthful] Loaded Version Adapter for modern Minecraft (1.9+).");
+                if (minorVersion < 20) {
+                    Bukkit.getLogger().warning("[Truthful] Detected legacy server version (1." + minorVersion + ").");
+                    Bukkit.getLogger().warning("[Truthful] TruthfulAC v2.3+ is designed for 1.20+. Stability is not guaranteed.");
                 }
+
+                // We now strictly use the Modern adapter for everything.
+                // 1.8/Legacy support has been dropped to streamline physics and attribute handling.
+                this.adapter = new VersionAdapter_Modern(minorVersion);
+                Bukkit.getLogger().info("[Truthful] Loaded Modern Version Adapter (1." + minorVersion + "+).");
+
             } else {
                 throw new IllegalStateException("Could not determine server version from Bukkit version string: " + Bukkit.getServer().getBukkitVersion());
             }
 
         } catch (Exception e) {
-            Bukkit.getLogger().severe("[Truthful] Failed to load a compatible version adapter! The plugin will be disabled.");
+            Bukkit.getLogger().severe("[Truthful] Failed to load version adapter! The plugin may not function correctly.");
             e.printStackTrace();
-            Bukkit.getPluginManager().disablePlugin(Bukkit.getPluginManager().getPlugin("Truthful"));
+            // Fallback to modern if parsing fails, assuming 1.20+ context
+            this.adapter = new VersionAdapter_Modern(20);
         }
     }
 
     public IVersionAdapter getAdapter() {
         if (this.adapter == null) {
-            throw new IllegalStateException("Version adapter has not been loaded yet!");
+            // Should not happen if load() is called on startup
+            this.adapter = new VersionAdapter_Modern(20);
         }
         return this.adapter;
     }

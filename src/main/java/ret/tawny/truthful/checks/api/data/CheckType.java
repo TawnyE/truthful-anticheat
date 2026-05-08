@@ -3,25 +3,31 @@ package ret.tawny.truthful.checks.api.data;
 import ret.tawny.truthful.checks.api.Check;
 
 public enum CheckType {
-    FLY("Fly"),
-    SPEED("Speed"),
-    JESUS("Jesus"),
+    SIMULATION("Simulation"),
     SPOOF("Spoof"),
+    BAD_PACKET("BadPacket"),
     SPRINT("Sprint"),
-    BAD_PACKET("Bad Packet"),
+    CRASHER("Crasher"),
+    INVALID("Invalid"),
     SCAFFOLD("Scaffold"),
     TIMER("Timer"),
-    HITBOX("Hit Box"),
+    HITBOX("HitBox"),
     AIM("Aim"),
     RAYCAST("Raycast"),
-    STRAFE("Strafe"),
-    ELYTRA("Elytra"),
-    PACKET_ORDER("Packet Order"),
+    PACKET_ORDER("PacketOrder"),
     AUTOCLICKER("AutoClicker"),
     REACH("Reach"),
-    NO_SLOW("NoSlow"),
     FAST_BREAK("FastBreak"),
-    VEHICLE("Vehicle");
+    PHASE("Phase"),
+    KILLAURA("KillAura"),
+    BARITONE("Baritone"),
+    INVENTORY("Inventory"),
+    VELOCITY("Velocity"),
+    CRYSTAL("Crystal"),
+    ANCHOR("Anchor"),
+
+    // --- NEW TYPE ---
+    BEDROCK("Bedrock");
 
     private final String name;
 

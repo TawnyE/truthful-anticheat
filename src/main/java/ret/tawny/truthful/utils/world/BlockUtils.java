@@ -11,7 +11,8 @@ import java.util.Locale;
 import java.util.Set;
 
 public final class BlockUtils {
-    private BlockUtils() {}
+    private BlockUtils() {
+    }
 
     private static final Set<Material> WHOLE_BLOCKS = EnumSet.noneOf(Material.class);
 
@@ -70,5 +71,25 @@ public final class BlockUtils {
             return name.equals("LADDER") || name.equals("VINE") || name.equals("SCAFFOLDING");
         }
         return false;
+    }
+
+    public static boolean isChunkLoaded(final org.bukkit.Location location) {
+        if (location == null || location.getWorld() == null)
+            return false;
+
+        // Fallback for async threads: Use the global cache if possible
+        if (!org.bukkit.Bukkit.isPrimaryThread()) {
+            return true; // Assume loaded to prevent false negatives in async checks
+        }
+
+        return location.getWorld().isChunkLoaded(location.getBlockX() >> 4, location.getBlockZ() >> 4);
+    }
+
+    public static boolean isChunkLoaded(final org.bukkit.Location location, ret.tawny.truthful.data.PlayerData data) {
+        if (location == null) return false;
+        if (data != null) {
+            return data.getWorldCache().isChunkLoaded(location.getBlockX() >> 4, location.getBlockZ() >> 4);
+        }
+        return isChunkLoaded(location);
     }
 }

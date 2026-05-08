@@ -1,32 +1,37 @@
 package ret.tawny.truthful.wrapper.impl.server.position;
 
-import com.comphenix.protocol.events.PacketEvent;
+import com.github.retrooper.packetevents.protocol.packettype.PacketType;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerPositionAndLook;
+import com.github.retrooper.packetevents.util.Vector3d;
+import org.bukkit.entity.Player;
 import ret.tawny.truthful.wrapper.api.PacketWrapper;
-
-import java.util.List;
 
 public final class SetPositionPacketWrapper extends PacketWrapper {
     private final double x, y, z;
     private final float yaw, pitch;
-    private final boolean ground;
+    private final int teleportId;
 
-    public SetPositionPacketWrapper(final PacketEvent packetEvent) {
-        super(packetEvent);
+    public SetPositionPacketWrapper(Object wrapper, Player player, PacketType.Play.Server type) {
+        super(wrapper, player, type);
 
-        // This is the robust, correct way to safely read from ProtocolLib's structure modifiers.
-        // We get the list of values and check the size before accessing an index.
-        final List<Double> doublesIn = packetContainer.getDoubles().getValues();
-        final List<Float> floatsIn = packetContainer.getFloat().getValues();
-        final List<Boolean> booleansIn = packetContainer.getBooleans().getValues();
-
-        this.x = !doublesIn.isEmpty() ? doublesIn.get(0) : player.getLocation().getX();
-        this.y = doublesIn.size() > 1 ? doublesIn.get(1) : player.getLocation().getY();
-        this.z = doublesIn.size() > 2 ? doublesIn.get(2) : player.getLocation().getZ();
-
-        this.yaw = !floatsIn.isEmpty() ? floatsIn.get(0) : player.getLocation().getYaw();
-        this.pitch = floatsIn.size() > 1 ? floatsIn.get(1) : player.getLocation().getPitch();
-
-        this.ground = !booleansIn.isEmpty() && booleansIn.get(0);
+        if (wrapper instanceof WrapperPlayServerPlayerPositionAndLook) {
+            WrapperPlayServerPlayerPositionAndLook posLook = (WrapperPlayServerPlayerPositionAndLook) wrapper;
+            Vector3d position = posLook.getPosition();
+            this.x = position.x;
+            this.y = position.y;
+            this.z = position.z;
+            this.yaw = posLook.getYaw();
+            this.pitch = posLook.getPitch();
+            // Teleport ID is only available in 1.9+, default to -1 for older versions
+            this.teleportId = posLook.getTeleportId();
+        } else {
+            this.x = 0;
+            this.y = 0;
+            this.z = 0;
+            this.yaw = 0;
+            this.pitch = 0;
+            this.teleportId = -1;
+        }
     }
 
     /**
@@ -65,12 +70,10 @@ public final class SetPositionPacketWrapper extends PacketWrapper {
     }
 
     /**
-     * @return Client Ground State
-     * @deprecated Any hacked client can spoof a fake value. Use server-side checks.
+     * @return Teleport ID
      */
-    @Deprecated
-    public boolean isGround() {
-        return ground;
+    public int getTeleportId() {
+        return teleportId;
     }
 
     @Override

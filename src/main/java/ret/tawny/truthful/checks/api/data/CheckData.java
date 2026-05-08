@@ -12,4 +12,11 @@ public @interface CheckData {
     char order();
 
     CheckType type();
+
+    /**
+     * Optional display name override for the check type prefix.
+     * If empty (default), uses the CheckType's name.
+     * Used by bedrock checks to show "B-Speed" instead of "Bedrock".
+     */
+    String displayName() default "";
 }
