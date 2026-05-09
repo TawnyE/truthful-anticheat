@@ -41,9 +41,9 @@ public class EnvironmentTask extends BukkitRunnable {
             boolean vehicleNearby = false;
             boolean entityNearby = false;
 
-            // Radius 2.0 covers immediate surroundings.
+            // Radius 1.25 covers immediate surroundings adequately.
             // Using a smaller radius improves performance while maintaining detection.
-            for (Entity entity : player.getNearbyEntities(2.0, 2.0, 2.0)) {
+            for (Entity entity : player.getNearbyEntities(1.25, 1.25, 1.25)) {
 
                 // Skip self
                 if (entity.getEntityId() == player.getEntityId()) continue;

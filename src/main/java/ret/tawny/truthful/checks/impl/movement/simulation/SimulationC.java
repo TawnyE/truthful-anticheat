@@ -100,7 +100,7 @@ public final class SimulationC extends Check {
         final int    airTicks    = data.getAirTicks();
 
         final EnumSet<Tag> tags = EnumSet.noneOf(Tag.class);
-        if (data.isInLiquid()) tags.add(Tag.LAVA);
+        if (isInLava(data)) tags.add(Tag.LAVA);
         else tags.add(Tag.WATER);
 
         if (deltaY > 0.5D && lastDeltaY > 0.3D)    tags.add(Tag.BUBBLE_UP);
@@ -347,6 +347,21 @@ public final class SimulationC extends Check {
                 floor(y),
                 floor(z)
         ));
+    }
+
+    private boolean isInLava(final PlayerData data) {
+        int x = floor(data.getX());
+        int z = floor(data.getZ());
+        int feetY = floor(data.getY());
+        int midY = floor(data.getY() + 0.5D);
+        int headY = floor(data.getY() + 1.62D);
+        return isLavaState(data, x, feetY, z)
+                || isLavaState(data, x, midY, z)
+                || isLavaState(data, x, headY, z);
+    }
+
+    private boolean isLavaState(final PlayerData data, final int x, final int y, final int z) {
+        return data.getWorldCache().getBlockState(x, y, z).getType().getName().toUpperCase().contains("LAVA");
     }
 
     private int floor(final double value) {

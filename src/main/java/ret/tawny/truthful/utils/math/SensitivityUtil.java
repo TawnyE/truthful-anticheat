@@ -1,15 +1,8 @@
 package ret.tawny.truthful.utils.math;
 
-import java.util.List;
-
 public final class SensitivityUtil {
 
     private SensitivityUtil() {}
-
-    /**
-     * Standard Minecraft GCD constant (2^24).
-     */
-    private static final double GCD_MULTIPLIER = Math.pow(2, 24);
 
     /**
      * Calculates the Greatest Common Divisor (GCD) of two floating point numbers.
@@ -26,21 +19,16 @@ public final class SensitivityUtil {
      * Formula: f = sens * 0.6 + 0.2; step = f^3 * 8 * 0.15
      */
     public static int getSensitivityFromPitchGCD(float deltaPitch) {
-        // We need the GCD of the current pitch delta and previous ones.
-        // This is usually handled in the Profile/PlayerData over time.
-        // This method assumes 'deltaPitch' IS the calculated GCD step.
-
-        // 1. Normalize the GCD to the 'f' value
-        // delta = f^3 * 1.2 (approximate constant for 8 * 0.15)
-        // f = cbrt(delta / 1.2)
+        if (!Float.isFinite(deltaPitch) || deltaPitch <= 0.0F) {
+            return -1;
+        }
 
         double f = Math.cbrt(deltaPitch / 1.2);
-
-        // 2. Inverse the linear formula: f = sens * 0.6 + 0.2
-        // sens = (f - 0.2) / 0.6
         double sensitivity = (f - 0.2) / 0.6;
+        int percent = (int) Math.round(sensitivity * 200.0);
 
-        // 3. Convert to percent (Minecraft displays e.g. "100%")
-        return (int) (sensitivity * 200.0);
+        if (percent < 0) return 0;
+        if (percent > 200) return 200;
+        return percent;
     }
 }

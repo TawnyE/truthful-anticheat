@@ -21,7 +21,7 @@ import ret.tawny.truthful.wrapper.impl.client.position.RelMovePacketWrapper;
  * Instead of simulating exact friction (which fails due to packet translation jitter),
  * this check enforces "Hard Limits" based on maximum feasible vanilla velocity.
  */
-@CheckData(order = 'A', type = CheckType.BEDROCK, displayName = "B-Speed")
+@CheckData(order = 'A', type = CheckType.BEDROCK, displayName = "BSpeed")
 public final class BSpeedA extends Check {
 
     private final CheckBuffer buffer = new CheckBuffer(15.0);

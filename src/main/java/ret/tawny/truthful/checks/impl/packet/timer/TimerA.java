@@ -12,6 +12,7 @@ import ret.tawny.truthful.wrapper.impl.client.position.RelMovePacketWrapper;
 public final class TimerA extends Check {
 
     private final CheckBuffer buffer = new CheckBuffer(15.0);
+    private static final long MAX_GRACE_BALANCE_NANOS = 150_000_000L;
 
     @Override
     public void handleRelMove(final RelMovePacketWrapper wrapper) {
@@ -25,11 +26,20 @@ public final class TimerA extends Check {
         // which completely inflates the packet count and false flags Timer.
         if (data.isInsideVehicle() || data.isMovementExempt()) {
             buffer.decrease(wrapper.getPlayer(), 0.5D);
+            clampAheadBalance(data);
             return;
         }
 
         if (data.isTeleportTick() || data.isServerFrozen() || data.isExempt(ExemptionType.RIPTIDE)) {
             buffer.decrease(wrapper.getPlayer(), 0.5D);
+            clampAheadBalance(data);
+            return;
+        }
+
+        double tps = ret.tawny.truthful.Truthful.getInstance().getTps();
+        if (tps < 19.0D || data.getPing() > 250L || data.shouldSkipChecks()) {
+            buffer.decrease(wrapper.getPlayer(), 1.0D);
+            clampAheadBalance(data);
             return;
         }
 
@@ -47,6 +57,14 @@ public final class TimerA extends Check {
             }
         } else {
             buffer.decrease(wrapper.getPlayer(), 0.1D);
+        }
+    }
+
+    private void clampAheadBalance(PlayerData data) {
+        long now = System.nanoTime();
+        long ahead = data.getTimerBalanceRealTime() - now;
+        if (ahead > MAX_GRACE_BALANCE_NANOS) {
+            data.addTimerBalance(MAX_GRACE_BALANCE_NANOS - ahead);
         }
     }
 

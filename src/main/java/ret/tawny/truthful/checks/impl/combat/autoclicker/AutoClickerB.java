@@ -32,6 +32,8 @@ public final class AutoClickerB extends Check {
 
             final PlayerData data = Truthful.getInstance().getDataManager().getPlayerData(player);
             if (data == null || data.isServerFrozen() || data.isExempt() || data.getActionTracker().isDigging()) return;
+            if (!Truthful.getInstance().getConfiguration().shouldCountGroundPunches()
+                    && data.getTicksTracked() - data.getLastAttackPacketTick() > 2) return;
 
             long now = System.nanoTime();
             long lastTime = lastClickNano.getOrDefault(player.getUniqueId(), 0L);

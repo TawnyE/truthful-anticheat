@@ -22,7 +22,6 @@ public final class AutoClickerD extends Check {
     private final CheckBuffer buffer = new CheckBuffer(10.0);
     private final Map<UUID, Long> lastClickNano = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastDelayNano = new ConcurrentHashMap<>();
-    private final Map<UUID, Integer> pendingAttacks = new ConcurrentHashMap<>();
 
     @Override
     public void handlePacketPlayerReceive(final PacketReceiveEvent event) {
@@ -33,12 +32,8 @@ public final class AutoClickerD extends Check {
             final PlayerData data = Truthful.getInstance().getDataManager().getPlayerData(player);
             if (data == null || data.isServerFrozen() || data.isExempt()) return;
 
-            // Only check attacks that actually hit an entity
-            Integer entityId = pendingAttacks.remove(player.getUniqueId());
-            if (entityId == null) {
-                // This is a ground punch - ignore it
-                return;
-            }
+            if (!Truthful.getInstance().getConfiguration().shouldCountGroundPunches()
+                    && data.getTicksTracked() - data.getLastAttackPacketTick() > 2) return;
 
             long now = System.nanoTime();
             long last = lastClickNano.getOrDefault(player.getUniqueId(), 0L);
@@ -65,20 +60,11 @@ public final class AutoClickerD extends Check {
         }
     }
 
-    // Track actual attacks (not ground punches)
-    @Override
-    public void onAttack(final org.bukkit.event.entity.EntityDamageByEntityEvent event) {
-        if (event.getDamager() instanceof Player) {
-            pendingAttacks.put(event.getDamager().getUniqueId(), event.getEntity().getEntityId());
-        }
-    }
-
     @EventHandler
     public void onQuit(final PlayerQuitEvent event) {
         UUID uuid = event.getPlayer().getUniqueId();
         lastClickNano.remove(uuid);
         lastDelayNano.remove(uuid);
-        pendingAttacks.remove(uuid);
         buffer.remove(event.getPlayer());
     }
 }

@@ -64,7 +64,7 @@ public final class SimulationA extends Check {
         AIRBORNE_XZ, WEB_XZ, LIQUID_XZ, VELOCITY_XZ,
         USING_ITEM, BLOCK_PLACE, GHOST_BLOCK, ELYTRA_RESIDUAL,
         GROUND_XZ, GROUND_SPEED, GROUND_ACCEL, GROUND_STRAFE,
-        H_PREDICT, H_DRIFT
+        H_PREDICT, H_DRIFT, WALL_TOUCH
     }
 
     // ─── Per-player state ─────────────────────────────────────────────────────
@@ -143,7 +143,8 @@ public final class SimulationA extends Check {
 
         if (data.isInWeb())       tags.add(Tag.WEB);
         if (data.isOnClimbable()) tags.add(Tag.LADDER);
-        if (data.isUnderBlock())  tags.add(Tag.HEAD_HIT);
+        if (data.isUnderBlock() || ticksNow - data.getLastUnderBlockTick() <= 3) tags.add(Tag.HEAD_HIT);
+        if (isNearHorizontalCollision(data)) tags.add(Tag.WALL_TOUCH);
 
         if (data.getMovementContext().isSlimeBounce()) tags.add(Tag.SLIME_BLOCK);
         if (data.getMovementContext().isHoney()) tags.add(Tag.HONEY);
@@ -185,12 +186,14 @@ public final class SimulationA extends Check {
         // Hover / fly-dip detection
         if (tags.contains(Tag.IN_AIR) && Math.abs(deltaY) < 1.0E-7D
                 && !tags.contains(Tag.LADDER) && !tags.contains(Tag.LIQUID)
+                && !tags.contains(Tag.HEAD_HIT)
                 && !tags.contains(Tag.VELOCITY) && !tags.contains(Tag.TELEPORT_GRACE)) {
             st.hoverTicks++;
             if (st.hoverTicks > 3) { tags.add(Tag.GRAVITY_INVALID); st.verticalBuffer += 0.5f; }
         } else { st.hoverTicks = 0; }
 
         if (tags.contains(Tag.IN_AIR) && Math.abs(deltaY + 0.04D) < 1.0E-4D
+                && !tags.contains(Tag.HEAD_HIT)
                 && !tags.contains(Tag.VELOCITY) && !tags.contains(Tag.TELEPORT_GRACE))
             tags.add(Tag.FLY_DIP_RESET);
 
@@ -247,6 +250,8 @@ public final class SimulationA extends Check {
             vDiff = Math.min(vDiff, Math.abs(deltaY - FREEFALL_FROM_ZERO));
         if (tags.contains(Tag.HEAD_HIT))
             if (deltaY > 0.0D && deltaY < jumpImpulse + 0.01D) vDiff = 0.0D;
+        if (tags.contains(Tag.HEAD_HIT) && lastDeltaY > 0.0D && deltaY <= 0.0D)
+            vDiff = 0.0D;
         if (tags.contains(Tag.LADDER)) {
             vDiff = Math.min(vDiff, Math.abs(deltaY - 0.2D));
             vDiff = Math.min(vDiff, Math.abs(deltaY - 0.1176D));
@@ -298,6 +303,10 @@ public final class SimulationA extends Check {
 
         if (isLegitStep || tags.contains(Tag.TELEPORT_GRACE) || tags.contains(Tag.STEP_DOWN) || tags.contains(Tag.LAZY_GROUND)) {
             if (!tags.contains(Tag.GRAVITY_INVALID) && !tags.contains(Tag.FLY_DIP_RESET)) vDiff = 0.0D;
+        }
+        if (tags.contains(Tag.HEAD_HIT) && vDiff < 0.12D) {
+            vDiff = 0.0D;
+            st.verticalBuffer = Math.max(0, st.verticalBuffer - 0.4f);
         }
         if (tags.contains(Tag.TELEPORT_GRACE)) { vDiff = 0.0D; st.verticalBuffer = 0.0f; }
         if (tags.contains(Tag.VELOCITY) && vDiff < 0.60D) {
@@ -365,6 +374,12 @@ public final class SimulationA extends Check {
             return;
         }
 
+        if (tags.contains(Tag.WALL_TOUCH)) {
+            st.horizontalBuffer = Math.max(0f, st.horizontalBuffer - 0.12f);
+            st.overSpeedTicks = 0;
+            st.driftAccumulator *= 0.65D;
+        }
+
         int ticksSinceIce  = ticksNow - data.getLastIceTick();
         if (ticksSinceIce >= 0 && ticksSinceIce <= 20) tags.add(Tag.ICE);
 
@@ -427,8 +442,8 @@ public final class SimulationA extends Check {
             double driftTolerance = 0.035D;
             if (tags.contains(Tag.SPRINT_JUMP) || tags.contains(Tag.JUMP) || tags.contains(Tag.JUMP_START))
                 driftTolerance += 0.08D;
-            if (isNearHorizontalCollision(data)) driftTolerance += 0.04D;
-            if (ticksNow - data.getLastDamageTick() < 6) driftTolerance += 0.06D;
+            if (tags.contains(Tag.WALL_TOUCH)) driftTolerance += 0.12D;
+            if (ticksNow - data.getLastDamageTick() < 6) driftTolerance += 0.04D;
 
             double excessDrift = Math.max(0.0D, vecDev - driftTolerance);
             st.driftAccumulator = st.driftAccumulator * 0.88D + excessDrift;
@@ -443,11 +458,13 @@ public final class SimulationA extends Check {
             double maxAirVectorAccel = airAccel + 0.08D;
             if (tags.contains(Tag.SPRINT_JUMP) || tags.contains(Tag.JUMP) || tags.contains(Tag.JUMP_START))
                 maxAirVectorAccel += SPRINT_JUMP_BOOST + 0.05D;
-            if (tags.contains(Tag.TELEPORT_GRACE) || ticksNow - data.getLastDamageTick() < 6)
+            if (tags.contains(Tag.TELEPORT_GRACE))
                 maxAirVectorAccel += 1.0D;
+            else if (ticksNow - data.getLastDamageTick() < 6)
+                maxAirVectorAccel += 0.35D;
 
             if (airVectorAccel > maxAirVectorAccel && !tags.contains(Tag.WEB_XZ)
-                    && !tags.contains(Tag.LADDER) && !isNearHorizontalCollision(data)) {
+                    && !tags.contains(Tag.LADDER) && !tags.contains(Tag.WALL_TOUCH)) {
                 st.horizontalBuffer += (float) ((airVectorAccel - maxAirVectorAccel) * 15.0D);
                 if (st.horizontalBuffer >= HORIZONTAL_FLAG_THRESHOLD) {
                     flag(data, String.format("Area Fail (AS) vAccel=%.4f max=%.4f tags=%s",
@@ -459,7 +476,8 @@ public final class SimulationA extends Check {
 
             // H_DRIFT: flag when drift accumulator + sustained violation ticks both breach
             if (st.driftAccumulator > 0.25D && st.driftViolationTicks >= 3
-                    && !tags.contains(Tag.WEB_XZ) && !tags.contains(Tag.LADDER)) {
+                    && !tags.contains(Tag.WEB_XZ) && !tags.contains(Tag.LADDER)
+                    && !tags.contains(Tag.WALL_TOUCH)) {
                 tags.add(Tag.H_DRIFT);
                 flag(data, String.format("Area Fail (H) drift=%.4f dTicks=%d pred=(%.4f,%.4f) got=(%.4f,%.4f) tags=%s",
                         st.driftAccumulator, st.driftViolationTicks,
@@ -602,6 +620,7 @@ public final class SimulationA extends Check {
                 || tags.contains(Tag.SPRINT_JUMP) || tags.contains(Tag.LANDING) || tags.contains(Tag.LANDING_GRACE)
                 || tags.contains(Tag.STEP_Y) || tags.contains(Tag.STEP_DOWN)
                 || tags.contains(Tag.VELOCITY) || tags.contains(Tag.VELOCITY_XZ) || tags.contains(Tag.TELEPORT_GRACE)
+                || tags.contains(Tag.WALL_TOUCH) || tags.contains(Tag.HEAD_HIT)
                 || tags.contains(Tag.ICE) || tags.contains(Tag.SLIME_BLOCK)
                 || tags.contains(Tag.LIQUID) || tags.contains(Tag.LIQUID_EXIT)
                 || tags.contains(Tag.WEB) || tags.contains(Tag.WEB_XZ) || tags.contains(Tag.LADDER)

@@ -18,13 +18,13 @@ import java.util.List;
 /**
  * Premium Check Config Menu
  * Toggle individual checks with clean visual status indicators.
- * No descriptions per user request — icons + status only.
+ * No descriptions per user request - icons + status only.
  */
 public final class CheckConfigMenu {
 
     public static String getTitle(CheckType type) {
         String pluginName = Truthful.getInstance().getConfiguration().getPluginDisplayName();
-        return GuiConstants.PRIMARY + pluginName + " §8» §7" + type.getName();
+        return GuiConstants.PRIMARY + pluginName + " " + GuiConstants.DARK + "> " + GuiConstants.MUTED + type.getName();
     }
 
     public static void open(Player player, CheckType type) {
@@ -32,7 +32,7 @@ public final class CheckConfigMenu {
     }
 
     public static void open(Player player, CheckType type, int page) {
-        Inventory inv = Bukkit.createInventory(null, 54, getTitle(type) + " §8(Page " + (page + 1) + ")");
+        Inventory inv = Bukkit.createInventory(null, 54, getTitle(type) + " " + GuiConstants.DARK + "(Page " + (page + 1) + ")");
         GuiItemFactory.fillGradientBorder(inv);
 
         List<Check> checks = new ArrayList<>();
@@ -104,11 +104,25 @@ public final class CheckConfigMenu {
         inv.setItem(49, GuiItemFactory.createToggleAll(allEnabled, type.getName() + " checks"));
         inv.setItem(45, GuiItemFactory.createBackButton(CategoryMenu.getCategoryForType(type)));
 
+        if (type == CheckType.AUTOCLICKER) {
+            boolean countGroundPunches = Truthful.getInstance().getConfiguration().shouldCountGroundPunches();
+            Material punchMat = countGroundPunches
+                    ? GuiConstants.getMat("ORANGE_DYE", "INK_SACK")
+                    : GuiConstants.getMat("GRAY_DYE", "INK_SACK");
+            inv.setItem(51, GuiItemFactory.create(punchMat,
+                    (countGroundPunches ? GuiConstants.WARNING : GuiConstants.MUTED) + "Ground Punches",
+                    GuiConstants.DARK + "Animation packets without an attack",
+                    "",
+                    GuiConstants.metric("Counted", countGroundPunches ? "Yes" : "No"),
+                    "",
+                    GuiConstants.SECONDARY + "Click to toggle"));
+        }
+
         if (page > 0) {
-            inv.setItem(45, GuiItemFactory.create(Material.ARROW, "§ePrevious Page", "§7Go to page " + page));
+            inv.setItem(45, GuiItemFactory.create(Material.ARROW, GuiConstants.SECONDARY + "Previous Page", GuiConstants.MUTED + "Go to page " + page));
         }
         if (end < checks.size()) {
-            inv.setItem(53, GuiItemFactory.create(Material.ARROW, "§eNext Page", "§7Go to page " + (page + 2)));
+            inv.setItem(53, GuiItemFactory.create(Material.ARROW, GuiConstants.SECONDARY + "Next Page", GuiConstants.MUTED + "Go to page " + (page + 2)));
         }
 
         player.openInventory(inv);
@@ -129,7 +143,7 @@ public final class CheckConfigMenu {
                 String msg = newState
                         ? GuiConstants.SUCCESS + GuiConstants.SYM_CHECK + " Enabled"
                         : GuiConstants.ERROR + GuiConstants.SYM_CROSS + " Disabled";
-                player.sendMessage(GuiConstants.PRIMARY + "Truthful §8" + GuiConstants.SYM_ARROW + " " +
+                player.sendMessage(GuiConstants.PRIMARY + "Truthful " + GuiConstants.DARK + GuiConstants.SYM_ARROW + " " +
                         GuiConstants.MUTED + formattedName + " " + msg);
                 return;
             }
@@ -148,7 +162,7 @@ public final class CheckConfigMenu {
                 String msg = newState
                         ? GuiConstants.SUCCESS + GuiConstants.SYM_CHECK + " Enabled"
                         : GuiConstants.ERROR + GuiConstants.SYM_CROSS + " Disabled";
-                player.sendMessage(GuiConstants.PRIMARY + "Truthful §8" + GuiConstants.SYM_ARROW + " " +
+                player.sendMessage(GuiConstants.PRIMARY + "Truthful " + GuiConstants.DARK + GuiConstants.SYM_ARROW + " " +
                         GuiConstants.MUTED + formattedName + " punishment " + msg);
                 return;
             }
@@ -173,8 +187,15 @@ public final class CheckConfigMenu {
             }
         }
 
-        String msg = newState ? "§aEnabled all " : "§cDisabled all ";
+        String msg = newState ? GuiConstants.SUCCESS + "Enabled all " : GuiConstants.ERROR + "Disabled all ";
         player.sendMessage(
-                GuiConstants.PRIMARY + "Truthful §8" + GuiConstants.SYM_ARROW + " " + msg + type.getName() + " checks");
+                GuiConstants.PRIMARY + "Truthful " + GuiConstants.DARK + GuiConstants.SYM_ARROW + " " + msg + type.getName() + " checks");
+    }
+
+    public static void toggleGroundPunches(Player player) {
+        boolean newState = !Truthful.getInstance().getConfiguration().shouldCountGroundPunches();
+        Truthful.getInstance().getConfiguration().setCountGroundPunches(newState);
+        String msg = newState ? GuiConstants.WARNING + "Ground punches counted" : GuiConstants.SUCCESS + "Ground punches ignored";
+        player.sendMessage(GuiConstants.PRIMARY + "Truthful " + GuiConstants.DARK + GuiConstants.SYM_ARROW + " " + msg);
     }
 }

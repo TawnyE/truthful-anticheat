@@ -152,9 +152,16 @@ public final class PlayerListener implements Listener {
         if (event.getEntity() instanceof Player player) {
             if (event.isCancelled()) return;
 
-            PlayerData data = this.dataManager.getPlayerData(player);
-            if (data != null) {
-                data.setLastDamageTick(data.getTicksTracked());
+            boolean physicsDamage = switch (event.getCause()) {
+                case ENTITY_ATTACK, ENTITY_SWEEP_ATTACK, PROJECTILE, ENTITY_EXPLOSION, BLOCK_EXPLOSION, THORNS, CUSTOM -> true;
+                default -> false;
+            };
+
+            if (physicsDamage) {
+                PlayerData data = this.dataManager.getPlayerData(player);
+                if (data != null) {
+                    data.setLastDamageTick(data.getTicksTracked());
+                }
             }
         }
     }
@@ -231,8 +238,8 @@ public final class PlayerListener implements Listener {
         }
 
         if (typeName.contains("WIND_CHARGE")) {
-            data.setExemption(ExemptionType.WIND_CHARGE, 40);
-            data.setVelocityExemption(20);
+            // Let the server-sided explosion/velocity handle the movement physics.
+            // Exempting right click directly allows abuse by just throwing it.
         }
 
         if (typeName.contains("SPEAR") || typeName.contains("TRIDENT") || typeName.contains("SWORD")) {
@@ -278,6 +285,7 @@ public final class PlayerListener implements Listener {
             // This instantly unlocks all AutoClicker checks.
             if (playerData.isInventoryOpen()) playerData.setInventoryOpen(false);
             playerData.setDigging(false);
+            playerData.setLastAttackPacketTick(playerData.getTicksTracked());
         } else if (type == PacketType.Play.Client.PLAYER_BLOCK_PLACEMENT) {
             ret.tawny.truthful.wrapper.impl.client.action.PlayerBlockPlacePacketWrapper cached = playerData.getCurrentBlockPlacement();
             if (cached != null) {

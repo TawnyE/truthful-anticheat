@@ -22,7 +22,7 @@ import ret.tawny.truthful.wrapper.impl.client.position.RelMovePacketWrapper;
  * packet translation, this checks for prolonged ascension or hovering
  * that defies basic physics logic.
  */
-@CheckData(order = 'B', type = CheckType.BEDROCK, displayName = "B-Fly")
+@CheckData(order = 'B', type = CheckType.BEDROCK, displayName = "BFly")
 public final class BFlyA extends Check {
 
     private final CheckBuffer buffer = new CheckBuffer(10.0);

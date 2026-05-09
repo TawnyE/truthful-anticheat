@@ -112,12 +112,7 @@ public final class CheckRegistry extends Manager<Class<? extends Check>, Check> 
 
         // Scaffold
         register(ScaffoldA.class, new ScaffoldA());
-        register(ScaffoldB.class, new ScaffoldB());
-        register(ScaffoldC.class, new ScaffoldC());
-        register(ScaffoldD.class, new ScaffoldD());
-        register(ScaffoldE.class, new ScaffoldE());
-        register(ScaffoldF.class, new ScaffoldF());
-        register(ScaffoldG.class, new ScaffoldG());
+
 
         // Raycast
         register(RaycastA.class, new RaycastA());

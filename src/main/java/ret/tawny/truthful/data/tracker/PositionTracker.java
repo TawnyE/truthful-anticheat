@@ -165,14 +165,20 @@ public class PositionTracker {
     }
 
     private void processSensitivity(float deltaP) {
+        if (!Float.isFinite(deltaP) || deltaP <= 0.0001F || deltaP > 10.0F) return;
+        if (!Float.isFinite(this.lastDeltaPitch) || this.lastDeltaPitch <= 0.0001F) return;
+
         long delta = (long) (deltaP * 16777216.0);
         long last = (long) (this.lastDeltaPitch * 16777216.0);
+        if (delta <= 0L || last <= 0L) return;
+
         long gcd = MathHelper.getGcd(delta, last);
         double step = gcd / 16777216.0;
-        if (sensitivityGcd == 0.0 || (step < sensitivityGcd && step > 0.0001))
+        if (!Double.isFinite(step) || step <= 0.0001D || step > 1.2D) return;
+
+        if (sensitivityGcd == 0.0 || step < sensitivityGcd)
             sensitivityGcd = step;
-        if (sensitivityGcd > 0.0001)
-            this.sensitivityPercent = SensitivityUtil.getSensitivityFromPitchGCD((float) sensitivityGcd);
+        this.sensitivityPercent = SensitivityUtil.getSensitivityFromPitchGCD((float) sensitivityGcd);
     }
 
     public Location getLocation() {

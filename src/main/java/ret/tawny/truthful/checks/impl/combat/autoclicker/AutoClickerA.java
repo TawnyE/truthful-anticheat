@@ -36,6 +36,8 @@ public final class AutoClickerA extends Check {
 
             final PlayerData data = Truthful.getInstance().getDataManager().getPlayerData(player);
             if (data == null || data.isExempt() || data.isServerFrozen() || data.getActionTracker().isDigging()) return;
+            if (!Truthful.getInstance().getConfiguration().shouldCountGroundPunches()
+                    && data.getTicksTracked() - data.getLastAttackPacketTick() > 2) return;
 
             long now = System.nanoTime();
             ClickData cd = clickDataMap.computeIfAbsent(player.getUniqueId(), k -> new ClickData());

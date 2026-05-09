@@ -77,16 +77,9 @@ discord:
 
 # ❖ MESSAGES ❖
 messages:
-  alert: "&8[&e&l⚡&8] &c%player% &ffailed &c%check% &8(&fVL:%vl%&8) &7%debug%"
-  brand: "&8[&e&l⚡&8] &7Login: &f%player% &7is using &b%brand%"
-  punishment-broadcast: |
-    &8&m--------------------------------------------------
-    &b&l           TRUTHFUL ANTI-CHEAT
-    &7             Removing the cheater...
-    
-    &c&l        ✖      &f%player%      &c&l✖
-    
-    &8&m--------------------------------------------------
+  alert: '&8[&e🏹&8] &9%player% &ffailed &e%check% &8(&fVL:%vl%&8) &f%debug%'
+  brand: '&8[&e🏹&8] &f%player% &7is using &b%brand%'
+  punishment-broadcast: '&eANTI&9CHEAT &cRemoved &c❌ &f%player% &c❌'
   alerts-enabled: "&8[&bTruthful&8] &7Alerts have been &aenabled&7."
   alerts-disabled: "&8[&bTruthful&8] &7Alerts have been &cdisabled&7."
 
@@ -177,6 +170,7 @@ checks:
 
   AUTOCLICKER:
     max_cps: 22
+    count_ground_punches: false
     A: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 30, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
     B: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 20, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
     C: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 15, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }

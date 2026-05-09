@@ -155,7 +155,8 @@ public final class SimulationB extends Check {
                 ticksSinceFirework, ticksSinceVelocity, lastDeltaY);
 
         // Full grace: reset both gates and return
-        if (tags.contains(Tag.GLIDE_INIT) || tags.contains(Tag.TELEPORT_GRACE) || tags.contains(Tag.RIPTIDE_LAUNCH)) {
+        if (tags.contains(Tag.GLIDE_INIT) || tags.contains(Tag.TELEPORT_GRACE)
+                || tags.contains(Tag.RIPTIDE_LAUNCH) || tags.contains(Tag.VELOCITY)) {
             st.physicsVL  = Math.max(0, st.physicsVL * 0.7);
             st.driftScore = Math.max(0, st.driftScore * 0.5);
             st.energySamples.clear();

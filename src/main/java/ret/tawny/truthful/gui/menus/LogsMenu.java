@@ -28,7 +28,7 @@ public final class LogsMenu {
 
     public static String getTitle(String playerName) {
         String pluginName = Truthful.getInstance().getConfiguration().getPluginDisplayName();
-        return GuiConstants.PRIMARY + pluginName + " §8» §7Logs: " + playerName;
+        return GuiConstants.PRIMARY + pluginName + " " + GuiConstants.DARK + "> " + GuiConstants.MUTED + "Logs: " + playerName;
     }
 
     public static void open(Player admin, String targetName) {
@@ -133,6 +133,10 @@ public final class LogsMenu {
     }
 
     private static CheckType getCheckTypeFromString(String checkName) {
+        if (checkName.startsWith("B ")) {
+            return CheckType.BEDROCK;
+        }
+
         int parenIndex = checkName.indexOf('(');
         if (parenIndex > 0) {
             String typeName = checkName.substring(0, parenIndex).toUpperCase();

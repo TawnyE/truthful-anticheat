@@ -23,7 +23,7 @@ public final class CategoryMenu {
 
     public static String getTitle() {
         String pluginName = Truthful.getInstance().getConfiguration().getPluginDisplayName();
-        return GuiConstants.PRIMARY + pluginName + " §8» §7Categories";
+        return GuiConstants.PRIMARY + pluginName + " " + GuiConstants.DARK + "> " + GuiConstants.MUTED + "Categories";
     }
 
     public static void open(Player player) {
@@ -110,8 +110,8 @@ public final class CategoryMenu {
                     .setCheckEnabled(check.getType().name(), String.valueOf(check.getOrder()), newState);
         }
 
-        String msg = newState ? "§aEnabled all checks" : "§cDisabled all checks";
-        player.sendMessage(GuiConstants.PRIMARY + "Truthful §8» " + msg);
+        String msg = newState ? GuiConstants.SUCCESS + "Enabled all checks" : GuiConstants.ERROR + "Disabled all checks";
+        player.sendMessage(GuiConstants.PRIMARY + "Truthful " + GuiConstants.DARK + "> " + msg);
     }
 
     // ═══════════════════════════════════════════════

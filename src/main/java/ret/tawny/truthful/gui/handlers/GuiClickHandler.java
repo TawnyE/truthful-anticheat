@@ -66,8 +66,8 @@ public final class GuiClickHandler implements Listener {
         if (title.endsWith("Dashboard")) {
             playSound(player, Sound.UI_BUTTON_CLICK);
             handleDashboard(player, matName, name);
-        } else if (title.endsWith("About")) {
-            handleAbout(player, matName);
+        } else if (title.endsWith("About") || title.endsWith("Credits")) {
+            handleAbout(player, matName, name);
         } else if (title.endsWith("Categories")) {
             handleCategories(player, matName, name);
         } else if (title.contains("Select (Logs)")) {
@@ -112,7 +112,7 @@ public final class GuiClickHandler implements Listener {
             PlayerSelectMenu.open(player, "Info");
         } else if ((matName.contains("BOOK") && matName.contains("WRITABLE")) || name.contains("Logs")) {
             PlayerSelectMenu.open(player, "Logs");
-        } else if (matName.contains("BOOK") && name.contains("About")) {
+        } else if (matName.contains("BOOK") && (name.contains("About") || name.contains("Credits"))) {
             PluginInfoMenu.open(player);
         }
     }
@@ -121,8 +121,8 @@ public final class GuiClickHandler implements Listener {
     // ABOUT
     // ═══════════════════════════════════════════════
 
-    private void handleAbout(Player player, String matName) {
-        if (matName.contains("KNOWLEDGE") || matName.contains("BOOK")) {
+    private void handleAbout(Player player, String matName, String name) {
+        if ((matName.contains("KNOWLEDGE") || matName.contains("BOOK")) && name.contains("Discord")) {
             PluginInfoMenu.sendDiscordLink(player);
         }
     }
@@ -177,6 +177,16 @@ public final class GuiClickHandler implements Listener {
             }
         }
 
+        if (name.contains("Ground Punches")) {
+            CheckType type = getCheckTypeFromTitle(title);
+            if (type == CheckType.AUTOCLICKER) {
+                playSound(player, Sound.BLOCK_NOTE_BLOCK_PLING);
+                CheckConfigMenu.toggleGroundPunches(player);
+                CheckConfigMenu.open(player, type);
+            }
+            return;
+        }
+
         // Individual check toggles (stained glass panes or dyes)
         if (matName.contains("GLASS_PANE") || matName.contains("DYE") || matName.contains("INK_SACK")) {
             playSound(player, Sound.BLOCK_NOTE_BLOCK_PLING);
@@ -221,7 +231,7 @@ public final class GuiClickHandler implements Listener {
     }
 
     private void handleBack(Player player, String title) {
-        if (title.endsWith("About") || title.endsWith("Categories") ||
+        if (title.endsWith("About") || title.endsWith("Credits") || title.endsWith("Categories") ||
                 title.contains("Select (") || title.contains("Info: ") || title.contains("Logs: ")) {
             MainMenu.open(player);
         } else if (isCheckTypeMenu(title)) {

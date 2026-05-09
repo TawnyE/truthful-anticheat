@@ -27,7 +27,7 @@ import ret.tawny.truthful.utils.hitbox.SimpleHitbox;
  * This check enforces a hard limit (defined in BedrockUtils, approx 4.5 blocks)
  * utilizing server-side lag compensation to prevent false flags during pings spikes.
  */
-@CheckData(order = 'C', type = CheckType.BEDROCK, displayName = "B-Reach")
+@CheckData(order = 'C', type = CheckType.BEDROCK, displayName = "BReach")
 public final class BReachA extends Check {
 
     private final CheckBuffer buffer = new CheckBuffer(10.0);

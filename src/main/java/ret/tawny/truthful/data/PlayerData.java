@@ -62,6 +62,7 @@ public final class PlayerData {
     private int lastBlockPlaceTick;
     private int lastGhostBlockTick;
     private int lastHitTick;
+    private int lastAttackPacketTick = -100;
     private int lastDamageTick;
     private int lastRiptideTick = -100;
     private int lastFireworkTick = -100;
@@ -605,6 +606,8 @@ public final class PlayerData {
 
     public int getLastHitTick() { return lastHitTick; }
     public void setLastHitTick(int t) { this.lastHitTick = t; }
+    public int getLastAttackPacketTick() { return lastAttackPacketTick; }
+    public void setLastAttackPacketTick(int t) { this.lastAttackPacketTick = t; }
     public int getLastDamageTick() { return lastDamageTick; }
     public void setLastDamageTick(int t) { this.lastDamageTick = t; }
     public int getLastRiptideTick() { return lastRiptideTick; }

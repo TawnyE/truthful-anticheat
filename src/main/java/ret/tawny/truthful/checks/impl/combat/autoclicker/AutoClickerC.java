@@ -32,6 +32,8 @@ public final class AutoClickerC extends Check {
 
             final PlayerData data = Truthful.getInstance().getDataManager().getPlayerData(player);
             if (data == null || data.isServerFrozen() || data.isExempt() || data.getActionTracker().isDigging()) return;
+            if (!Truthful.getInstance().getConfiguration().shouldCountGroundPunches()
+                    && data.getTicksTracked() - data.getLastAttackPacketTick() > 2) return;
 
             long now = System.currentTimeMillis();
             Deque<Long> clicks = clickTimestamps.computeIfAbsent(player.getUniqueId(), k -> new ArrayDeque<>());

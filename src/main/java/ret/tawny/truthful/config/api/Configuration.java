@@ -92,6 +92,11 @@ public final class Configuration {
     // --- OPTIONS ---
 
     public int getAutoClickerMaxCps() { return this.config.getInt("checks.AUTOCLICKER.max_cps", 22); }
+    public boolean shouldCountGroundPunches() { return this.config.getBoolean("checks.AUTOCLICKER.count_ground_punches", false); }
+    public void setCountGroundPunches(boolean enabled) {
+        this.config.set("checks.AUTOCLICKER.count_ground_punches", enabled);
+        this.save();
+    }
     public boolean isLagbacks() { return this.config.getBoolean("options.lagback", true); }
     public boolean isDebugMode() { return this.config.getBoolean("options.debug-mode", false); }
     public int getViolationResetInterval() { return this.config.getInt("options.violation-reset-interval", 5); }
@@ -199,6 +204,10 @@ public final class Configuration {
             if (typeSection == null) continue;
 
             for (String order : typeSection.getKeys(false)) {
+                if (isCheckOptionKey(type, order)) {
+                    continue;
+                }
+
                 boolean found = false;
                 for (ret.tawny.truthful.checks.api.Check check : activeChecks) {
                     if (check.getType().name().equals(type) && String.valueOf(check.getOrder()).equals(order)) {
@@ -223,5 +232,9 @@ public final class Configuration {
             this.save();
             this.plugin.getLogger().info("Cleaned up orphaned checks from configuration.");
         }
+    }
+
+    private boolean isCheckOptionKey(String type, String key) {
+        return "AUTOCLICKER".equals(type) && ("max_cps".equals(key) || "count_ground_punches".equals(key));
     }
 }

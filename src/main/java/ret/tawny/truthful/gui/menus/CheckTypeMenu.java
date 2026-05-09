@@ -22,7 +22,7 @@ public final class CheckTypeMenu {
 
     public static String getTitle(String category) {
         String pluginName = Truthful.getInstance().getConfiguration().getPluginDisplayName();
-        return GuiConstants.PRIMARY + pluginName + " §8» §7" + category;
+        return GuiConstants.PRIMARY + pluginName + " " + GuiConstants.DARK + "> " + GuiConstants.MUTED + category;
     }
 
     public static void open(Player player, String category) {

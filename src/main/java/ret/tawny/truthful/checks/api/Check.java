@@ -30,11 +30,9 @@ public abstract class Check {
         final CheckData checkData = this.getClass().getAnnotation(CheckData.class);
         this.order = checkData.order();
         this.checkType = checkData.type();
-        // Use custom displayName if provided (e.g. bedrock checks: "B-Speed"),
-        // otherwise fall back to the CheckType's generic name (e.g. "Simulation")
         String customName = checkData.displayName();
         if (customName != null && !customName.isEmpty()) {
-            this.formattedName = customName + (this.order == ' ' ? "" : "(" + this.order + ")");
+            this.formattedName = customName + (this.order == ' ' ? "" : " " + this.order);
         } else {
             this.formattedName = this.checkType.getName(this);
         }

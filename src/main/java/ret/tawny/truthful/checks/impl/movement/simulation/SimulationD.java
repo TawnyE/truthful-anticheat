@@ -343,8 +343,8 @@ public final class SimulationD extends Check {
     private void applyFlag(PlayerData data, Player player, String flagReason,
                            double severity, EnumSet<Tag> tags, boolean canEject) {
         if (flagReason != null) {
-            flag(data, flagReason);
             if (buffer.increase(player, severity) > BUFFER_FLAG_THRESHOLD) {
+                flag(data, flagReason + String.format(" buffer=%.2f", buffer.get(player)));
                 if (canEject) {
                     Truthful.getInstance().getPlugin().getServer().getScheduler().runTask(
                             Truthful.getInstance().getPlugin(), () -> {

@@ -21,7 +21,7 @@ public final class PlayerSelectMenu {
 
     public static String getTitle(String type) {
         String pluginName = Truthful.getInstance().getConfiguration().getPluginDisplayName();
-        return GuiConstants.PRIMARY + pluginName + " §8» §7Select (" + type + ")";
+        return GuiConstants.PRIMARY + pluginName + " " + GuiConstants.DARK + "> " + GuiConstants.MUTED + "Select (" + type + ")";
     }
 
     public static void open(Player admin, String type) {
@@ -29,7 +29,7 @@ public final class PlayerSelectMenu {
     }
 
     public static void open(Player admin, String type, int page) {
-        Inventory inv = Bukkit.createInventory(null, 54, getTitle(type) + " §8(Page " + (page + 1) + ")");
+        Inventory inv = Bukkit.createInventory(null, 54, getTitle(type) + " " + GuiConstants.DARK + "(Page " + (page + 1) + ")");
         GuiItemFactory.fillGradientBorder(inv);
 
         int[] contentSlots = { 10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25,
@@ -85,10 +85,10 @@ public final class PlayerSelectMenu {
         inv.setItem(49, GuiItemFactory.createBackButton("Dashboard"));
 
         if (page > 0) {
-            inv.setItem(45, GuiItemFactory.create(Material.ARROW, "§ePrevious Page", "§7Go to page " + page));
+            inv.setItem(45, GuiItemFactory.create(Material.ARROW, GuiConstants.SECONDARY + "Previous Page", GuiConstants.MUTED + "Go to page " + page));
         }
         if (end < players.size()) {
-            inv.setItem(53, GuiItemFactory.create(Material.ARROW, "§eNext Page", "§7Go to page " + (page + 2)));
+            inv.setItem(53, GuiItemFactory.create(Material.ARROW, GuiConstants.SECONDARY + "Next Page", GuiConstants.MUTED + "Go to page " + (page + 2)));
         }
 
         admin.openInventory(inv);

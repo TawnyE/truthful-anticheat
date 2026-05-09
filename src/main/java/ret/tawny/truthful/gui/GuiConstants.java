@@ -3,68 +3,49 @@ package ret.tawny.truthful.gui;
 import org.bukkit.Material;
 import ret.tawny.truthful.checks.api.data.CheckType;
 
-import java.util.LinkedHashMap;
+import java.util.EnumMap;
 import java.util.Map;
 
-/**
- * Enterprise GUI Constants
- * Centralized design tokens, icons, and formatting constants.
- */
 public final class GuiConstants {
 
-    // ═══════════════════════════════════════════════
-    // COLOR PALETTE
-    // ═══════════════════════════════════════════════
+    public static final String PRIMARY = "\u00A7c";
+    public static final String SECONDARY = "\u00A7e";
+    public static final String ACCENT = "\u00A7b";
+    public static final String SUCCESS = "\u00A7a";
+    public static final String ERROR = "\u00A7c";
+    public static final String WARNING = "\u00A76";
+    public static final String MUTED = "\u00A77";
+    public static final String DARK = "\u00A78";
+    public static final String HIGHLIGHT = "\u00A7f";
+    public static final String PURPLE = "\u00A75";
+    public static final String LIGHT_PURPLE = "\u00A7d";
+    public static final String AQUA = "\u00A73";
+    public static final String BLUE = "\u00A79";
+    public static final String BOLD = "\u00A7l";
+    public static final String ITALIC = "\u00A7o";
+    public static final String RESET = "\u00A7r";
+    public static final String STRIKE = "\u00A7m";
 
-    public static final String PRIMARY = "§c"; // Red accent (brand)
-    public static final String SECONDARY = "§e"; // Gold
-    public static final String ACCENT = "§b"; // Cyan/Aqua
-    public static final String SUCCESS = "§a"; // Green
-    public static final String ERROR = "§c"; // Red
-    public static final String WARNING = "§6"; // Orange
-    public static final String MUTED = "§7"; // Gray
-    public static final String DARK = "§8"; // Dark Gray
-    public static final String HIGHLIGHT = "§f"; // White
-    public static final String PURPLE = "§5"; // Purple
-    public static final String LIGHT_PURPLE = "§d"; // Light Purple
-    public static final String AQUA = "§3"; // Dark Aqua
-    public static final String BLUE = "§9"; // Blue
-    public static final String BOLD = "§l";
-    public static final String ITALIC = "§o";
-    public static final String RESET = "§r";
-    public static final String STRIKE = "§m";
+    public static final String ARROW = ">";
+    public static final String BULLET = "-";
+    public static final String CHECK = "ON";
+    public static final String CROSS = "OFF";
+    public static final String LINE = "|";
+    public static final String SYM_ARROW = ARROW;
+    public static final String SYM_BULLET = BULLET;
+    public static final String SYM_CHECK = CHECK;
+    public static final String SYM_CROSS = CROSS;
+    public static final String SYM_CIRCLE = "*";
+    public static final String SYM_LINE = LINE;
+    public static final String SYM_DASH = "-";
+    public static final String SYM_HEART = "HP";
+    public static final String SYM_STAR = "*";
+    public static final String SYM_DIAMOND = "*";
 
-    // ═══════════════════════════════════════════════
-    // UNICODE SYMBOLS
-    // ═══════════════════════════════════════════════
-
-    public static final String SYM_ARROW = "»";
-    public static final String SYM_BULLET = "▸";
-    public static final String SYM_CHECK = "✔";
-    public static final String SYM_CROSS = "✖";
-    public static final String SYM_HEART = "❤";
-    public static final String SYM_STAR = "★";
-    public static final String SYM_DIAMOND = "◆";
-    public static final String SYM_CIRCLE = "●";
-    public static final String SYM_LINE = "│";
-    public static final String SYM_DASH = "━";
-    public static final String BAR_FULL = "█";
-    public static final String BAR_HALF = "▌";
-    public static final String BAR_EMPTY = "░";
-
-    // ═══════════════════════════════════════════════
-    // CHECK TYPE ICONS
-    // ═══════════════════════════════════════════════
-
-    private static final Map<CheckType, Material> CHECK_ICONS = new LinkedHashMap<>();
-    private static final Map<CheckType, String> TYPE_DESCRIPTIONS = new LinkedHashMap<>();
+    private static final Map<CheckType, Material> CHECK_ICONS = new EnumMap<>(CheckType.class);
+    private static final Map<CheckType, String> TYPE_DESCRIPTIONS = new EnumMap<>(CheckType.class);
 
     static {
-        initIcons();
-        initDescriptions();
-    }
-
-    private static void initIcons() {
         CHECK_ICONS.put(CheckType.SIMULATION, getMat("COMPASS"));
         CHECK_ICONS.put(CheckType.VELOCITY, getMat("SLIME_BLOCK", "SLIME_BALL"));
         CHECK_ICONS.put(CheckType.SPOOF, getMat("MAGMA_CREAM"));
@@ -87,33 +68,31 @@ public final class GuiConstants {
         CHECK_ICONS.put(CheckType.INVENTORY, getMat("CHEST"));
         CHECK_ICONS.put(CheckType.BARITONE, getMat("COMPASS"));
         CHECK_ICONS.put(CheckType.BEDROCK, getMat("BEDROCK"));
-    }
 
-    private static void initDescriptions() {
-        TYPE_DESCRIPTIONS.put(CheckType.SIMULATION, "Advanced movement simulation");
+        TYPE_DESCRIPTIONS.put(CheckType.SIMULATION, "Movement prediction");
         TYPE_DESCRIPTIONS.put(CheckType.VELOCITY, "Knockback verification");
-        TYPE_DESCRIPTIONS.put(CheckType.KILLAURA, "Combat pattern analysis");
-        TYPE_DESCRIPTIONS.put(CheckType.SCAFFOLD, "Block placement analysis");
-        TYPE_DESCRIPTIONS.put(CheckType.BAD_PACKET, "Protocol violations");
+        TYPE_DESCRIPTIONS.put(CheckType.SPOOF, "Ground state validation");
         TYPE_DESCRIPTIONS.put(CheckType.PHASE, "Block clipping detection");
-        TYPE_DESCRIPTIONS.put(CheckType.TIMER, "Game speed manipulation");
-        TYPE_DESCRIPTIONS.put(CheckType.BARITONE, "Automation detection");
-        TYPE_DESCRIPTIONS.put(CheckType.BEDROCK, "Bedrock edition profiles");
+        TYPE_DESCRIPTIONS.put(CheckType.TIMER, "Packet timing balance");
+        TYPE_DESCRIPTIONS.put(CheckType.KILLAURA, "Combat automation");
+        TYPE_DESCRIPTIONS.put(CheckType.AIM, "Rotation analysis");
         TYPE_DESCRIPTIONS.put(CheckType.HITBOX, "Hitbox expansion");
-        TYPE_DESCRIPTIONS.put(CheckType.REACH, "Attack reach limits");
-        TYPE_DESCRIPTIONS.put(CheckType.SPRINT, "Sprint violations");
-        TYPE_DESCRIPTIONS.put(CheckType.INVENTORY, "Inventory exploits");
-        TYPE_DESCRIPTIONS.put(CheckType.CRYSTAL, "Crystal aura");
-        TYPE_DESCRIPTIONS.put(CheckType.ANCHOR, "Anchor aura");
+        TYPE_DESCRIPTIONS.put(CheckType.REACH, "Attack distance limits");
+        TYPE_DESCRIPTIONS.put(CheckType.AUTOCLICKER, "Click timing analysis");
+        TYPE_DESCRIPTIONS.put(CheckType.RAYCAST, "Line-of-sight validation");
         TYPE_DESCRIPTIONS.put(CheckType.PACKET_ORDER, "Packet sequencing");
-        TYPE_DESCRIPTIONS.put(CheckType.CRASHER, "Crash exploits");
-        TYPE_DESCRIPTIONS.put(CheckType.INVALID, "Invalid packets");
-        TYPE_DESCRIPTIONS.put(CheckType.FAST_BREAK, "Fast break detection");
+        TYPE_DESCRIPTIONS.put(CheckType.CRYSTAL, "Crystal combat checks");
+        TYPE_DESCRIPTIONS.put(CheckType.ANCHOR, "Anchor combat checks");
+        TYPE_DESCRIPTIONS.put(CheckType.SCAFFOLD, "Block placement patterns");
+        TYPE_DESCRIPTIONS.put(CheckType.FAST_BREAK, "Break speed limits");
+        TYPE_DESCRIPTIONS.put(CheckType.BAD_PACKET, "Protocol sanity checks");
+        TYPE_DESCRIPTIONS.put(CheckType.SPRINT, "Sprint state checks");
+        TYPE_DESCRIPTIONS.put(CheckType.CRASHER, "Crash exploit guards");
+        TYPE_DESCRIPTIONS.put(CheckType.INVENTORY, "Inventory movement checks");
+        TYPE_DESCRIPTIONS.put(CheckType.BARITONE, "Automation profiles");
+        TYPE_DESCRIPTIONS.put(CheckType.BEDROCK, "Geyser/Bedrock checks");
+        TYPE_DESCRIPTIONS.put(CheckType.INVALID, "Invalid packet checks");
     }
-
-    // ═══════════════════════════════════════════════
-    // ACCESSORS
-    // ═══════════════════════════════════════════════
 
     public static Material getIcon(CheckType type) {
         return CHECK_ICONS.getOrDefault(type, getMat("PAPER"));
@@ -123,46 +102,41 @@ public final class GuiConstants {
         return TYPE_DESCRIPTIONS.getOrDefault(type, "Detection check");
     }
 
-    /**
-     * Build a premium progress bar string.
-     * Example: §a████████§7░░ §f80%
-     */
-    public static String buildProgressBar(int current, int total, int barLength) {
-        if (total <= 0)
-            return MUTED + "N/A";
-        double ratio = (double) current / total;
-        int filled = (int) Math.round(ratio * barLength);
-        int empty = barLength - filled;
-
-        String fillColor = ratio >= 1.0 ? SUCCESS : ratio >= 0.5 ? SECONDARY : ERROR;
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(fillColor);
-        for (int i = 0; i < filled; i++)
-            sb.append(BAR_FULL);
-        sb.append(DARK);
-        for (int i = 0; i < empty; i++)
-            sb.append(BAR_EMPTY);
-        sb.append(" ").append(HIGHLIGHT).append(Math.round(ratio * 100)).append("%");
-        return sb.toString();
+    public static String formatTitle(String section) {
+        return PRIMARY + "Truthful " + DARK + "> " + MUTED + section;
     }
 
-    /**
-     * Format a separator line for lore.
-     */
+    public static String status(boolean enabled) {
+        return enabled ? SUCCESS + CHECK : ERROR + CROSS;
+    }
+
+    public static String buildProgressBar(int current, int total, int length) {
+        if (total <= 0) return MUTED + "No checks";
+        double ratio = Math.max(0.0D, Math.min(1.0D, (double) current / (double) total));
+        int filled = (int) Math.round(ratio * length);
+        String color = ratio >= 1.0D ? SUCCESS : ratio >= 0.5D ? SECONDARY : ERROR;
+
+        StringBuilder builder = new StringBuilder(color);
+        for (int i = 0; i < length; i++) {
+            builder.append(i < filled ? '|' : '.');
+        }
+        builder.append(' ').append(HIGHLIGHT).append((int) Math.round(ratio * 100.0D)).append('%');
+        return builder.toString();
+    }
+
+    public static String metric(String label, String value) {
+        return DARK + LINE + " " + MUTED + label + " " + HIGHLIGHT + value;
+    }
+
     public static String separator() {
-        return DARK + STRIKE + "                              ";
+        return DARK + STRIKE + "------------------------------";
     }
 
-    /**
-     * Safe material lookup with fallback chain.
-     */
     public static Material getMat(String... names) {
         for (String name : names) {
             try {
-                Material mat = Material.getMaterial(name);
-                if (mat != null)
-                    return mat;
+                Material material = Material.getMaterial(name);
+                if (material != null) return material;
             } catch (Throwable ignored) {
             }
         }
