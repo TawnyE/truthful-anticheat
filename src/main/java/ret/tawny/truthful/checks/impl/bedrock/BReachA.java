@@ -17,17 +17,8 @@ import ret.tawny.truthful.data.PlayerData;
 import ret.tawny.truthful.utils.bedrock.BedrockUtils;
 import ret.tawny.truthful.utils.hitbox.SimpleHitbox;
 
-/**
- * BReachA (Bedrock Reach A)
- *
- * A lenient reach check for Bedrock players.
- * Unlike Java (Strict 3.0), Bedrock clients have variable reach depending on input
- * (Touch vs Controller) and Geyser translation introduces position jitter.
- *
- * This check enforces a hard limit (defined in BedrockUtils, approx 4.5 blocks)
- * utilizing server-side lag compensation to prevent false flags during pings spikes.
- */
-@CheckData(order = 'C', type = CheckType.BEDROCK, displayName = "BReach")
+
+@CheckData(order = 'C', type = CheckType.BEDROCK, displayName = "BReach(A)")
 public final class BReachA extends Check {
 
     private final CheckBuffer buffer = new CheckBuffer(10.0);

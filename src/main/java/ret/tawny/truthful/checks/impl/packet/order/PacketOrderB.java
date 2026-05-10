@@ -19,14 +19,13 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * PacketOrderB — Attack While Blocking/Using Item Detection
  *
  * Detects players attacking entities while actively using an item (blocking,
  * eating, drawing a bow). In vanilla, the client sends RELEASE_USE_ITEM
  * before attacking. If an attack arrives while the player is confirmed
  * to be using a slow item, it indicates autoblock or NoSlow combat.
  *
- * FIX: Previously, PLAYER_BLOCK_PLACEMENT was treated as "using an item",
+ * FIX I THAKE: Previously, PLAYER_BLOCK_PLACEMENT was treated as "using an item",
  * which caused false positives when rapidly switching between block
  * interaction (mining/placing blocks) and attacking nearby players.
  * Now only USE_ITEM (actual item use like eating/blocking/bow) sets

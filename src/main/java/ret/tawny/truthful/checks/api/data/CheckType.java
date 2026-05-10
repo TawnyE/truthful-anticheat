@@ -25,8 +25,6 @@ public enum CheckType {
     VELOCITY("Velocity"),
     CRYSTAL("Crystal"),
     ANCHOR("Anchor"),
-
-    // --- NEW TYPE ---
     BEDROCK("Bedrock");
 
     private final String name;

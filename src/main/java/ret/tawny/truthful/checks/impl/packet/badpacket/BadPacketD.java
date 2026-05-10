@@ -12,12 +12,7 @@ import ret.tawny.truthful.checks.api.data.CheckType;
 import ret.tawny.truthful.compensation.CompensationTracker;
 import ret.tawny.truthful.data.PlayerData;
 
-/**
- * BadPacketD - Entity Interaction Integrity
- *
- * Verifies that a player only interacts with entities that currently exist
- * in the async compensation tracker.
- */
+
 @CheckData(order = 'D', type = CheckType.BAD_PACKET)
 public final class BadPacketD extends Check {
 

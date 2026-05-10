@@ -40,7 +40,7 @@ public final class TruthfulPlugin extends JavaPlugin {
         int pluginId = 28120;
         new Metrics(this, pluginId);
 
-        Truthful.getInstance().start(this);
+        Truthful.startEngine(this);
 
         log("§7Hooking into PacketEvents...");
         log("§7Registering checks...");
@@ -50,7 +50,7 @@ public final class TruthfulPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        Truthful.getInstance().shutdown();
+        Truthful.stopEngine();
         PacketEvents.getAPI().terminate();
         log("§cTruthfulAC has been disabled.");
     }

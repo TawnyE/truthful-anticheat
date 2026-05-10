@@ -14,14 +14,8 @@ import ret.tawny.truthful.utils.bedrock.BedrockUtils;
 import ret.tawny.truthful.utils.world.PhysicsUtils;
 import ret.tawny.truthful.wrapper.impl.client.position.RelMovePacketWrapper;
 
-/**
- * BSpeedA (Bedrock Speed A)
- *
- * A lenient speed check designed specifically for Geyser/Bedrock clients.
- * Instead of simulating exact friction (which fails due to packet translation jitter),
- * this check enforces "Hard Limits" based on maximum feasible vanilla velocity.
- */
-@CheckData(order = 'A', type = CheckType.BEDROCK, displayName = "BSpeed")
+
+@CheckData(order = 'A', type = CheckType.BEDROCK, displayName = "BSpeed(A)")
 public final class BSpeedA extends Check {
 
     private final CheckBuffer buffer = new CheckBuffer(15.0);
@@ -40,7 +34,7 @@ public final class BSpeedA extends Check {
         final PlayerData data = Truthful.getInstance().getDataManager().getPlayerData(player);
         if (data == null) return;
 
-        // --- EXEMPTIONS ---
+
         if (player.getGameMode() == GameMode.CREATIVE || data.isAllowFlight() ||
                 data.isFlying() || data.isGliding() || data.isInsideVehicle()) {
             return;
@@ -61,7 +55,7 @@ public final class BSpeedA extends Check {
             return;
         }
 
-        // --- CALCULATION ---
+
         double deltaXZ = data.getDeltaXZ();
 
         // Base Limit from BedrockUtils

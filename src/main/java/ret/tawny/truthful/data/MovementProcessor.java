@@ -7,18 +7,6 @@ import ret.tawny.truthful.sync.VelocityQueue;
 import ret.tawny.truthful.utils.world.BlockPropertyRegistry;
 import ret.tawny.truthful.utils.world.PhysicsConstants;
 
-/**
- * Enterprise-grade Movement Prediction Engine.
- *
- * Performs a multi-input brute-force simulation across all plausible
- * input permutations (forward/backward/none × left/right/none × sprint × sneak)
- * to compute the BEST-CASE valid movement for the player. This is the
- * technique used by top-tier anti-cheats (Grim, Polar) to achieve
- * near-zero false positives while maintaining strict enforcement.
- *
- * The engine also maintains a single-path "legacy" prediction for
- * backward compatibility with checks that don't need the brute-force layer.
- */
 public final class MovementProcessor {
 
     // --- Minecraft Physics Constants ---
@@ -125,7 +113,7 @@ public final class MovementProcessor {
         sampledVelocityY = activeVelocity.getY();
         sampledVelocityZ = activeVelocity.getZ();
 
-        // ======================================================
+        // =====================================================
         // LEGACY SINGLE-PATH PREDICTION (backward compatibility)
         // ======================================================
         predictedDeltaX = data.getLastDeltaX() * groundFriction + sampledVelocityX;

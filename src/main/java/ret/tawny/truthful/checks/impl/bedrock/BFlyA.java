@@ -14,15 +14,8 @@ import ret.tawny.truthful.utils.bedrock.BedrockUtils;
 import ret.tawny.truthful.utils.world.PhysicsUtils;
 import ret.tawny.truthful.wrapper.impl.client.position.RelMovePacketWrapper;
 
-/**
- * BFlyA (Bedrock Fly A)
- *
- * Logic-based vertical movement check for Bedrock clients.
- * Instead of checking exact gravity (0.08D), which varies on Bedrock due to
- * packet translation, this checks for prolonged ascension or hovering
- * that defies basic physics logic.
- */
-@CheckData(order = 'B', type = CheckType.BEDROCK, displayName = "BFly")
+
+@CheckData(order = 'B', type = CheckType.BEDROCK, displayName = "BFly(A)")
 public final class BFlyA extends Check {
 
     private final CheckBuffer buffer = new CheckBuffer(10.0);

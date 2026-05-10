@@ -38,6 +38,9 @@ public final class Truthful {
 
     public static final boolean USE_MODERN_PING = true;
 
+    private Method getTPSMethod = null;
+    private boolean getTPSMethodFetched = false;
+
     private VersionManager versionManager;
     private CheckRegistry checkManager;
     private DataManager dataManager;
@@ -88,15 +91,13 @@ public final class Truthful {
         this.checkManager.init();
 
         this.environmentTask = new EnvironmentTask();
-        this.environmentTask.runTaskTimer(plugin, 1L, 1L);
+        long envInterval = getConfiguration().getEnvironmentScanIntervalTicks();
+        this.environmentTask.runTaskTimer(plugin, envInterval, envInterval);
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             for (org.bukkit.World world : Bukkit.getWorlds()) {
                 for (Entity ent : world.getEntities()) {
-                    boolean isPlayer = ent instanceof Player;
-                    Location loc = ent.getLocation();
-                    this.compensationTracker.handleSpawn(ent.getEntityId(), ent.getUniqueId(),
-                            loc.getX(), loc.getY(), loc.getZ(), 0.6, 1.8, isPlayer);
+                    this.compensationTracker.handleEntitySnapshot(ent);
                 }
             }
         }, 10L);
@@ -157,11 +158,24 @@ public final class Truthful {
         if (plugin != null) Bukkit.getScheduler().cancelTasks(plugin);
     }
 
+    public static void startEngine(Plugin plugin) {
+        INSTANCE.start(plugin);
+    }
+
+    public static void stopEngine() {
+        INSTANCE.shutdown();
+    }
+
     public boolean isBedrockPlayer(Player player) {
         return BedrockUtils.isBedrock(player);
     }
 
-    public static Truthful getInstance() { return INSTANCE; }
+    public static Truthful getInstance() {
+        if (INSTANCE.plugin == null) {
+            throw new IllegalStateException("Truthful is not initialized! Call start() first.");
+        }
+        return INSTANCE;
+    }
     public VersionManager getVersionManager() { return this.versionManager; }
     public DataManager getDataManager() { return this.dataManager; }
     public ret.tawny.truthful.data.world.GlobalWorldCache getGlobalWorldCache() { return this.globalWorldCache; }
@@ -186,9 +200,16 @@ public final class Truthful {
 
     public double getTps() {
         try {
-            final Method method = Bukkit.getServer().getClass().getMethod("getTPS");
-            final Object value = method.invoke(Bukkit.getServer());
-            if (value instanceof double[] tps && tps.length > 0) return tps[0];
+            if (!getTPSMethodFetched) {
+                getTPSMethodFetched = true;
+                try {
+                    getTPSMethod = Bukkit.getServer().getClass().getMethod("getTPS");
+                } catch (Throwable ignored) {}
+            }
+            if (getTPSMethod != null) {
+                final Object value = getTPSMethod.invoke(Bukkit.getServer());
+                if (value instanceof double[] tps && tps.length > 0) return tps[0];
+            }
         } catch (Throwable t) {
         }
         return 20.0;

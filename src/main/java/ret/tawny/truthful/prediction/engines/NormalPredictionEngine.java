@@ -5,12 +5,7 @@ import org.bukkit.util.Vector;
 import ret.tawny.truthful.data.PlayerData;
 import ret.tawny.truthful.utils.world.PhysicsConstants;
 
-/**
- * NormalPredictionEngine - Area-based vanilla vertical physics simulator.
- * The horizontal component is kept intentionally simple (air/ground drag + best-case boost);
- * consumers that need precise horizontal prediction should continue to use the brute-force
- * MovementProcessor path.
- */
+
 public final class NormalPredictionEngine {
 
     private static final double JUMP_BOOST_PER_LEVEL = 0.1D;

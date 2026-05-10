@@ -1,17 +1,6 @@
 package ret.tawny.truthful.prediction;
 
-/**
- * EWMAPerformanceTracker - Exponentially Weighted Moving Average for prediction timing.
- *
- * Inspired by GrimAC's predictionNanos/longPredictionNanos tracking.
- * Tracks the time it takes to run prediction, which helps detect:
- * - Timer abuse (client sending packets faster than expected)
- * - Negative timer (client slowing down game speed)
- * - Network manipulation
- *
- * Uses EWMA (alpha = 0.002 for long-term, 0.02 for short-term)
- * for smooth, responsive tracking.
- */
+
 public final class EWMAPerformanceTracker {
 
     private static final double SHORT_ALPHA = 0.02;

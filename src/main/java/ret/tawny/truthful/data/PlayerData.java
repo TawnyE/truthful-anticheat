@@ -20,7 +20,7 @@ import ret.tawny.truthful.sync.VelocityQueue;
 import ret.tawny.truthful.utils.elytra.FireworkBoostTracker;
 import ret.tawny.truthful.wrapper.impl.client.action.PlayerBlockPlacePacketWrapper;
 import ret.tawny.truthful.wrapper.impl.client.position.RelMovePacketWrapper;
-import ret.tawny.truthful.util.Threading;
+import ret.tawny.truthful.utils.Threading;
 import ret.tawny.truthful.wrapper.impl.server.position.SetPositionPacketWrapper;
 
 import java.lang.ref.WeakReference;
@@ -38,7 +38,6 @@ public final class PlayerData {
 
     private final Player player;
     private final UUID playerId;
-    private final WeakReference<Player> playerRef;
 
     // Systems
     private final MovementProcessor movementProcessor;
@@ -49,7 +48,6 @@ public final class PlayerData {
     private final MovementState movementState;
     private final MovementContext movementContext;
 
-    // Setback Handler (Grim-Style)
     private final SetbackHandler setbackHandler;
 
     // Trackers
@@ -103,8 +101,7 @@ public final class PlayerData {
     private boolean banning = false;
     private long banStartTime = 0;
 
-    // --- PERFORMANCE CACHE ---
-    private final Map<PotionEffectType, Integer> potionCache = new HashMap<>();
+    private volatile Map<PotionEffectType, Integer> potionCache = new HashMap<>();
     private final Map<String, Integer> enchantmentCache = new ConcurrentHashMap<>();
     private double walkSpeedCache = 0.1;
     private int foodLevelCache = 20;
@@ -129,7 +126,6 @@ public final class PlayerData {
     public PlayerData(final Player player, int queueMaxEntries, long queueTtlMillis) {
         this.player = player;
         this.playerId = player.getUniqueId();
-        this.playerRef = new WeakReference<>(player);
         this.movementProcessor = new MovementProcessor(this);
         this.velocityQueue = new VelocityQueue(queueMaxEntries, queueTtlMillis);
         this.teleportQueue = new TeleportQueue(queueMaxEntries, queueTtlMillis);
@@ -175,9 +171,6 @@ public final class PlayerData {
         flyingCache = player.isFlying();
         glidingCache = player.isGliding();
         insideVehicleCache = player.isInsideVehicle();
-        // FIX: Keep lastVehicleTick fresh while riding ANY entity (horse, pig, strider, etc.)
-        // This ensures the isInsideVehicle() 10-tick fallback is always active,
-        // closing the race condition between main-thread cache updates and netty-thread aim checks.
         if (insideVehicleCache) {
             lastVehicleTick = ticksTracked;
         }
@@ -259,10 +252,11 @@ public final class PlayerData {
         Player player = getPlayer();
         if (player == null || !player.isOnline()) return;
 
-        potionCache.clear();
+        Map<PotionEffectType, Integer> newPotionCache = new HashMap<>();
         for (PotionEffect effect : player.getActivePotionEffects()) {
-            potionCache.put(effect.getType(), effect.getAmplifier() + 1);
+            newPotionCache.put(effect.getType(), effect.getAmplifier() + 1);
         }
+        this.potionCache = newPotionCache;
 
         enchantmentCache.clear();
         updateEnchantment(player.getInventory().getBoots(), "soul_speed", org.bukkit.enchantments.Enchantment.SOUL_SPEED);
@@ -307,8 +301,7 @@ public final class PlayerData {
         if (tp != null) {
             this.nextMoveIsTeleport = true;
             this.nextMoveIsLagbackTeleport = tp.isLagback;
-            // FIXED: Removed the continuous 60 tick override here.
-            // It allowed infinite immunity loops.
+
         }
     }
 
@@ -316,8 +309,6 @@ public final class PlayerData {
         boolean lagback = this.isNextTeleportLagback;
         teleportQueue.add(wrapper.getTeleportId(), new Location(player.getWorld(), wrapper.getX(), wrapper.getY(), wrapper.getZ()), lagback);
 
-        // FIXED: Differentiate between normal teleports and AC lagbacks.
-        // A lagback only needs 20 ticks (1s) of transit grace. Normal plugins get 60 ticks (3s).
         if (lagback) {
             this.setExemption(ExemptionType.TELEPORT, 20);
             this.isNextTeleportLagback = false;
@@ -328,7 +319,7 @@ public final class PlayerData {
 
     @Deprecated
     public void executeLagback() {
-        // No-op. Lagbacks are now handled by forceLagback() centrally.
+        throw new UnsupportedOperationException("Lagbacks are now handled by forceLagback() centrally.");
     }
 
     // Called by the core Check.java engine
@@ -399,7 +390,7 @@ public final class PlayerData {
     public int getTicksInAir() { return positionTracker.getAirTicks(); }
 
     public boolean isSwimming() {
-        try { return player.isSwimming(); } catch (Throwable t) { return false; }
+        try { return player.isSwimming(); } catch (NoSuchMethodError t) { return false; } // For older versions
     }
 
     public short getNextTransactionId() {

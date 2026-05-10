@@ -40,7 +40,7 @@ public final class VelocityC extends Check {
 
         for (VelocityQueue.VelocityEntry entry : queue) {
             int tick = entry.getAckTick();
-            if (entry.isAcked() && tick >= 1 && tick <= 3 && !entry.isExplosion()) {
+            if (entry.isAcked() && tick >= 2 && tick <= 3 && !entry.isExplosion()) {
                 Vector currentExpected = entry.getCurrent();
                 double expectedXZ = Math.hypot(currentExpected.getX(), currentExpected.getZ());
 

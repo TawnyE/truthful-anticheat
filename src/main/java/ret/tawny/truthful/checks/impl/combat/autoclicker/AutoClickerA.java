@@ -46,8 +46,6 @@ public final class AutoClickerA extends Check {
                 long delayNanos = now - cd.lastClickTime;
                 double delayMillis = delayNanos / 1_000_000.0;
 
-                // FIXED: Do not reset lastClickTime on batched packets (< 10ms).
-                // This combines the times so it naturally counts as one valid interval.
                 if (delayMillis < 10) return;
 
                 if (delayMillis <= 500) {

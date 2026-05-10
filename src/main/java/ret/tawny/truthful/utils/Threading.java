@@ -1,4 +1,4 @@
-package ret.tawny.truthful.util;
+package ret.tawny.truthful.utils;
 
 import org.bukkit.Bukkit;
 import ret.tawny.truthful.Truthful;
@@ -30,4 +30,3 @@ public final class Threading {
         Bukkit.getScheduler().runTaskAsynchronously(Truthful.getInstance().getPlugin(), runnable);
     }
 }
-

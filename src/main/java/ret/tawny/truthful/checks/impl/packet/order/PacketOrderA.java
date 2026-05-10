@@ -18,16 +18,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * PacketOrderA — Block Placement Without Swing
- *
- * Detects block placements that arrive without a preceding animation (swing) packet.
- * In vanilla, the client sends ANIMATION before PLAYER_BLOCK_PLACEMENT when
- * placing blocks by clicking. Scaffold and auto-build mods often skip the
- * animation packet to place blocks faster.
- *
- * Grace period of 2 ticks accounts for packet batching and ordering jitter.
- */
+
 @CheckData(order = 'A', type = CheckType.PACKET_ORDER)
 @SuppressWarnings("unused")
 public final class PacketOrderA extends Check {

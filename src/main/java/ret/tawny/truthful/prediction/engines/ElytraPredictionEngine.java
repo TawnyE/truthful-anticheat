@@ -3,16 +3,7 @@ package ret.tawny.truthful.prediction.engines;
 import ret.tawny.truthful.data.PlayerData;
 import ret.tawny.truthful.utils.world.PhysicsConstants;
 
-/**
- * ElytraPredictionEngine - 1:1 Vanilla Minecraft Aerodynamics Simulator.
- *
- * Simulates exact Elytra physics (1.9+):
- * - Lift: Converts negative Y (falling) into XZ horizontal momentum.
- * - Dive Thrust: Converts XZ momentum into downward Y acceleration.
- * - Climb Drag: Converts XZ momentum into upward Y height (losing speed).
- * - Steering: Interpolates current vector toward the camera's LookVector.
- * - Firework Boost: Applies 0.1D acceleration + 0.5D correction toward a 1.5D max vector.
- */
+
 public final class ElytraPredictionEngine {
 
     private final PlayerData data;

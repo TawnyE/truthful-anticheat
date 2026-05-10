@@ -25,6 +25,7 @@ public final class CompensationTracker implements ITickable {
     private static final double LIVE_RESYNC_DISTANCE_SQUARED = 4.0;
 
     private final Map<Integer, CompensatedEntity> compensationMap = new ConcurrentHashMap<>();
+    private final Map<Integer, java.lang.ref.WeakReference<Entity>> entityCache = new ConcurrentHashMap<>();
     private int tickCounter = 0;
 
     @Override
@@ -32,7 +33,13 @@ public final class CompensationTracker implements ITickable {
         tickCounter++;
         if (tickCounter % CLEANUP_INTERVAL == 0) {
             int currentTick = Bukkit.getCurrentTick();
-            compensationMap.entrySet().removeIf(entry -> entry.getValue().isExpired(currentTick));
+            compensationMap.entrySet().removeIf(entry -> {
+                if (entry.getValue().isExpired(currentTick)) {
+                    entityCache.remove(entry.getKey());
+                    return true;
+                }
+                return false;
+            });
         }
     }
 
@@ -49,6 +56,7 @@ public final class CompensationTracker implements ITickable {
 
         int currentTick = Bukkit.getCurrentTick();
         int entityId = entity.getEntityId();
+        entityCache.put(entityId, new java.lang.ref.WeakReference<>(entity));
         EntityBox box = readEntityBox(entity);
         CompensatedEntity data = compensationMap.computeIfAbsent(entityId,
                 id -> new CompensatedEntity(id, entity.getUniqueId(), entity instanceof Player));
@@ -238,9 +246,16 @@ public final class CompensationTracker implements ITickable {
     }
 
     private Entity findEntity(int entityId) {
+        java.lang.ref.WeakReference<Entity> ref = entityCache.get(entityId);
+        if (ref != null) {
+            Entity e = ref.get();
+            if (e != null && e.isValid()) return e;
+        }
+
         for (World world : Bukkit.getWorlds()) {
             for (Entity entity : world.getEntities()) {
                 if (entity.getEntityId() == entityId) {
+                    entityCache.put(entityId, new java.lang.ref.WeakReference<>(entity));
                     return entity;
                 }
             }

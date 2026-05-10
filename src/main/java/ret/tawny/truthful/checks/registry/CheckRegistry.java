@@ -10,7 +10,7 @@ import ret.tawny.truthful.checks.impl.combat.reach.*;
 import ret.tawny.truthful.checks.impl.movement.baritone.*;
 import ret.tawny.truthful.checks.impl.movement.inventory.*;
 import ret.tawny.truthful.checks.impl.movement.spoof.*;
-import ret.tawny.truthful.checks.impl.movement.timer.*;
+import ret.tawny.truthful.checks.impl.packet.timer.*;
 import ret.tawny.truthful.checks.impl.movement.simulation.*;
 import ret.tawny.truthful.checks.impl.movement.velocity.*;
 import ret.tawny.truthful.checks.impl.packet.order.PacketOrderA;
@@ -42,7 +42,6 @@ public final class CheckRegistry extends Manager<Class<? extends Check>, Check> 
         // Aim
         register(AimA.class, new AimA());
         register(AimB.class, new AimB());
-        register(AimC.class, new AimC());
         register(AimD.class, new AimD());
         register(AimE.class, new AimE());
         register(AimF.class, new AimF());
@@ -65,7 +64,6 @@ public final class CheckRegistry extends Manager<Class<? extends Check>, Check> 
         register(ReachA.class, new ReachA());
 
         // KillAura
-        register(KillAuraA.class, new KillAuraA());
         register(KillAuraB.class, new KillAuraB());
         register(KillAuraC.class, new KillAuraC());
         register(KillAuraD.class, new KillAuraD());
@@ -95,7 +93,6 @@ public final class CheckRegistry extends Manager<Class<? extends Check>, Check> 
         register(InventoryA.class, new InventoryA());
 
         // Spoof
-        register(GroundSpoofA.class, new GroundSpoofA());
         register(GroundSpoofB.class, new GroundSpoofB());
         register(GroundSpoofC.class, new GroundSpoofC());
         register(GroundSpoofD.class, new GroundSpoofD());
@@ -119,10 +116,8 @@ public final class CheckRegistry extends Manager<Class<? extends Check>, Check> 
 
         // Packet
         register(ret.tawny.truthful.checks.impl.packet.badpacket.BadPacketA.class, new ret.tawny.truthful.checks.impl.packet.badpacket.BadPacketA());
-        register(ret.tawny.truthful.checks.impl.packet.badpacket.BadPacketB.class, new ret.tawny.truthful.checks.impl.packet.badpacket.BadPacketB());
         register(ret.tawny.truthful.checks.impl.packet.crasher.CrasherA.class, new ret.tawny.truthful.checks.impl.packet.crasher.CrasherA());
         register(ret.tawny.truthful.checks.impl.packet.invalid.InvalidA.class, new ret.tawny.truthful.checks.impl.packet.invalid.InvalidA());
-        register(ret.tawny.truthful.checks.impl.packet.invalid.InvalidB.class, new ret.tawny.truthful.checks.impl.packet.invalid.InvalidB());
 
         // Packet Order
         register(PacketOrderA.class, new PacketOrderA());
@@ -137,7 +132,6 @@ public final class CheckRegistry extends Manager<Class<? extends Check>, Check> 
         register(ret.tawny.truthful.checks.impl.packet.badpacket.BadPacketC.class, new ret.tawny.truthful.checks.impl.packet.badpacket.BadPacketC());
         register(ret.tawny.truthful.checks.impl.packet.badpacket.BadPacketD.class, new ret.tawny.truthful.checks.impl.packet.badpacket.BadPacketD());
         register(ret.tawny.truthful.checks.impl.packet.badpacket.BadPacketE.class, new ret.tawny.truthful.checks.impl.packet.badpacket.BadPacketE());
-        register(ret.tawny.truthful.checks.impl.packet.badpacket.BadPacketF.class, new ret.tawny.truthful.checks.impl.packet.badpacket.BadPacketF());
         register(ret.tawny.truthful.checks.impl.packet.badpacket.BadPacketG.class, new ret.tawny.truthful.checks.impl.packet.badpacket.BadPacketG());
         register(ret.tawny.truthful.checks.impl.packet.badpacket.BadPacketH.class, new ret.tawny.truthful.checks.impl.packet.badpacket.BadPacketH());
         register(ret.tawny.truthful.checks.impl.packet.badpacket.BadPacketI.class, new ret.tawny.truthful.checks.impl.packet.badpacket.BadPacketI());
@@ -166,17 +160,34 @@ public final class CheckRegistry extends Manager<Class<? extends Check>, Check> 
         vehicleMoveChecks.clear();
         quitChecks.clear();
 
-        // FIXED: 100% Obfuscator-Proof Routing.
-        // We supply all checks to all lists. The base `Check` class has empty, no-op methods
-        // for events it doesn't use, meaning the JVM completely ignores them with zero performance impact.
-        // This ensures combat and interaction checks NEVER get lost due to reflection/renaming errors.
-        movementChecks.addAll(getCollection());
-        packetChecks.addAll(getCollection());
-        sendPacketChecks.addAll(getCollection());
-        attackChecks.addAll(getCollection());
-        blockBreakChecks.addAll(getCollection());
-        vehicleMoveChecks.addAll(getCollection());
-        quitChecks.addAll(getCollection());
+        for (Check check : getCollection()) {
+            Class<?> clazz = check.getClass();
+            try {
+                if (clazz.getMethod("handleRelMove", ret.tawny.truthful.wrapper.impl.client.position.RelMovePacketWrapper.class).getDeclaringClass() != Check.class) {
+                    movementChecks.add(check);
+                }
+                if (clazz.getMethod("handlePacketPlayerReceive", com.github.retrooper.packetevents.event.PacketReceiveEvent.class).getDeclaringClass() != Check.class) {
+                    packetChecks.add(check);
+                }
+                if (clazz.getMethod("handlePacketPlaySend", com.github.retrooper.packetevents.event.PacketSendEvent.class).getDeclaringClass() != Check.class) {
+                    sendPacketChecks.add(check);
+                }
+                if (clazz.getMethod("onAttack", org.bukkit.event.entity.EntityDamageByEntityEvent.class).getDeclaringClass() != Check.class) {
+                    attackChecks.add(check);
+                }
+                if (clazz.getMethod("onBlockBreak", org.bukkit.event.block.BlockBreakEvent.class).getDeclaringClass() != Check.class) {
+                    blockBreakChecks.add(check);
+                }
+                if (clazz.getMethod("onVehicleMove", org.bukkit.event.vehicle.VehicleMoveEvent.class).getDeclaringClass() != Check.class) {
+                    vehicleMoveChecks.add(check);
+                }
+                if (clazz.getMethod("onQuit", org.bukkit.event.player.PlayerQuitEvent.class).getDeclaringClass() != Check.class) {
+                    quitChecks.add(check);
+                }
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void init() {

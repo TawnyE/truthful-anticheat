@@ -8,15 +8,16 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import ret.tawny.truthful.data.PlayerData;
 import ret.tawny.truthful.utils.world.PhysicsUtils;
+import ret.tawny.truthful.utils.Threading;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-// CHANGE: DECOMP-2 - Extracted StateCacheProcessor from PlayerData god class
+
 public final class StateCacheProcessor {
 
-    // CHANGE: PERF-4 - Changed from HashMap to ConcurrentHashMap for thread safety
+
     private final Map<PotionEffectType, Integer> potionCache = new ConcurrentHashMap<>();
     private final Map<String, Integer> enchantmentCache = new ConcurrentHashMap<>();
     private double walkSpeedCache = 0.1;
@@ -109,7 +110,7 @@ public final class StateCacheProcessor {
     public void update(PlayerData data) {
         if (!Bukkit.isPrimaryThread()) {
             if (stateUpdatePending.compareAndSet(false, true)) {
-                ret.tawny.truthful.util.Threading.runOnMain(() -> {
+                Threading.runOnMain(() -> {
                     stateUpdatePending.set(false);
                     update(data);
                 });

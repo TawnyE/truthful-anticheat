@@ -8,17 +8,7 @@ import ret.tawny.truthful.checks.api.data.CheckType;
 import ret.tawny.truthful.data.PlayerData;
 import ret.tawny.truthful.wrapper.impl.client.position.RelMovePacketWrapper;
 
-/**
- * BadPacketG: NaN/Infinity Position Detection
- *
- * Detects when a player sends NaN or Infinity coordinates.
- * This is used for:
- * 1. Server crash exploits
- * 2. Teleportation exploits
- * 3. Chunk ban exploits
- *
- * Version safe: All versions 1.8+
- */
+
 @CheckData(order = 'G', type = CheckType.BAD_PACKET)
 public final class BadPacketG extends Check {
 

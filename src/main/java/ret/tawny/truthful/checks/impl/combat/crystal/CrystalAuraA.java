@@ -23,12 +23,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * CrystalAuraA - Speed & Timing
- * Updates:
- * - Detects Place -> Break speed.
- * - Detects ID Prediction (Attacking too fast after spawn).
- */
+
 @CheckData(order = 'A', type = CheckType.CRYSTAL)
 public final class CrystalAuraA extends Check {
 
@@ -95,9 +90,6 @@ public final class CrystalAuraA extends Check {
                     buffer.decrease(player, 0.1);
                 }
 
-                // Logic 2: Spawn -> Break Speed (ID Prediction)
-                // We need to know when the crystal actually spawned.
-                // Since this is packet level, we approximate by checking Entity existence.
 
                 Bukkit.getScheduler().runTask(Truthful.getInstance().getPlugin(), () -> {
                     if (!player.isOnline())
@@ -106,7 +98,7 @@ public final class CrystalAuraA extends Check {
                     Entity target = null;
                     int targetId = interact.getEntityId();
 
-                    // FIX: Manual lookup in nearby entities (Efficient & API safe)
+
                     for (Entity e : player.getNearbyEntities(10, 10, 10)) {
                         if (e.getEntityId() == targetId) {
                             target = e;
@@ -121,7 +113,6 @@ public final class CrystalAuraA extends Check {
                         return;
                     }
 
-                    // FIX: Updated Enum Name for 1.21 (END_CRYSTAL)
                     if (target.getType() == EntityType.END_CRYSTAL) {
                         // If the crystal has existed for 0 ticks, it JUST spawned.
                         // Clients shouldn't be able to attack it that fast unless predictable.

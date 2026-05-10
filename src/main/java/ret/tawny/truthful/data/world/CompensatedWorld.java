@@ -15,8 +15,16 @@ public final class CompensatedWorld {
     private UUID worldUid;
 
     // Performance: Cache the last accessed chunk to avoid map lookups and boxing
-    private long lastChunkKey = Long.MAX_VALUE;
-    private ChunkSnapshot lastChunkValue = null;
+    private volatile ChunkCacheEntry lastChunkCache = new ChunkCacheEntry(Long.MAX_VALUE, null);
+
+    private static class ChunkCacheEntry {
+        final long key;
+        final ChunkSnapshot value;
+        ChunkCacheEntry(long key, ChunkSnapshot value) {
+            this.key = key;
+            this.value = value;
+        }
+    }
 
     public CompensatedWorld(UUID worldUid) {
         this.worldUid = worldUid;
@@ -32,16 +40,17 @@ public final class CompensatedWorld {
         Truthful.getInstance().getGlobalWorldCache().addChunk(worldUid, x, z, snapshot);
 
         long key = getChunkKey(x, z);
-        if (key == lastChunkKey) {
-            lastChunkValue = snapshot;
+        ChunkCacheEntry cache = lastChunkCache;
+        if (cache.key == key) {
+            lastChunkCache = new ChunkCacheEntry(key, snapshot);
         }
     }
 
     public void removeChunk(int x, int z) {
         long key = getChunkKey(x, z);
-        if (key == lastChunkKey) {
-            lastChunkKey = Long.MAX_VALUE;
-            lastChunkValue = null;
+        ChunkCacheEntry cache = lastChunkCache;
+        if (cache.key == key) {
+            lastChunkCache = new ChunkCacheEntry(Long.MAX_VALUE, null);
         }
     }
 
@@ -57,13 +66,13 @@ public final class CompensatedWorld {
         long key = getChunkKey(x >> 4, z >> 4);
         ChunkSnapshot chunk;
 
-        if (key == lastChunkKey) {
-            chunk = lastChunkValue;
+        ChunkCacheEntry cache = lastChunkCache;
+        if (cache.key == key) {
+            chunk = cache.value;
         } else {
             chunk = Truthful.getInstance().getGlobalWorldCache().getChunk(worldUid, x >> 4, z >> 4);
             if (chunk != null) {
-                lastChunkKey = key;
-                lastChunkValue = chunk;
+                lastChunkCache = new ChunkCacheEntry(key, chunk);
             }
         }
 
@@ -79,7 +88,8 @@ public final class CompensatedWorld {
      */
     public boolean isChunkLoaded(int x, int z) {
         long key = getChunkKey(x, z);
-        if (key == lastChunkKey && lastChunkValue != null) return true;
+        ChunkCacheEntry cache = lastChunkCache;
+        if (cache.key == key && cache.value != null) return true;
         return Truthful.getInstance().getGlobalWorldCache().getChunk(worldUid, x, z) != null;
     }
 
@@ -88,7 +98,6 @@ public final class CompensatedWorld {
     }
 
     public void clear() {
-        lastChunkKey = Long.MAX_VALUE;
-        lastChunkValue = null;
+        lastChunkCache = new ChunkCacheEntry(Long.MAX_VALUE, null);
     }
 }

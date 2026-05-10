@@ -16,12 +16,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * BadPacketA - Packet Flood Detection
- *
- * Monitors the total rate of packets received per second.
- * Prevents DoS/Lag exploits and extreme game-speed manipulation.
- */
+
 @CheckData(order = 'A', type = CheckType.BAD_PACKET)
 public final class BadPacketA extends Check {
 

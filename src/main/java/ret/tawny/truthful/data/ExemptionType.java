@@ -11,7 +11,6 @@ public enum ExemptionType {
     LIQUID,
     CLIMBABLE,
     WEB,
-    // Modern Exemptions
     RIPTIDE,
     SHIELD_BLOCKING,
     ATTACK_COOLDOWN,

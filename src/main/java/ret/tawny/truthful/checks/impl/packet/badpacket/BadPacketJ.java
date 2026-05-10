@@ -19,12 +19,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * BadPacketJ: Sneak + Sprint Impossible State Detection
- *
- * Update: Added a persistence check. The impossible state must persist
- * for a specific duration to rule out packet arrival jitter (race conditions).
- */
+
 @CheckData(order = 'J', type = CheckType.BAD_PACKET)
 public final class BadPacketJ extends Check {
 

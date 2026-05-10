@@ -1,7 +1,7 @@
 # ❖ CORE SETTINGS ❖
 settings:
   # The display name used in menus, prefix tags, and alerts
-  plugin-name: "Truthful"
+  plugin-name: "&9&lT&e&lAC"
   # Prefix used by Geyser/Floodgate to identify Bedrock players (e.g. ".", "*", or "_")
   bedrock-prefix: "."
 

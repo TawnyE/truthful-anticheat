@@ -99,7 +99,6 @@ public class PositionTracker {
             this.deltaZ = z - this.lastZ;
             this.onGroundClient = event.isGround();
 
-            // PERFORMANCE: Use primitive check to avoid Location object allocation
             this.onGroundServer = WorldUtils.safeGround(x, y, z, data);
 
             // Check environment state every tick to prevent stale flags causing false positives

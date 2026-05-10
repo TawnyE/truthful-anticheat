@@ -18,6 +18,10 @@ public class DiscordManager {
     private final ConcurrentHashMap<UUID, Long> cooldowns = new ConcurrentHashMap<>();
     private static final long COOLDOWN_MS = 2000; // 2 seconds per player
 
+    public void removePlayer(UUID uuid) {
+        cooldowns.remove(uuid);
+    }
+
     public void sendAlert(PlayerData data, Check check, String debug, int vl) {
         Configuration config = Truthful.getInstance().getConfiguration();
 

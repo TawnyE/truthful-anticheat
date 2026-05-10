@@ -24,12 +24,13 @@ public final class LogManager {
     private static final int MAX_PENDING_QUEUE = 20_000;
 
     private final Plugin plugin;
-    private Connection connection;
+    private Connection writeConnection;
+    private Connection readConnection;
 
     private final Queue<LogEntry> pending = new ConcurrentLinkedQueue<>();
     private final AtomicInteger pendingSize = new AtomicInteger();
     private final AtomicInteger droppedLogs = new AtomicInteger();
-    private final ReentrantLock lock = new ReentrantLock();
+    private final ReentrantLock writeLock = new ReentrantLock();
 
     public LogManager(final Plugin plugin) {
         this.plugin = plugin;
@@ -48,14 +49,14 @@ public final class LogManager {
             File dbFile = new File(folder, "logs.db");
             String url = "jdbc:sqlite:" + dbFile.getAbsolutePath();
 
-            this.connection = DriverManager.getConnection(url);
-            try (Statement pragmas = connection.createStatement()) {
+            this.writeConnection = DriverManager.getConnection(url);
+            try (Statement pragmas = writeConnection.createStatement()) {
                 pragmas.execute("PRAGMA journal_mode=WAL");
                 pragmas.execute("PRAGMA synchronous=NORMAL");
                 pragmas.execute("PRAGMA temp_store=MEMORY");
             }
 
-            try (Statement st = connection.createStatement()) {
+            try (Statement st = writeConnection.createStatement()) {
                 st.executeUpdate(
                         "CREATE TABLE IF NOT EXISTS logs (" +
                                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -70,6 +71,11 @@ public final class LogManager {
                 );
                 st.executeUpdate("CREATE INDEX IF NOT EXISTS idx_logs_uuid_ts ON logs(uuid, ts DESC)");
                 st.executeUpdate("CREATE INDEX IF NOT EXISTS idx_logs_ts ON logs(ts DESC)");
+            }
+
+            this.readConnection = DriverManager.getConnection(url);
+            try (Statement pragmas = readConnection.createStatement()) {
+                pragmas.execute("PRAGMA journal_mode=WAL");
             }
         } catch (Exception e) {
             plugin.getLogger().severe("Failed to initialize LogManager database.");
@@ -91,11 +97,11 @@ public final class LogManager {
     }
 
     private void flushNow() {
-        if (this.connection == null) {
+        if (this.writeConnection == null) {
             return;
         }
 
-        lock.lock();
+        writeLock.lock();
         try {
             List<LogEntry> batch = new ArrayList<>();
             while (!pending.isEmpty() && batch.size() < FLUSH_BATCH_SIZE) {
@@ -107,7 +113,7 @@ public final class LogManager {
             }
             if (batch.isEmpty()) return;
 
-            try (PreparedStatement ps = connection.prepareStatement(
+            try (PreparedStatement ps = writeConnection.prepareStatement(
                     "INSERT INTO logs (uuid, player, check_name, vl, ping, data, ts) VALUES (?,?,?,?,?,?,?)"
             )) {
                 for (LogEntry e : batch) {
@@ -126,36 +132,36 @@ public final class LogManager {
             plugin.getLogger().severe("Failed to flush detection logs.");
             ex.printStackTrace();
         } finally {
-            lock.unlock();
+            writeLock.unlock();
         }
     }
 
     private void pruneOldLogs() {
-        if (this.connection == null) {
+        if (this.writeConnection == null) {
             return;
         }
 
-        lock.lock();
+        writeLock.lock();
         try {
             long cutoff = System.currentTimeMillis() - (RETENTION_DAYS * 24L * 60L * 60L * 1000L);
-            try (PreparedStatement deleteOld = connection.prepareStatement("DELETE FROM logs WHERE ts < ?")) {
+            try (PreparedStatement deleteOld = writeConnection.prepareStatement("DELETE FROM logs WHERE ts < ?")) {
                 deleteOld.setLong(1, cutoff);
                 deleteOld.executeUpdate();
             }
 
-            try (PreparedStatement trimRows = connection.prepareStatement(
+            try (PreparedStatement trimRows = writeConnection.prepareStatement(
                     "DELETE FROM logs WHERE id NOT IN (SELECT id FROM logs ORDER BY ts DESC LIMIT ?)")) {
                 trimRows.setInt(1, MAX_LOG_ROWS);
                 trimRows.executeUpdate();
             }
 
-            try (Statement optimize = connection.createStatement()) {
+            try (Statement optimize = writeConnection.createStatement()) {
                 optimize.execute("PRAGMA optimize");
             }
         } catch (SQLException ex) {
             plugin.getLogger().warning("Failed to prune detection logs: " + ex.getMessage());
         } finally {
-            lock.unlock();
+            writeLock.unlock();
         }
     }
 
@@ -175,12 +181,12 @@ public final class LogManager {
 
     public List<LogEntry> getLogs(final UUID uuid, final int limit) {
         List<LogEntry> out = new ArrayList<>();
-        if (this.connection == null) return out;
+        if (this.readConnection == null) return out;
 
-        lock.lock();
-        try (PreparedStatement ps = connection.prepareStatement(
-                "SELECT uuid, player, check_name, vl, ping, data, ts FROM logs WHERE uuid=? ORDER BY ts DESC LIMIT ?"
-        )) {
+        synchronized (readConnection) {
+            try (PreparedStatement ps = readConnection.prepareStatement(
+                    "SELECT uuid, player, check_name, vl, ping, data, ts FROM logs WHERE uuid=? ORDER BY ts DESC LIMIT ?"
+            )) {
             ps.setString(1, uuid.toString());
             ps.setInt(2, Math.max(1, limit));
 
@@ -198,20 +204,19 @@ public final class LogManager {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            lock.unlock();
+        }
         }
 
         return out;
     }
 
     public void exportToCsv(final File outFile) {
-        if (this.connection == null) return;
+        if (this.readConnection == null) return;
 
-        lock.lock();
-        try (PreparedStatement ps = connection.prepareStatement(
-                "SELECT uuid, player, check_name, vl, ping, data, ts FROM logs ORDER BY ts DESC"
-        );
+        synchronized (readConnection) {
+            try (PreparedStatement ps = readConnection.prepareStatement(
+                    "SELECT uuid, player, check_name, vl, ping, data, ts FROM logs ORDER BY ts DESC"
+            );
              ResultSet rs = ps.executeQuery();
              PrintWriter pw = new PrintWriter(outFile)) {
 
@@ -230,8 +235,7 @@ public final class LogManager {
             }
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            lock.unlock();
+        }
         }
     }
 
@@ -247,15 +251,24 @@ public final class LogManager {
     public void shutdown() {
         flushNow();
 
-        lock.lock();
+        writeLock.lock();
         try {
-            if (connection != null) {
-                connection.close();
+            if (writeConnection != null) {
+                writeConnection.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            lock.unlock();
+            writeLock.unlock();
+        }
+        synchronized (readConnection) {
+            try {
+                if (readConnection != null) {
+                    readConnection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 

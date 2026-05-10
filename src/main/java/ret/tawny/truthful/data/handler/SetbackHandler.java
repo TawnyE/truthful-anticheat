@@ -38,7 +38,6 @@ public final class SetbackHandler {
     }
 
     public void setback() {
-        // FIX: Increased to 250ms to prevent spamming teleport packets during lag
         if (System.currentTimeMillis() - lastSetbackTime < 250) return;
         if (awaitingTeleport) return;
 

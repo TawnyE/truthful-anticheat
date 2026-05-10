@@ -3,19 +3,7 @@ package ret.tawny.truthful.prediction.engines;
 import ret.tawny.truthful.data.PlayerData;
 import ret.tawny.truthful.utils.world.PhysicsConstants;
 
-/**
- * WaterPredictionEngine - Simulates vanilla Minecraft water/swimming physics.
- *
- * Vanilla water movement (1.13+):
- * - Water drag: 0.8 per tick (much higher than air's 0.91)
- * - Gravity in water: 0.04 (half of normal 0.08)
- * - Swimming forward: 0.02 * effectiveSpeed * 1.2 (swimming boost)
- * - Drowning players sink faster
- * - Depth Strider enchantment reduces water drag
- * - Dolphin's Grace gives massive water speed boost
- *
- * Pre-1.13 water physics differs (no swimming animation).
- */
+
 public final class WaterPredictionEngine {
 
     private static final double WATER_DRAG_XZ = 0.8D;

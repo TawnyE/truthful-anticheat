@@ -18,12 +18,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * BadPacketC - Use-Release Timing (FastBow)
- *
- * Verifies that items (Bows/Crossbows) are only released after a reasonable
- * draw duration.
- */
+
 @CheckData(order = 'C', type = CheckType.BAD_PACKET)
 public final class BadPacketC extends Check {
 

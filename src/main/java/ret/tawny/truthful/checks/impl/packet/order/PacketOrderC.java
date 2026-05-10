@@ -16,18 +16,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * PacketOrderC — Crystal Place & Break Automation
- *
- * Detects automated crystal PvP by tracking same-tick crystal placement
- * and destruction patterns. A single same-tick operation is legitimate
- * (skilled crystal PvP), but SUSTAINED same-tick operations at high
- * frequency indicate automation.
- *
- * FIXED: Raised buffer threshold to avoid flagging skilled crystal PvP
- * players on occasional same-tick operations. Now requires consistent
- * sustained patterns to flag.
- */
 @CheckData(order = 'C', type = CheckType.PACKET_ORDER)
 public final class PacketOrderC extends Check {
 

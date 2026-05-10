@@ -90,18 +90,21 @@ public abstract class Check {
         if (shouldAlert) {
             lastAlertTimes.put(uuid, now);
             Truthful.getInstance().getDiscordManager().sendAlert(data, this, debug, vl);
+        }
 
-            final String rawMessage = config.getAlertMessage();
-            final String chatMessage = rawMessage
-                    .replace("%player%", p.getName())
-                    .replace("%check%", this.formattedName)
-                    .replace("%vl%", String.valueOf(vl))
-                    .replace("%ping%", String.valueOf(data.getPing()))
-                    .replace("%debug%", "")
-                    .trim();
+        final String rawMessage = config.getAlertMessage();
+        final String chatMessage = rawMessage
+                .replace("%player%", p.getName())
+                .replace("%check%", this.formattedName)
+                .replace("%vl%", String.valueOf(vl))
+                .replace("%ping%", String.valueOf(data.getPing()))
+                .replace("%debug%", "")
+                .trim();
 
-            Bukkit.getScheduler().runTask(Truthful.getInstance().getPlugin(), () -> {
-                if (!p.isOnline()) return;
+        Bukkit.getScheduler().runTask(Truthful.getInstance().getPlugin(), () -> {
+            if (!p.isOnline()) return;
+
+            if (shouldAlert) {
 
                 final long nowMillis = System.currentTimeMillis();
                 final long lastLog = lastLogTimes.getOrDefault(uuid, 0L);
@@ -122,41 +125,38 @@ public abstract class Check {
                     }
                 }
 
+                java.util.List<UUID> toRemove = new java.util.ArrayList<>();
                 for (UUID staffUuid : Truthful.getInstance().getDataManager().getAlertSubscribers()) {
                     Player staff = Bukkit.getPlayer(staffUuid);
                     if (staff != null && staff.isOnline()) {
                         staff.spigot().sendMessage(components);
                     } else {
-                        Truthful.getInstance().getDataManager().getAlertSubscribers().remove(staffUuid);
+                        toRemove.add(staffUuid);
                     }
                 }
-            });
-        }
-
-        // --- CENTRALIZED LAGBACK & PUNISHMENT LOGIC ---
-        Bukkit.getScheduler().runTask(Truthful.getInstance().getPlugin(), () -> {
-            if (!p.isOnline()) return;
-
-            // 1. Configurable Lagbacks
-            boolean lagbackEnabled = config.isCheckLagbackEnabled(checkType.name(), String.valueOf(order));
-            int lagbackVl = config.getCheckLagbackVl(checkType.name(), String.valueOf(order));
-
-            if (lagbackEnabled && vl >= lagbackVl && !data.isServerFrozen()) {
-                if (!p.isDead()) {
-                    data.forceLagback();
-                }
+                toRemove.forEach(Truthful.getInstance().getDataManager().getAlertSubscribers()::remove);
             }
 
-            // 2. Punishments
-            if (config.isPunishmentEnabled(checkType.name(), String.valueOf(order))) {
-                if (vl >= config.getPunishmentVl(checkType.name(), String.valueOf(order))) {
+            // --- CENTRALIZED LAGBACK & PUNISHMENT LOGIC ---
+            // 1. Configurable Lagbacks
+                boolean lagbackEnabled = config.isCheckLagbackEnabled(checkType.name(), String.valueOf(order));
+                int lagbackVl = config.getCheckLagbackVl(checkType.name(), String.valueOf(order));
 
-                    data.setBanning(true);
-                    if (!data.isServerFrozen()) {
+                if (lagbackEnabled && vl >= lagbackVl && !data.isServerFrozen()) {
+                    if (!p.isDead()) {
                         data.forceLagback();
                     }
+                }
 
-                    Bukkit.getScheduler().runTaskLater(Truthful.getInstance().getPlugin(), () -> {
+                // 2. Punishments
+                if (config.isPunishmentEnabled(checkType.name(), String.valueOf(order))) {
+                    if (vl >= config.getPunishmentVl(checkType.name(), String.valueOf(order))) {
+
+                        data.setBanning(true);
+                        if (!data.isServerFrozen()) {
+                            data.forceLagback();
+                        }
+
                         if (config.isPunishmentAnimationEnabled()) {
                             p.getWorld().strikeLightningEffect(p.getLocation());
                         }
@@ -177,10 +177,9 @@ public abstract class Check {
                                 Bukkit.broadcastMessage(broadcastMessage);
                             }
                         }
-                    }, 20L);
+                    }
                 }
-            }
-        });
+            });
 
         Truthful.getInstance().getLogManager().log(uuid, p.getName(), this.formattedName, vl, data.getPing(), debug);
     }

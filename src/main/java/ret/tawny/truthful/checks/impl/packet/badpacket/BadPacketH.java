@@ -10,17 +10,7 @@ import ret.tawny.truthful.checks.api.data.CheckData;
 import ret.tawny.truthful.checks.api.data.CheckType;
 import ret.tawny.truthful.data.PlayerData;
 
-/**
- * BadPacketH: Invalid Slot Detection
- *
- * Detects when a player sends an invalid hotbar slot number.
- * Valid slots are 0-8. Anything else indicates:
- * 1. Protocol manipulation
- * 2. Inventory exploit attempts
- * 3. Malformed client
- *
- * Version safe: All versions 1.8+
- */
+
 @CheckData(order = 'H', type = CheckType.BAD_PACKET)
 public final class BadPacketH extends Check {
 

@@ -40,7 +40,7 @@ public final class AnchorAuraA extends Check {
         boolean holdingGlowstone = (hand != null && hand.getType() == Material.GLOWSTONE) ||
                 (offhand != null && offhand.getType() == Material.GLOWSTONE);
 
-        // Anchor Aura Flow:
+        // Anhor Aura Flow:
         // 1. Right Click with Glowstone (Charge)
         // 2. Right Click with Hand/Item (Explode)
 

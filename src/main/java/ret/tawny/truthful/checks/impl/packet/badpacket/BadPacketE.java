@@ -10,17 +10,7 @@ import ret.tawny.truthful.checks.api.data.CheckData;
 import ret.tawny.truthful.checks.api.data.CheckType;
 import ret.tawny.truthful.data.PlayerData;
 
-/**
- * BadPacketE: Self Interaction Detection
- *
- * Detects when a player tries to interact with their own entity ID.
- * This is impossible in vanilla and indicates:
- * 1. Protocol manipulation
- * 2. Crash/exploit attempts
- * 3. Malformed client
- *
- * Version safe: All versions 1.8+
- */
+
 @CheckData(order = 'E', type = CheckType.BAD_PACKET)
 public final class BadPacketE extends Check {
 

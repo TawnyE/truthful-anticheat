@@ -10,21 +10,7 @@ import ret.tawny.truthful.checks.api.data.CheckData;
 import ret.tawny.truthful.checks.api.data.CheckType;
 import ret.tawny.truthful.data.PlayerData;
 
-/**
- * BadPacketK: Negative Transaction ID Detection
- *
- * Detects when a player sends negative transaction/confirmation IDs.
- * This is a known crash exploit and protocol manipulation technique.
- *
- * Transaction IDs should always be positive or zero in normal gameplay.
- * Negative IDs can cause:
- * 1. Integer overflow exploits
- * 2. Server crash attempts
- * 3. Inventory duplication glitches
- *
- * Version safe: All versions 1.8+
- * Note: In 1.17+ the packet was renamed, but PacketEvents handles this.
- */
+
 @CheckData(order = 'K', type = CheckType.BAD_PACKET)
 public final class BadPacketK extends Check {
 

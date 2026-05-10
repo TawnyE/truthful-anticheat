@@ -35,16 +35,17 @@ public final class DataManager {
         UUID uuid = player.getUniqueId();
         PlayerData data = players.remove(uuid);
         alertSubscribers.remove(uuid);
+        ret.tawny.truthful.Truthful.getInstance().getDiscordManager().removePlayer(uuid);
 
         if (data != null) {
             data.teardown();
             UUID worldUid = player.getWorld().getUID();
-            boolean worldEmpty = players.values().stream()
-                    .noneMatch(p -> p.getPlayer().getWorld().getUID().equals(worldUid));
-
-            if (worldEmpty) {
-                ret.tawny.truthful.Truthful.getInstance().getGlobalWorldCache().clearWorld(worldUid);
-            }
+            org.bukkit.Bukkit.getScheduler().runTask(ret.tawny.truthful.Truthful.getInstance().getPlugin(), () -> {
+                org.bukkit.World world = org.bukkit.Bukkit.getWorld(worldUid);
+                if (world != null && world.getPlayers().isEmpty()) {
+                    ret.tawny.truthful.Truthful.getInstance().getGlobalWorldCache().clearWorld(worldUid);
+                }
+            });
         }
     }
 

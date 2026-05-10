@@ -24,7 +24,6 @@ import java.util.UUID;
  */
 public final class LogsMenu {
 
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MM-dd HH:mm:ss");
 
     public static String getTitle(String playerName) {
         String pluginName = Truthful.getInstance().getConfiguration().getPluginDisplayName();
@@ -88,13 +87,14 @@ public final class LogsMenu {
                                 37, 38, 39, 40, 41, 42, 43 };
                         int slotIndex = 0;
 
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd HH:mm:ss");
                         for (LogManager.LogEntry log : logs) {
                             if (slotIndex >= contentSlots.length)
                                 break;
 
                             CheckType type = getCheckTypeFromString(log.check);
                             Material icon = type != null ? GuiConstants.getIcon(type) : GuiConstants.getMat("PAPER");
-                            String date = DATE_FORMAT.format(new Date(log.timestamp));
+                            String date = dateFormat.format(new Date(log.timestamp));
 
                             // Severity color based on VL
                             String sevColor = log.vl < 5 ? GuiConstants.SECONDARY

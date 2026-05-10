@@ -7,14 +7,13 @@ import org.bukkit.entity.Player;
 import ret.tawny.truthful.Truthful;
 import ret.tawny.truthful.config.api.Configuration;
 import ret.tawny.truthful.data.PlayerData;
-import ret.tawny.truthful.util.Threading;
+import ret.tawny.truthful.utils.Threading;
 
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-// CHANGE: DECOMP-1 - Extracted TransactionProcessor from PlayerData god class
 public final class TransactionProcessor {
 
     private final PlayerData data;

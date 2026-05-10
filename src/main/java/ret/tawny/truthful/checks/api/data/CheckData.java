@@ -13,10 +13,6 @@ public @interface CheckData {
 
     CheckType type();
 
-    /**
-     * Optional display name override for the check type prefix.
-     * If empty (default), uses the CheckType's name.
-     * Used by bedrock checks to show names such as "B Speed A" instead of "Bedrock(A)".
-     */
+
     String displayName() default "";
 }
