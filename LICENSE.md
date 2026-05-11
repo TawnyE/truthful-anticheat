@@ -1,33 +1,59 @@
-Truthful & Faithful License v1.0
+Truthful and Faithful License v1.1
 
-Copyright (c) 2026 tawny (devtawny)
+Copyright (c) 2026 tawny (ret.tawny/TawnyE)
 
-Permission is hereby granted to any person obtaining a copy of this
-software and associated documentation files (the "Software") to use,
-study, modify, and contribute to the Software, subject to the following
-conditions:
+Permission is hereby granted to any person obtaining a copy of this software to use, study, and modify it for personal or server use, subject to the following conditions:
 
-You MAY:
-- Use the Software freely on your Minecraft server
-- Study and learn from the source code
-- Modify the Software for personal or server use
-- Submit contributions and improvements
-- Fork and distribute modified versions under this same license
 
-You MAY NOT:
-- Sell, license, or monetize the Software or any derivative work
-- Redistribute the Software under a different license
-- Remove or alter this license notice or copyright attribution
-- Use the Software or any portion of it in a commercial product or
-  paid service without explicit written permission from the copyright
-  holder
+1. FREE TO USE
 
-Contributions:
-By submitting a contribution, you agree that your contribution is
-licensed under these same terms and that the copyright holder retains
-the right to use contributions in any future version of the Software.
+This software is free to use on any Minecraft server without restriction.
 
-No Warranty:
-The Software is provided "as is," without warranty of any kind. The
-copyright holder is not liable for any damages arising from use of
-the Software.
+2. FREE TO STUDY AND MODIFY
+
+You may read, modify, and build upon the source code for personal or server use.
+
+3. CONTRIBUTIONS WELCOME
+
+You may submit contributions back to the original project via pull request.
+
+Contributions must include a clear explanation of what changed and why.
+
+4. NO SELLING THE PLUGIN
+
+You may not sell, license, or monetize this plugin or any modified version of it.
+
+You may not distribute the plugin jar as part of a paid product or bundle.
+
+The plugin jar must always be obtained separately by the end user from the official sources:
+
+- Modrinth: https://modrinth.com/project/truthfulac
+
+- GitHub: https://github.com/devtawny/TruthfulAC
+
+5. CONFIGURATIONS ARE EXEMPT
+
+Configuration files and presets created for this plugin are not subject to the restrictions above.
+
+You may sell, distribute, or monetize custom configuration setups for TruthfulAC.
+
+The plugin jar itself must still be downloaded separately by the buyer.
+
+You may not bundle or include the jar in what you are selling.
+
+6. NO REDISTRIBUTION UNDER A DIFFERENT LICENSE
+
+You may not redistribute this software or any derivative of it under a different license.
+
+Any public fork or distribution must retain this license in full.
+
+7. NO FALSE ATTRIBUTION
+
+You may not claim authorship or original ownership of this plugin or its core systems.
+
+Forks must clearly credit the original project and author.
+
+
+THIS SOFTWARE IS PROVIDED AS IS, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.
+
+THE AUTHOR IS NOT LIABLE FOR ANY DAMAGES OR ISSUES ARISING FROM THE USE OF THIS SOFTWARE.
