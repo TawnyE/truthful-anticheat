@@ -1,50 +1,48 @@
 # TruthfulAC
 
-> Movement-first. Open source.
+TruthfulAC is a Minecraft anti-cheat built around simulation-based movement detection and a full combat suite. It is not trying to be the best anti-cheat ever made. It is trying to be a solid, honest one that actually works and that the community can build on together.
 
-TruthfulAC is a Minecraft anti-cheat focused on simulation-based movement detection. It's not trying to be the best anti-cheat ever made, it's trying to be a solid, honest one that actually works and that the community can build on together.
-
-Grim handles movement really well. What it doesn't do is combat. TruthfulAC fills that gap with GCD analysis, basic aim consistency checks, and a movement suite built around simulation rather than guesswork. Nothing overcomplicated. Nothing that hands cheaters a free roadmap either.
-
-This used to be a paid plugin. It's not anymore. The license key system is gone, the obfuscation is gone, and now it's here for anyone who wants to use it, learn from it, or help make it better.
+This used to be a paid plugin. It is not anymore. The license key is gone, the obfuscation is gone, and the full source is here for anyone who wants to use it, learn from it, or help make it better.
 
 ---
 
 ## What it checks
 
-**Movement / Simulation** - The core of the plugin. Simulation-based checks that track how players move and flag what doesn't add up. This is where the most work has gone and where most future work will go.
+**Movement** — The core of the plugin. A full server-side physics engine that validates movement every tick against what vanilla actually allows. Covers fly, bhop, speed, elytra abuse, liquid movement, vehicle exploits, NoFall, velocity, and timer manipulation. This is where the most work has gone and where most future work will go.
 
-**Reach & Hitbox** - Standard but solid. Does what it says.
+**Combat** — A complete combat detection suite. Eleven aim checks covering GCD analysis, jerk detection, entropy, Bayesian classification, target lock, and more. Seven KillAura checks. Five AutoClicker checks. Reach, hitbox, raycast, crystal aura, and anchor aura. Not basic.
 
-**Combat (basic)** - GCD detection and basic aim consistency. Not trying to reinvent the wheel, just catching the obvious stuff that other open source options miss.
+**World and Packets** — Scaffold, fastbreak, phase, bad packet detection, packet order violations, sprint abuse, and crash exploit protection.
+
+**Bedrock** — Dedicated checks for Geyser-translated Bedrock players with separate thresholds. Bedrock players never run Java physics checks.
 
 ---
 
 ## What it doesn't do
 
-It's not going to catch everything. No anti-cheat does. The goal is to keep servers reasonably clean and give the community something maintainable and understandable, not a black box you just hope works.
+It will not catch everything. No anti-cheat does. The goal is to keep servers reasonably clean and give the community something maintainable and transparent, not a black box you just hope works.
 
 ---
 
 ## Contributing
 
-Contributions are welcome but there are rules.
+Contributions are welcome but there are standards.
 
-Movement checks are the priority. If you're submitting something, movement-related PRs will get the most attention and are the most likely to get merged. Combat and other checks are accepted too but they need to actually be good, not a half-baked implementation pulled from somewhere else.
+Movement checks are the priority. Combat and other checks are accepted too but they need to actually be good, not a half-baked port of something else.
 
-**What we don't want:**
-- Overcomplicated combat checks that create more false positives than actual catches
-- Packet or world-related checks that are out of scope
-- Anything where you clearly don't understand what you're submitting
-- Low-effort ports of existing public check implementations
+**What is not wanted:**
+- Checks that produce more false positives than actual catches
+- Low effort ports of existing public implementations
+- PRs with no explanation of what changed or why
+- Anything where it is clear the submitter does not understand what they are submitting
 
-**What we do want:**
-- Solid movement check improvements or new simulation-based detections
+**What is wanted:**
+- Movement check improvements and new simulation-based detections
 - Bug fixes with a clear explanation of what was wrong and why the fix works
 - Performance improvements
 - Anything that makes the codebase cleaner or easier to follow
 
-If you hit 30 or more meaningful contributions you'll get a spot in the in-game credit scene inside the plugin GUI. That's the only credit system. Earn it in the code.
+Hit 30 or more meaningful contributions and you get a named credit in the in-game plugin GUI. That is the only credit system. Earn it in the code.
 
 Open a PR, explain what you did and why, and keep it clean.
 
@@ -52,9 +50,9 @@ Open a PR, explain what you did and why, and keep it clean.
 
 ## License
 
-Licensed under the **Truthful & Faithful License v1.0**, see the [LICENSE](LICENSE.md) file for full terms.
+Licensed under the **Truthful and Faithful License v1.1**, see the [LICENSE](LICENSE.md) file for full terms.
 
-Short version: free to use, study, modify, and contribute. You cannot sell it, monetize it, or redistribute it under a different license.
+Free to use, study, modify, and contribute. You cannot sell the plugin or redistribute it under a different license. Custom configuration files and presets are exempt and can be sold freely as long as the plugin jar is not bundled with them.
 
 ---
 
@@ -62,4 +60,3 @@ Short version: free to use, study, modify, and contribute. You cannot sell it, m
 
 - [Discord](https://discord.gg/DA88PBbseD)
 - [Modrinth](https://modrinth.com/project/truthfulac)
-- 
