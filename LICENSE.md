@@ -29,7 +29,7 @@ The plugin jar must always be obtained separately by the end user from the offic
 
 - Modrinth: https://modrinth.com/project/truthfulac
 
-- GitHub: https://github.com/devtawny/TruthfulAC
+- GitHub: https://github.com/TawnyE/TruthfulAC
 
 5. CONFIGURATIONS ARE EXEMPT
 
