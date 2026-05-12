@@ -52,7 +52,7 @@ Open a PR, explain what you did and why, and keep it clean.
 
 ## License
 
-Licensed under the **Truthful & Faithful License v1.0**, see the [LICENSE](LICENSE) file for full terms.
+Licensed under the **Truthful & Faithful License v1.0**, see the [LICENSE](LICENSE.md) file for full terms.
 
 Short version: free to use, study, modify, and contribute. You cannot sell it, monetize it, or redistribute it under a different license.
 
