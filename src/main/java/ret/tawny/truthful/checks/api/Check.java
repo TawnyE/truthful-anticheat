@@ -92,12 +92,25 @@ public abstract class Check {
             Truthful.getInstance().getDiscordManager().sendAlert(data, this, debug, vl);
         }
 
+        // Snapshot values for use in async/main thread lambda
+        final String playerName = p.getName();
+        final long ping = data.getPing();
+        final double tps = Truthful.getInstance().getTps();
+        final String brand = data.getClientBrand();
+        final String world = p.getWorld().getName();
+        final int px = (int) data.getX();
+        final int py = (int) data.getY();
+        final int pz = (int) data.getZ();
+        final String checkName = this.formattedName;
+
         final String rawMessage = config.getAlertMessage();
         final String chatMessage = rawMessage
-                .replace("%player%", p.getName())
-                .replace("%check%", this.formattedName)
+                .replace("%player%", playerName)
+                .replace("%check%", checkName)
                 .replace("%vl%", String.valueOf(vl))
-                .replace("%ping%", String.valueOf(data.getPing()))
+                .replace("%ping%", String.valueOf(ping))
+                .replace("%tps%", String.format("%.1f", tps))
+                .replace("%brand%", brand)
                 .replace("%debug%", "")
                 .trim();
 
@@ -110,15 +123,42 @@ public abstract class Check {
                 final long lastLog = lastLogTimes.getOrDefault(uuid, 0L);
 
                 if (nowMillis - lastLog > 2000L) {
-                    Bukkit.getLogger().info(p.getName() + " failed " + this.formattedName + ": " + debug);
+                    Bukkit.getLogger().info(playerName + " failed " + checkName + ": " + debug);
                     lastLogTimes.put(uuid, nowMillis);
                 }
 
-                net.md_5.bungee.api.chat.BaseComponent[] components = net.md_5.bungee.api.chat.TextComponent.fromLegacyText(org.bukkit.ChatColor.translateAlternateColorCodes('&', chatMessage));
-                if (debug != null && !debug.isEmpty()) {
+                net.md_5.bungee.api.chat.BaseComponent[] components = net.md_5.bungee.api.chat.TextComponent.fromLegacyText(
+                        org.bukkit.ChatColor.translateAlternateColorCodes('&', chatMessage));
+
+                // --- CUSTOMIZABLE HOVER TEXT ---
+                if (config.isAlertHoverEnabled()) {
+                    StringBuilder hoverBuilder = new StringBuilder();
+                    java.util.List<String> hoverLines = config.getAlertHoverLines();
+
+                    for (int i = 0; i < hoverLines.size(); i++) {
+                        String line = hoverLines.get(i)
+                                .replace("%check%", checkName)
+                                .replace("%vl%", String.valueOf(vl))
+                                .replace("%ping%", String.valueOf(ping))
+                                .replace("%tps%", String.format("%.1f", tps))
+                                .replace("%brand%", brand)
+                                .replace("%debug%", debug != null ? debug : "")
+                                .replace("%player%", playerName)
+                                .replace("%world%", world)
+                                .replace("%x%", String.valueOf(px))
+                                .replace("%y%", String.valueOf(py))
+                                .replace("%z%", String.valueOf(pz));
+
+                        hoverBuilder.append(line);
+                        if (i < hoverLines.size() - 1) {
+                            hoverBuilder.append("\n");
+                        }
+                    }
+
                     net.md_5.bungee.api.chat.HoverEvent hoverEvent = new net.md_5.bungee.api.chat.HoverEvent(
                             net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT,
-                            net.md_5.bungee.api.chat.TextComponent.fromLegacyText(org.bukkit.ChatColor.translateAlternateColorCodes('&', "&7" + debug))
+                            net.md_5.bungee.api.chat.TextComponent.fromLegacyText(
+                                    org.bukkit.ChatColor.translateAlternateColorCodes('&', hoverBuilder.toString()))
                     );
                     for (net.md_5.bungee.api.chat.BaseComponent component : components) {
                         component.setHoverEvent(hoverEvent);
@@ -164,16 +204,16 @@ public abstract class Check {
                         if (config.shouldQueueBandwave(checkType.name(), String.valueOf(order)) && config.isBandwaveEnabled()) {
                             boolean added = Truthful.getInstance().getBandwaveManager().addPlayer(p.getName());
                             String queueMessage = (added ? config.getBandwaveQueuedMessage() : config.getBandwaveDuplicateMessage())
-                                    .replace("%player%", p.getName());
+                                    .replace("%player%", playerName);
                             Bukkit.getConsoleSender().sendMessage(queueMessage);
                         } else {
                             final String command = config.getPunishmentCommand(checkType.name(), String.valueOf(order))
-                                    .replace("%player%", p.getName());
+                                    .replace("%player%", playerName);
                             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
 
                             if (config.isPunishmentBroadcastEnabled()) {
                                 final String broadcastMessage = config.getPunishmentBroadcast()
-                                        .replace("%player%", p.getName());
+                                        .replace("%player%", playerName);
                                 Bukkit.broadcastMessage(broadcastMessage);
                             }
                         }
@@ -181,7 +221,7 @@ public abstract class Check {
                 }
             });
 
-        Truthful.getInstance().getLogManager().log(uuid, p.getName(), this.formattedName, vl, data.getPing(), debug);
+        Truthful.getInstance().getLogManager().log(uuid, playerName, checkName, vl, ping, debug);
     }
 
     private boolean requiresStableSimulation(CheckType type) {

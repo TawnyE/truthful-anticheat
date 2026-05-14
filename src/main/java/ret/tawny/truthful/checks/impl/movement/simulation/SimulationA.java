@@ -23,31 +23,36 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class SimulationA extends Check {
 
     // ─── Vertical constants ──────────────────────────────────────────────────
-    private static final double JUMP_BOOST_PER_LEVEL  = 0.1D;
-    private static final double FREEFALL_FROM_ZERO    = -PhysicsConstants.GRAVITY * PhysicsConstants.AIR_DRAG_Y;
-    private static final double SLOW_FALL_MIN_Y       = -PhysicsConstants.SLOW_FALLING_GRAVITY * PhysicsConstants.AIR_DRAG_Y;
+    private static final double JUMP_BOOST_PER_LEVEL    = 0.1D;
+    private static final double FREEFALL_FROM_ZERO      = -PhysicsConstants.GRAVITY * PhysicsConstants.AIR_DRAG_Y;
+    private static final double SLOW_FALL_MIN_Y         = -PhysicsConstants.SLOW_FALLING_GRAVITY * PhysicsConstants.AIR_DRAG_Y;
     private static final double VERTICAL_FLAG_THRESHOLD = 0.75D;
 
     // ─── Horizontal / moveRelative constants ─────────────────────────────────
-    private static final double AIR_DRAG_XZ             = PhysicsConstants.AIR_DRAG_XZ;
-    private static final double DEFAULT_SLIPPERINESS    = PhysicsConstants.DEFAULT_SLIPPERINESS;
-    private static final double SPRINT_JUMP_BOOST       = 0.2D;
-    private static final double MIN_XZ_MOTION           = PhysicsConstants.MIN_MOTION;
-    private static final double H_NOISE_FLOOR           = 0.012D;
+    private static final double AIR_DRAG_XZ              = PhysicsConstants.AIR_DRAG_XZ;
+    private static final double DEFAULT_SLIPPERINESS     = PhysicsConstants.DEFAULT_SLIPPERINESS;
+    private static final double SPRINT_JUMP_BOOST        = 0.2D;
+    private static final double MIN_XZ_MOTION            = PhysicsConstants.MIN_MOTION;
+    private static final double H_NOISE_FLOOR            = 0.002D;
     private static final float  HORIZONTAL_FLAG_THRESHOLD = 1.0f;
 
-    // Ground speed caps (vanilla physics: acel / (1 - friction) at DEFAULT_SLIPPERINESS)
-    private static final double GROUND_BASE_WALK_CAP   = 0.221D;
-    private static final double GROUND_BASE_SPRINT_CAP = 0.287D;
-    private static final double GROUND_CAP_LENIENCY    = 0.020D;
-    private static final double GROUND_ACCEL_LENIENCY  = 0.030D;
-    private static final double GROUND_VECTOR_ACCEL_LENIENCY = 0.040D;
+    // Ground speed caps (vanilla physics: accel / (1 - friction) at DEFAULT_SLIPPERINESS)
+    private static final double GROUND_BASE_WALK_CAP          = 0.221D;
+    private static final double GROUND_BASE_SPRINT_CAP        = 0.287D;
+    private static final double GROUND_CAP_LENIENCY           = 0.008D;
+    private static final double GROUND_ACCEL_LENIENCY         = 0.015D;
+    private static final double GROUND_VECTOR_ACCEL_LENIENCY  = 0.020D;
 
     // Raw key scale Minecraft applies before normalize: 0.98
-    private static final double KEY_SCALE              = 0.98D;
-    // Air accleration friction constants
-    private static final double AIR_ACCEL_BASE         = 0.02D;
-    private static final double AIR_ACCEL_SPRINT        = 0.026D;
+    private static final double KEY_SCALE       = 0.98D;
+    // Air acceleration friction constants
+    private static final double AIR_ACCEL_BASE  = 0.02D;
+    private static final double AIR_ACCEL_SPRINT = 0.026D;
+
+    // Sprint-jump momentum stays active for this many air ticks after takeoff.
+    // Vanilla sprint-jump carries the 0.2 boost through the full jump arc.
+    // Without this, AS and H_DRIFT false-flag mid-jump when SPRINT_JUMP tag expires.
+    private static final int SPRINT_JUMP_GRACE_TICKS = 8;
 
     // ─── Tags ─────────────────────────────────────────────────────────────────
     private enum Tag {
@@ -55,7 +60,7 @@ public final class SimulationA extends Check {
         LANDING, LANDING_GRACE,
         HEAD_HIT,
         STEP_Y, STEP_DOWN,
-        LADDER, LIQUID, LIQUID_EXIT, WEB,
+        LADDER, LIQUID, LIQUID_EXIT, BUBBLE_EXIT, WEB,
         VELOCITY, TELEPORT_GRACE,
         SLIME_BLOCK,
         LEVITATION, SLOW_FALLING,
@@ -82,14 +87,22 @@ public final class SimulationA extends Check {
         int    groundSpeedTicks;
         int    groundAccelTicks;
         int    groundStrafeTicks;
-        double driftAccumulator;     // physicsOffset equivalent
-        int    driftViolationTicks;  // consecutive ticks where predicted > actual + tolerance
+        double driftAccumulator;
+        int    driftViolationTicks;
         // Key inference cache
-        int    lastForward;          // -1, 0, or 1
-        int    lastStrafe;           // -1, 0, or 1
+        int    lastForward;
+        int    lastStrafe;
+        // Sprint-jump grace tracking
+        // Tracks how many ticks ago the player last performed a sprint-jump.
+        // Used to extend SPRINT_JUMP tag lifetime through the full jump arc.
+        int    sprintJumpTick;
     }
 
     private final ConcurrentHashMap<UUID, State> states = new ConcurrentHashMap<>();
+
+    // FIX: Cache SimulationC enabled state — resolved once, never re-scanned per packet.
+    private volatile boolean simCEnabled  = false;
+    private volatile boolean simCResolved = false;
 
     // ─── Entry point ──────────────────────────────────────────────────────────
     @Override
@@ -101,14 +114,23 @@ public final class SimulationA extends Check {
         if (data.isGliding()) return;
         if (data.isExempt(ExemptionType.RESPAWN)) {
             final State st2 = states.get(data.getPlayer().getUniqueId());
-            if (st2 != null) { st2.verticalBuffer = 0f; st2.horizontalBuffer = 0f;
-                st2.hoverTicks = 0; st2.driftAccumulator = 0; }
+            if (st2 != null) {
+                st2.verticalBuffer    = 0f;
+                st2.horizontalBuffer  = 0f;
+                st2.hoverTicks        = 0;
+                st2.driftAccumulator  = 0;
+                st2.sprintJumpTick    = -999;
+            }
             return;
         }
         if (data.isTeleportPending()) return;
         if (MovementCheckSupport.skipForPrediction(data)) return;
 
-        final State st = states.computeIfAbsent(data.getPlayer().getUniqueId(), k -> new State());
+        final State st = states.computeIfAbsent(data.getPlayer().getUniqueId(), k -> {
+            State s = new State();
+            s.sprintJumpTick = -999;
+            return s;
+        });
 
         final double deltaY      = data.getDeltaY();
         final double lastDeltaY  = data.getLastDeltaY();
@@ -118,15 +140,18 @@ public final class SimulationA extends Check {
         final boolean onGround  = data.isServerGround() || data.isClientGround();
         final int airTicks      = data.getAirTicks();
         final int lastAirTicks  = data.getPositionTracker().getLastAirTicks();
-        final boolean wasRecentlyOnGround = onGround || airTicks <= 2 || lastAirTicks == 0;
+        final int ticksNow      = data.getTicksTracked();
+
+        // FIX: Tightened from airTicks <= 2 to airTicks <= 1.
+        // airTicks <= 2 let bhop-style cheats stay in the JUMP grace window
+        // for an extra tick while already airborne.
+        final boolean wasRecentlyOnGround = onGround || airTicks <= 1 || lastAirTicks == 0;
 
         final int levitation  = data.getPotionLevel(PotionEffectType.LEVITATION);
         final int slowFalling = data.getPotionLevel(PotionEffectType.SLOW_FALLING);
         final int jumpBoost   = data.getPotionLevel(PotionEffectType.JUMP_BOOST);
         final int speedLevel  = data.getPotionLevel(PotionEffectType.SPEED);
         final double jumpImpulse = PhysicsConstants.JUMP_IMPULSE + jumpBoost * JUMP_BOOST_PER_LEVEL;
-
-        final int ticksNow = data.getTicksTracked();
 
         // Slime bounce tracker
         if (deltaY < -0.05D) st.slimeFallVelocity = Math.min(st.slimeFallVelocity, deltaY);
@@ -139,7 +164,10 @@ public final class SimulationA extends Check {
         if (st.landingTicks > 0) { tags.add(Tag.LANDING_GRACE); st.landingTicks--; }
 
         if (data.isInLiquid()) tags.add(Tag.LIQUID);
-        else if (WorldUtils.isNearLiquid(data.getPlayer())) tags.add(Tag.LIQUID_EXIT);
+        else if (WorldUtils.isNearLiquid(data.getPlayer())) {
+            tags.add(Tag.LIQUID_EXIT);
+            if (WorldUtils.isNearBubbleColumn(data.getPlayer())) tags.add(Tag.BUBBLE_EXIT);
+        }
 
         if (data.isInWeb())       tags.add(Tag.WEB);
         if (data.isOnClimbable()) tags.add(Tag.LADDER);
@@ -176,8 +204,10 @@ public final class SimulationA extends Check {
         if (isGhostJump) tags.add(Tag.JUMP_START);
         if (!onGround && airTicks < 25 && deltaY > 0.0D) tags.add(Tag.JUMPING);
 
-        if (onGround && deltaY > 0.0D && deltaY <= 0.601D) tags.add(Tag.STEP_Y);
-        if (onGround && deltaY < 0.0D)                     tags.add(Tag.STEP_DOWN);
+        boolean isLegitStep = data.isServerGround() && deltaY > 0.0D && deltaY <= 0.601D;
+        if (isLegitStep) tags.add(Tag.STEP_Y);
+
+        if (onGround && deltaY < 0.0D)                        tags.add(Tag.STEP_DOWN);
         if (st.lastWasOnGround && !onGround && deltaY < 0.0D) tags.add(Tag.STEP_DOWN);
 
         boolean lazyGround = !data.isServerGround() && data.isClientGround() && Math.abs(deltaY) < 1.0E-5D;
@@ -222,7 +252,6 @@ public final class SimulationA extends Check {
             final int levitation, final int slowFalling,
             final double jumpImpulse, final int ticksSinceVelocity) {
 
-        // Compute predicted freefall
         double predFallY;
         if (levitation > 0) {
             double target = 0.05D * levitation;
@@ -235,7 +264,6 @@ public final class SimulationA extends Check {
 
         double vDiff = Math.abs(deltaY - predFallY);
 
-        // Reduce vDiff for each legitimate alternative
         if (onGround || lazyGround || tags.contains(Tag.HEAD_HIT) || tags.contains(Tag.LANDING)) {
             vDiff = Math.min(vDiff, Math.abs(deltaY));
             vDiff = Math.min(vDiff, Math.abs(deltaY - FREEFALL_FROM_ZERO));
@@ -266,7 +294,9 @@ public final class SimulationA extends Check {
             vDiff = Math.min(vDiff, Math.abs(deltaY - 0.04D));
             vDiff = Math.min(vDiff, Math.abs(deltaY + 0.5D));
             vDiff = Math.min(vDiff, Math.abs(deltaY - 0.7D));
-            vDiff = Math.min(vDiff, Math.abs(deltaY + 0.49D));
+            // FIX: Was 0.49D — too generous, allowed water-based fly bypasses.
+            // 0.42D matches vanilla water jump-out speed.
+            vDiff = Math.min(vDiff, Math.abs(deltaY - 0.42D));
         }
         if (tags.contains(Tag.LIQUID_EXIT)) {
             double waterJump = (lastDeltaY + 0.04D) * 0.8D;
@@ -274,7 +304,17 @@ public final class SimulationA extends Check {
             vDiff = Math.min(vDiff, Math.abs(deltaY - waterJump));
             vDiff = Math.min(vDiff, Math.abs(deltaY - waterFall));
             vDiff = Math.min(vDiff, Math.abs(deltaY - lastDeltaY));
-            if (deltaY > 0.0D && deltaY <= 0.45D) vDiff = 0.0D;
+            // Bubble columns launch with velocities up to 0.7 (up) or -0.49 (down),
+            // which combined with jump impulse can reach ~0.85, and even slightly higher with momentum.
+            double liquidExitCap = tags.contains(Tag.BUBBLE_EXIT) ? 1.15D : 0.45D;
+            if (deltaY > 0.0D && deltaY <= liquidExitCap) vDiff = 0.0D;
+            // Also accept gravity-following ticks after bubble column exit
+            if (tags.contains(Tag.BUBBLE_EXIT)) {
+                double bubblePred = (lastDeltaY - PhysicsConstants.GRAVITY) * PhysicsConstants.AIR_DRAG_Y;
+                vDiff = Math.min(vDiff, Math.abs(deltaY - bubblePred));
+                // Accept downward bubble column velocities
+                if (deltaY < 0.0D && deltaY >= -0.55D) vDiff = 0.0D;
+            }
         }
         if (tags.contains(Tag.SLIME_BLOCK)) {
             double maxBounce = Math.abs(st.slimeFallVelocity) + 0.05D;
@@ -298,10 +338,10 @@ public final class SimulationA extends Check {
             if (ticksSinceVelocity <= 8 && Math.abs(deltaY - velY) < 0.60D) vDiff = 0.0D;
         }
 
-        boolean isLegitStep = onGround && deltaY <= 0.601D;
-        if (tags.contains(Tag.GRAVITY_INVALID) || tags.contains(Tag.FLY_DIP_RESET)) isLegitStep = false;
+        boolean validVerticalStep = data.isServerGround() && deltaY <= 0.601D;
+        if (tags.contains(Tag.GRAVITY_INVALID) || tags.contains(Tag.FLY_DIP_RESET)) validVerticalStep = false;
 
-        if (isLegitStep || tags.contains(Tag.TELEPORT_GRACE) || tags.contains(Tag.STEP_DOWN) || tags.contains(Tag.LAZY_GROUND)) {
+        if (validVerticalStep || tags.contains(Tag.TELEPORT_GRACE) || tags.contains(Tag.STEP_DOWN) || tags.contains(Tag.LAZY_GROUND)) {
             if (!tags.contains(Tag.GRAVITY_INVALID) && !tags.contains(Tag.FLY_DIP_RESET)) vDiff = 0.0D;
         }
         if (tags.contains(Tag.HEAD_HIT) && vDiff < 0.12D) {
@@ -316,7 +356,11 @@ public final class SimulationA extends Check {
 
         if (vDiff > 0.01D) {
             float mult;
-            if (tags.contains(Tag.GRAVITY_INVALID) || tags.contains(Tag.FLY_DIP_RESET)) mult = 40.0f;
+            // FIX: Reduced from 40.0f to 6.0f. The hoverTicks gate (> 3 ticks) already
+            // ensures only real hover/fly reaches this point. 40.0f caused an instant
+            // spike far above the threshold on the first qualifying tick, bypassing
+            // the buffer system entirely.
+            if (tags.contains(Tag.GRAVITY_INVALID) || tags.contains(Tag.FLY_DIP_RESET)) mult = 6.0f;
             else if (tags.contains(Tag.IN_AIR) && Math.abs(deltaY) < 1.0E-5D)           mult = 25.0f;
             else if (tags.contains(Tag.IN_AIR) && vDiff > 0.05D)                         mult = 15.0f;
             else if (tags.contains(Tag.VELOCITY))                                          mult = 2.5f;
@@ -325,6 +369,7 @@ public final class SimulationA extends Check {
         } else {
             float decay = tags.contains(Tag.IN_AIR) ? 0.025f : 0.1f;
             if (tags.contains(Tag.LIQUID_EXIT)) decay = 0.2f;
+            if (tags.contains(Tag.BUBBLE_EXIT)) decay = 0.4f;
             if (!tags.contains(Tag.GRAVITY_INVALID) && !tags.contains(Tag.FLY_DIP_RESET))
                 st.verticalBuffer = Math.max(0, st.verticalBuffer - decay);
         }
@@ -332,8 +377,8 @@ public final class SimulationA extends Check {
         if (st.verticalBuffer >= VERTICAL_FLAG_THRESHOLD && vDiff > 0.01D) {
             String sub = tags.contains(Tag.GRAVITY_INVALID) ? "(AirWalk)"
                     : tags.contains(Tag.FLY_DIP_RESET)      ? "(FlyDip)"
-                    : tags.contains(Tag.IN_AIR)              ? "(Air)"
-                    : "";
+                      : tags.contains(Tag.IN_AIR)              ? "(Air)"
+                        : "";
             flag(data, String.format(
                     "Area Fail (V) %s buf=%.3f vDiff=%.4f Y=%.4f lastY=%.4f air=%d tags=%s",
                     sub, st.verticalBuffer, vDiff, deltaY, lastDeltaY, airTicks, tags));
@@ -350,12 +395,15 @@ public final class SimulationA extends Check {
             final int airTicks, final int speedLevel,
             final Vector queuedVel, final int ticksSinceVelocity, final int ticksNow) {
 
-        // Defer liquid to SimulationC if enabled
+        // FIX: Resolve SimulationC once and cache. Previously scanned all checks every packet.
         if (tags.contains(Tag.LIQUID)) {
-            boolean simCEnabled = false;
-            for (Check check : Truthful.getInstance().getCheckManager().getCollection()) {
-                if (check instanceof ret.tawny.truthful.checks.impl.movement.simulation.SimulationC) {
-                    simCEnabled = check.isEnabled(); break;
+            if (!simCResolved) {
+                for (Check check : Truthful.getInstance().getCheckManager().getCollection()) {
+                    if (check instanceof ret.tawny.truthful.checks.impl.movement.simulation.SimulationC) {
+                        simCEnabled  = check.isEnabled();
+                        simCResolved = true;
+                        break;
+                    }
                 }
             }
             if (simCEnabled) return;
@@ -369,14 +417,14 @@ public final class SimulationA extends Check {
 
         if (tags.contains(Tag.VELOCITY) || tags.contains(Tag.TELEPORT_GRACE)) {
             st.horizontalBuffer = Math.max(0f, st.horizontalBuffer - 0.3f);
-            st.overSpeedTicks = 0;
+            st.overSpeedTicks   = 0;
             st.driftAccumulator *= 0.7;
             return;
         }
 
         if (tags.contains(Tag.WALL_TOUCH)) {
             st.horizontalBuffer = Math.max(0f, st.horizontalBuffer - 0.12f);
-            st.overSpeedTicks = 0;
+            st.overSpeedTicks   = 0;
             st.driftAccumulator *= 0.65D;
         }
 
@@ -387,20 +435,31 @@ public final class SimulationA extends Check {
         if (ticksSinceSoul >= 0 && ticksSinceSoul <= 8) tags.add(Tag.SOUL_SAND);
 
         boolean isSprinting = data.isSprinting();
-        if (isSprinting && (tags.contains(Tag.JUMP_START) || (airTicks <= 1 && wasRecentlyOnGround))) tags.add(Tag.SPRINT_JUMP);
+
+        // FIX: SPRINT_JUMP tag now uses a persistent tick tracker (sprintJumpTick) so
+        // the tag stays active for SPRINT_JUMP_GRACE_TICKS (8) ticks of air time.
+        // Previously the tag only applied on airTicks 0-1, which caused the AS check
+        // and H_DRIFT to false-flag mid-jump when the sprint-jump momentum was still
+        // fully present but the tag had already expired.
+        if (isSprinting && (tags.contains(Tag.JUMP_START) || (airTicks > 0 && airTicks <= 1 && wasRecentlyOnGround))) {
+            st.sprintJumpTick = ticksNow;
+        }
+        boolean isSprintJump = (ticksNow - st.sprintJumpTick) <= SPRINT_JUMP_GRACE_TICKS;
+        if (isSprintJump) tags.add(Tag.SPRINT_JUMP);
+
         if (data.isSneaking())  tags.add(Tag.SNEAKING);
         if (!onGround)          tags.add(Tag.AIRBORNE_XZ);
         if (data.isInWeb())     tags.add(Tag.WEB_XZ);
         if (data.hasVelocity() || (ticksSinceVelocity >= 0 && ticksSinceVelocity <= 5)) tags.add(Tag.VELOCITY_XZ);
-        double maxAllowed = MovementCheckSupport.computeMaxHorizontalSpeed(data);
 
+        double maxAllowed = MovementCheckSupport.computeMaxHorizontalSpeed(data);
         if (speedLevel > 0) maxAllowed += speedLevel * 0.03D;
         if (tags.contains(Tag.SPRINT_JUMP)) maxAllowed += SPRINT_JUMP_BOOST + 0.05D;
         if (tags.contains(Tag.USING_ITEM) && data.isSlowItem()) maxAllowed *= 0.35D;
         if (tags.contains(Tag.SOUL_SAND) && data.getEnchantLevel("soul_speed") == 0) maxAllowed = Math.min(maxAllowed, 0.13D);
-        if (tags.contains(Tag.HONEY))   maxAllowed = Math.min(maxAllowed, 0.12D);
-        if (tags.contains(Tag.WEB_XZ))  maxAllowed = Math.min(maxAllowed, 0.05D);
-        if (tags.contains(Tag.LADDER))  maxAllowed = Math.min(maxAllowed, 0.15D);
+        if (tags.contains(Tag.HONEY))    maxAllowed = Math.min(maxAllowed, 0.12D);
+        if (tags.contains(Tag.WEB_XZ))   maxAllowed = Math.min(maxAllowed, 0.05D);
+        if (tags.contains(Tag.LADDER))   maxAllowed = Math.min(maxAllowed, 0.15D);
         if (tags.contains(Tag.SNEAKING)) maxAllowed = Math.min(maxAllowed, 0.13D);
         if (tags.contains(Tag.SLIME_BLOCK)) maxAllowed += 0.15D;
 
@@ -435,13 +494,16 @@ public final class SimulationA extends Check {
             double accelZ = data.getDeltaZ() - data.getLastDeltaZ() * 0.91D;
             double airVectorAccel = Math.hypot(accelX, accelZ);
 
-            // Vector drift accumulate 2D deviation
             double vecDev = Math.hypot(data.getDeltaX() - predictedVX, data.getDeltaZ() - predictedVZ);
 
-            // Tolerance: base + sprint/jump grace + near-collision grace
-            double driftTolerance = 0.035D;
+            // FIX: Raised base drift tolerance from 0.035 to 0.055 and sprint-jump
+            // bonus from 0.08 to 0.12. The logs showed legitimate jumps consistently
+            // producing drift values of 0.25-0.30 at dTicks=3 because the inferred
+            // key direction has natural variance mid-jump when the player changes
+            // direction. The previous thresholds were too tight for normal play.
+            double driftTolerance = 0.055D;
             if (tags.contains(Tag.SPRINT_JUMP) || tags.contains(Tag.JUMP) || tags.contains(Tag.JUMP_START))
-                driftTolerance += 0.08D;
+                driftTolerance += 0.12D;
             if (tags.contains(Tag.WALL_TOUCH)) driftTolerance += 0.12D;
             if (ticksNow - data.getLastDamageTick() < 6) driftTolerance += 0.04D;
 
@@ -454,10 +516,11 @@ public final class SimulationA extends Check {
                 st.driftViolationTicks = Math.max(0, st.driftViolationTicks - 1);
             }
 
-
-            double maxAirVectorAccel = airAccel + 0.08D;
+            // FIX: Raised base cap from 0.08 to 0.12, sprint-jump bonus from 0.05 to 0.08.
+            // Previous values false-flagged sprint-jumps before SPRINT_JUMP tag was applied.
+            double maxAirVectorAccel = airAccel + 0.12D;
             if (tags.contains(Tag.SPRINT_JUMP) || tags.contains(Tag.JUMP) || tags.contains(Tag.JUMP_START))
-                maxAirVectorAccel += SPRINT_JUMP_BOOST + 0.05D;
+                maxAirVectorAccel += SPRINT_JUMP_BOOST + 0.08D;
             if (tags.contains(Tag.TELEPORT_GRACE))
                 maxAirVectorAccel += 1.0D;
             else if (ticksNow - data.getLastDamageTick() < 6)
@@ -466,7 +529,9 @@ public final class SimulationA extends Check {
             if (airVectorAccel > maxAirVectorAccel && !tags.contains(Tag.WEB_XZ)
                     && !tags.contains(Tag.LADDER) && !tags.contains(Tag.WALL_TOUCH)) {
                 st.horizontalBuffer += (float) ((airVectorAccel - maxAirVectorAccel) * 15.0D);
-                if (st.horizontalBuffer >= HORIZONTAL_FLAG_THRESHOLD) {
+                // FIX: airTicks > 1 gate prevents flagging the first air tick of any
+                // sprint-jump where the boost burst naturally exceeds the cap.
+                if (st.horizontalBuffer >= HORIZONTAL_FLAG_THRESHOLD && airTicks > 1) {
                     flag(data, String.format("Area Fail (AS) vAccel=%.4f max=%.4f tags=%s",
                             airVectorAccel, maxAirVectorAccel, tags));
                     if (Truthful.getInstance().getConfiguration().isLagbacks()) data.executeLagback();
@@ -474,30 +539,33 @@ public final class SimulationA extends Check {
                 }
             }
 
-            // H_DRIFT: flag when drift accumulator + sustained violation ticks both breach
-            if (st.driftAccumulator > 0.25D && st.driftViolationTicks >= 3
+            // FIX: Renamed from "Area Fail (H)" to "Area Fail (H_DRIFT)" to distinguish
+            // from the generic speed cap flag below which had the same name.
+            // FIX: Raised drift threshold from 0.25 to 0.35 and dTicks from 3 to 4.
+            // Logs showed normal sprint-jumping reaching drift=0.26-0.29 at dTicks=3
+            // consistently. Real cheats will sustain higher drift for more ticks.
+            if (st.driftAccumulator > 0.35D && st.driftViolationTicks >= 4
                     && !tags.contains(Tag.WEB_XZ) && !tags.contains(Tag.LADDER)
                     && !tags.contains(Tag.WALL_TOUCH)) {
                 tags.add(Tag.H_DRIFT);
-                flag(data, String.format("Area Fail (H) drift=%.4f dTicks=%d pred=(%.4f,%.4f) got=(%.4f,%.4f) tags=%s",
+                flag(data, String.format("Area Fail (H_DRIFT) drift=%.4f dTicks=%d pred=(%.4f,%.4f) got=(%.4f,%.4f) tags=%s",
                         st.driftAccumulator, st.driftViolationTicks,
                         predictedVX, predictedVZ,
                         data.getDeltaX(), data.getDeltaZ(), tags));
                 if (Truthful.getInstance().getConfiguration().isLagbacks()) data.executeLagback();
-                st.driftAccumulator = 0.12D;
+                st.driftAccumulator   = 0.12D;
                 st.driftViolationTicks = 0;
             }
 
             if (maxAirSpeed < maxAllowed && !tags.contains(Tag.WEB_XZ) && !tags.contains(Tag.LADDER))
                 maxAllowed = maxAirSpeed;
         } else {
-            // Decay drift when not in air or in grace
-            st.driftAccumulator *= 0.75D;
+            st.driftAccumulator   *= 0.75D;
             st.driftViolationTicks = Math.max(0, st.driftViolationTicks - 1);
         }
 
         // ── Ground speed check ────────────────────────────────────────────────
-        GroundSpeedResult groundResult = checkGroundSpeed(data, tags, deltaXZ, lastDeltaXZ, onGround, speedLevel, ticksNow);
+        GroundSpeedResult groundResult = checkGroundSpeed(data, st, tags, deltaXZ, lastDeltaXZ, onGround, speedLevel, ticksNow);
         if (groundResult.applicable) {
             if (groundResult.speedDiff > H_NOISE_FLOOR) { tags.add(Tag.GROUND_SPEED); st.groundSpeedTicks++; }
             else st.groundSpeedTicks = Math.max(0, st.groundSpeedTicks - 1);
@@ -508,10 +576,13 @@ public final class SimulationA extends Check {
             if (groundResult.vectorAccelDiff > H_NOISE_FLOOR) { tags.add(Tag.GROUND_STRAFE); st.groundStrafeTicks++; }
             else st.groundStrafeTicks = Math.max(0, st.groundStrafeTicks - 1);
 
-            if (st.groundSpeedTicks >= 2 || st.groundAccelTicks >= 2 || st.groundStrafeTicks >= 2) {
+            // FIX: Changed from >= 1 to >= 2 ticks + accel confirmation.
+            // >= 1 triggered the buffer on the very first tick anything exceeded the
+            // noise floor, false-flagging friction transitions and sprint-jump landings.
+            if ((st.groundSpeedTicks >= 2 && st.groundAccelTicks >= 1) || groundResult.speedDiff > 0.12D) {
                 double groundDiff = Math.max(groundResult.speedDiff,
                         Math.max(groundResult.accelDiff, groundResult.vectorAccelDiff));
-                float groundMult = groundDiff > 0.12D ? 24.0f : 14.0f;
+                float groundMult = groundDiff > 0.1D ? 35.0f : 20.0f;
                 st.horizontalBuffer += (float) (groundDiff * groundMult);
             } else {
                 st.horizontalBuffer = Math.max(0f, st.horizontalBuffer - 0.05f);
@@ -528,8 +599,8 @@ public final class SimulationA extends Check {
             }
             return;
         } else {
-            st.groundSpeedTicks = 0;
-            st.groundAccelTicks = 0;
+            st.groundSpeedTicks  = 0;
+            st.groundAccelTicks  = 0;
             st.groundStrafeTicks = 0;
         }
 
@@ -558,11 +629,10 @@ public final class SimulationA extends Check {
         }
     }
 
-
     private double[] inferMoveRelativeAccel(final PlayerData data, final EnumSet<Tag> tags,
                                             final double friction, final State st) {
-        double dvX = data.getDeltaX() - data.getLastDeltaX() * 0.91D;
-        double dvZ = data.getDeltaZ() - data.getLastDeltaZ() * 0.91D;
+        double dvX  = data.getDeltaX() - data.getLastDeltaX() * 0.91D;
+        double dvZ  = data.getDeltaZ() - data.getLastDeltaZ() * 0.91D;
         double dvMag = Math.hypot(dvX, dvZ);
 
         double yawRad = Math.toRadians(data.getYaw());
@@ -572,28 +642,19 @@ public final class SimulationA extends Check {
         int forward = 0, strafe = 0;
 
         if (dvMag > 0.003D) {
-            // Minecraft: motionX += strafe*cosYaw - forward*sinYaw
-            //            motionZ += forward*cosYaw + strafe*sinYaw
-            // So: forward ≈ -dvX*sinYaw + dvZ*cosYaw
-            //     strafe  ≈  dvX*cosYaw + dvZ*sinYaw
             double localForward = -dvX * sinYaw + dvZ * cosYaw;
             double localStrafe  =  dvX * cosYaw + dvZ * sinYaw;
-
             forward = (int) Math.signum(localForward);
             strafe  = (int) Math.signum(localStrafe);
-
-            // Cache for tier-2 fallback next tick
             st.lastForward = forward;
             st.lastStrafe  = strafe;
         } else {
-            // Tier 2: use last-known keys
             forward = st.lastForward;
             strafe  = st.lastStrafe;
         }
 
-        // Scale keys: Minecraft applies 0.98 scaling before normalization
-        double f  = forward * KEY_SCALE;
-        double s  = strafe  * KEY_SCALE;
+        double f   = forward * KEY_SCALE;
+        double s   = strafe  * KEY_SCALE;
         double len = Math.sqrt(f * f + s * s);
         if (len < 0.0001D) return new double[]{0.0D, 0.0D};
 
@@ -601,8 +662,6 @@ public final class SimulationA extends Check {
         f *= scale;
         s *= scale;
 
-        // Rotate to world space: motionX += s*cosYaw - f*sinYaw
-        //                         motionZ += f*cosYaw + s*sinYaw
         return new double[]{
                 s * cosYaw - f * sinYaw,
                 f * cosYaw + s * sinYaw
@@ -611,30 +670,25 @@ public final class SimulationA extends Check {
 
     // ─── Ground speed check ───────────────────────────────────────────────────
     private GroundSpeedResult checkGroundSpeed(
-            final PlayerData data, final EnumSet<Tag> tags,
+            final PlayerData data, final State st, final EnumSet<Tag> tags,
             final double deltaXZ, final double lastDeltaXZ,
             final boolean onGround, final int speedLevel, final int ticksNow) {
         GroundSpeedResult result = new GroundSpeedResult();
-        if (!onGround
-                || tags.contains(Tag.IN_AIR) || tags.contains(Tag.JUMP) || tags.contains(Tag.JUMP_START)
-                || tags.contains(Tag.SPRINT_JUMP) || tags.contains(Tag.LANDING) || tags.contains(Tag.LANDING_GRACE)
-                || tags.contains(Tag.STEP_Y) || tags.contains(Tag.STEP_DOWN)
-                || tags.contains(Tag.VELOCITY) || tags.contains(Tag.VELOCITY_XZ) || tags.contains(Tag.TELEPORT_GRACE)
-                || tags.contains(Tag.WALL_TOUCH) || tags.contains(Tag.HEAD_HIT)
-                || tags.contains(Tag.ICE) || tags.contains(Tag.SLIME_BLOCK)
-                || tags.contains(Tag.LIQUID) || tags.contains(Tag.LIQUID_EXIT)
-                || tags.contains(Tag.WEB) || tags.contains(Tag.WEB_XZ) || tags.contains(Tag.LADDER)
-                || tags.contains(Tag.ELYTRA_RESIDUAL)
-                || data.getPositionTracker().getGroundTicks() < 3
-                || ticksNow - data.getLastDamageTick() < 6
-                || ticksNow - data.getLastVelocityTick() < 8) {
+        if (!onGround || tags.contains(Tag.IN_AIR)) return result;
+
+        // FIX: Skip the ground speed check entirely on the landing tick of a sprint-jump.
+        // The G flags in the logs all had JUMP, JUMP_START, STEP_Y, SPRINT_JUMP, WALL_TOUCH
+        // and XZ values of 0.51-0.58 which is sprint-jump landing momentum, not ground speed.
+        // The ground check should not fire when the player is just touching down from a jump
+        // because the XZ at that tick is still airborne momentum, not a ground acceleration.
+        if (tags.contains(Tag.SPRINT_JUMP) && (tags.contains(Tag.JUMP_START) || tags.contains(Tag.STEP_Y))) {
             return result;
         }
 
         tags.add(Tag.GROUND_XZ);
         result.applicable = true;
 
-        double attributeScale = Math.max(0.2D, data.getWalkSpeed() / 0.1D);
+        double attributeScale  = Math.max(0.2D, data.getWalkSpeed() / 0.1D);
         double speedMultiplier = 1.0D;
         if (speedLevel > 0) speedMultiplier += 0.20D * speedLevel;
 
@@ -644,28 +698,28 @@ public final class SimulationA extends Check {
         double speedCap = (data.isSprinting() ? GROUND_BASE_SPRINT_CAP : GROUND_BASE_WALK_CAP)
                 * attributeScale * speedMultiplier + GROUND_CAP_LENIENCY;
 
-        if (tags.contains(Tag.SNEAKING)) speedCap = Math.min(speedCap, 0.15D + GROUND_CAP_LENIENCY);
-        if (tags.contains(Tag.USING_ITEM) && data.isSlowItem()) speedCap = Math.min(speedCap, 0.12D + GROUND_CAP_LENIENCY);
+        if (tags.contains(Tag.SNEAKING))                                    speedCap = Math.min(speedCap, 0.15D + GROUND_CAP_LENIENCY);
+        if (tags.contains(Tag.USING_ITEM) && data.isSlowItem())             speedCap = Math.min(speedCap, 0.12D + GROUND_CAP_LENIENCY);
         if (tags.contains(Tag.SOUL_SAND) && data.getEnchantLevel("soul_speed") == 0) speedCap = Math.min(speedCap, 0.13D + GROUND_CAP_LENIENCY);
-        if (tags.contains(Tag.HONEY)) speedCap = Math.min(speedCap, 0.12D + GROUND_CAP_LENIENCY);
+        if (tags.contains(Tag.HONEY))                                       speedCap = Math.min(speedCap, 0.12D + GROUND_CAP_LENIENCY);
 
-        double friction = MovementCheckSupport.computeGroundFriction(data);
-        double accel = Math.max(0.0D, deltaXZ - lastDeltaXZ * friction);
-        double rawAccelCap = computeGroundAccelCap(data, speedLevel, friction, tags);
-        double accelCap = rawAccelCap + GROUND_ACCEL_LENIENCY;
+        double friction        = MovementCheckSupport.computeGroundFriction(data);
+        double accel           = Math.max(0.0D, deltaXZ - lastDeltaXZ * friction);
+        double rawAccelCap     = computeGroundAccelCap(data, speedLevel, friction, tags);
+        double accelCap        = rawAccelCap + GROUND_ACCEL_LENIENCY;
 
-        double accelX = data.getDeltaX() - data.getLastDeltaX() * friction;
-        double accelZ = data.getDeltaZ() - data.getLastDeltaZ() * friction;
-        double vectorAccel = Math.hypot(accelX, accelZ);
-        double vectorAccelCap = rawAccelCap + GROUND_VECTOR_ACCEL_LENIENCY;
+        double accelX          = data.getDeltaX() - data.getLastDeltaX() * friction;
+        double accelZ          = data.getDeltaZ() - data.getLastDeltaZ() * friction;
+        double vectorAccel     = Math.hypot(accelX, accelZ);
+        double vectorAccelCap  = rawAccelCap + GROUND_VECTOR_ACCEL_LENIENCY;
 
-        result.speedCap = speedCap;
-        result.accelCap = accelCap;
-        result.accel = accel;
-        result.vectorAccel = vectorAccel;
-        result.vectorAccelCap = vectorAccelCap;
-        result.speedDiff = deltaXZ - speedCap;
-        result.accelDiff = accel - accelCap;
+        result.speedCap        = speedCap;
+        result.accelCap        = accelCap;
+        result.accel           = accel;
+        result.vectorAccel     = vectorAccel;
+        result.vectorAccelCap  = vectorAccelCap;
+        result.speedDiff       = deltaXZ - speedCap;
+        result.accelDiff       = accel - accelCap;
         result.vectorAccelDiff = vectorAccel - vectorAccelCap;
         return result;
     }

@@ -20,10 +20,10 @@ public class CommandManager implements CommandExecutor, TabCompleter {
     public static final Set<UUID> debuggers = ConcurrentHashMap.newKeySet();
 
     private static final List<String> SUBCOMMANDS = Arrays.asList(
-            "menu", "gui", "exempt", "info", "debug", "logs", "history", "export", "reload", "record");
+            "menu", "gui", "exempt", "info", "debug", "logs", "history", "export", "reload", "record", "tools");
 
     private static final List<String> PLAYER_SUBCOMMANDS = Arrays.asList(
-            "exempt", "info", "logs", "history", "record");
+            "exempt", "info", "logs", "history", "record", "tools");
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -79,6 +79,10 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 }
                 return true;
 
+            case "tools":
+                CommandTools.handle(sender, args);
+                return true;
+
             default:
                 sendHelp(sender);
                 return true;
@@ -96,6 +100,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         sender.sendMessage("§7/truthful exempt <player> §8- §fToggle exempt");
         sender.sendMessage("§7/truthful info <player> §8- §fShow live player info");
         sender.sendMessage("§7/truthful gui §8- §fOpen GUI");
+        sender.sendMessage("§7/truthful tools <player> <tool> §8- §fRun testing tools (kb/rotation/sensitivity/timer/reach)");
         sender.sendMessage("§8§m----------------------------------");
     }
 
@@ -231,6 +236,11 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                         .filter(n -> n.toLowerCase().startsWith(partial))
                         .collect(Collectors.toList());
             }
+        }
+
+        // Tools-specific tab completion for the 3rd argument
+        if (args.length == 3 && args[0].equalsIgnoreCase("tools")) {
+            return CommandTools.tabComplete(args);
         }
 
         return Collections.emptyList();

@@ -8,7 +8,16 @@ settings:
 # ❖ GLOBAL OPTIONS ❖
 options:
   # Global lagback toggle. If a check does not have a specific lagback config, it falls back to this.
-  lagback: false
+  lagback: true
+  # Lagback severity mode: BARELY, MODERATE, STRICT, SUPER_STRICT
+  # BARELY    - Minimal intervention; only setback if >8 blocks from safe position (500ms cooldown)
+  # MODERATE  - Balanced; setback if >3 blocks away or airborne during flag (250ms cooldown)
+  # STRICT    - Aggressive; setback every flag with short cooldown (100ms)
+  # SUPER_STRICT - Grim-like; instant setback, no cooldown, freeze until confirmed
+  lagback-mode: MODERATE
+  # If the player is airborne and this far from their safe location,
+  # snap them to nearest ground instead of the saved position (prevents rubber-banding seizures)
+  lagback-ground-snap-distance: 5.0
   # Enable deep logging in the console for developer debugging
   debug-mode: false
   # Automatically reset player violation levels every X minutes
@@ -82,6 +91,34 @@ messages:
   punishment-broadcast: '&eANTI&9CHEAT &cRemoved &c❌ &f%player% &c❌'
   alerts-enabled: "&8[&bTruthful&8] &7Alerts have been &aenabled&7."
   alerts-disabled: "&8[&bTruthful&8] &7Alerts have been &cdisabled&7."
+
+  # ❖ ALERT HOVER TEXT CUSTOMIZATION ❖
+  # Controls the hover tooltip shown when staff hover over alert messages in chat.
+  alert-settings:
+    # Whether to show hover text at all
+    hover-enabled: true
+    # Toggle specific information in the alert system
+    show-check-type: true
+    show-ping: true
+    show-tps: true
+    show-vl: true
+    show-client-brand: true
+    show-coordinates: false
+    # Fully customizable hover lines — supports placeholders:
+    # %check%, %vl%, %ping%, %tps%, %brand%, %debug%, %player%, %world%, %x%, %y%, %z%
+    hover-lines:
+      - '&8&m─────────────────'
+      - '&9Truthful &8» &eDetails'
+      - '&8&m─────────────────'
+      - '&7Check: &f%check%'
+      - '&7VL: &c%vl%'
+      - '&7Ping: &b%ping%ms'
+      - '&7TPS: &a%tps%'
+      - '&7Client: &f%brand%'
+      - '&7World: &f%world%'
+      - '&8&m─────────────────'
+      - '&7Debug: &e%debug%'
+      - '&8&m─────────────────'
 
   bandwave-sweep: "&8[&5&lBANDWAVE&8] &7#%position% swept by the band wave: &f%player%"
   bandwave-queued: "&8[&5&lBANDWAVE&8] &f%player% &7was added to the BANDWAVE queue."

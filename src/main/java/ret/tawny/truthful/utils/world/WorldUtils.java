@@ -134,6 +134,33 @@ public final class WorldUtils {
         return false;
     }
 
+    /**
+     * Checks if the player is near a bubble column block.
+     * Bubble columns produce significantly higher vertical velocities than regular water
+     * (up to 0.7 upward or -0.49 downward), so they need distinct handling.
+     */
+    public static boolean isNearBubbleColumn(Player player) {
+        PlayerData data = ret.tawny.truthful.Truthful.getInstance().getDataManager().getPlayerData(player);
+        if (data == null) return false;
+        Location loc = data.getLocation();
+        CompensatedWorld cache = data.getWorldCache();
+        int bX = loc.getBlockX();
+        int bY = loc.getBlockY();
+        int bZ = loc.getBlockZ();
+
+        for (int x = -1; x <= 1; x++) {
+            for (int y = -2; y <= 1; y++) {
+                for (int z = -1; z <= 1; z++) {
+                    WrappedBlockState state = cache.getBlockState(bX + x, bY + y, bZ + z);
+                    if (state != null && state.getType().getName().toUpperCase().contains("BUBBLE_COLUMN")) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     public static boolean hasClimbableNearby(Player player) {
         PlayerData data = ret.tawny.truthful.Truthful.getInstance().getDataManager().getPlayerData(player);
         if (data == null) return false;

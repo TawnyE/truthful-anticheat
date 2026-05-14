@@ -204,9 +204,15 @@ public final class PlayerData {
                 this.nextMoveIsLagbackTeleport = false;
             }
 
-            // Save safe location constantly, unless they flagged in the last 5 ticks
+            // FIX: Only update safe location when genuinely on the ground with no
+            // recent flags. Previously updated after just 5 ticks without a flag,
+            // even while airborne — this let fly cheats slowly drift the setback
+            // position forward between flag bursts.
+            // Now requires: server ground + no velocity + no pending teleport + 12
+            // ticks without a flag. The SetbackHandler's updateSafeLocation() adds
+            // its own mode-specific checks on top of this.
             if (!hasVelocity() && teleportQueue.getPendingCount() == 0 && !isTeleportPending()) {
-                if (this.ticksTracked - this.lastFlagTick > 5) {
+                if (isServerGround() && this.ticksTracked - this.lastFlagTick > 12) {
                     setbackHandler.updateSafeLocation(getLocation());
                 }
             }
@@ -319,7 +325,8 @@ public final class PlayerData {
 
     @Deprecated
     public void executeLagback() {
-        throw new UnsupportedOperationException("Lagbacks are now handled by forceLagback() centrally.");
+        // Redirect legacy calls to the centralized lagback system
+        forceLagback();
     }
 
     // Called by the core Check.java engine
@@ -336,6 +343,10 @@ public final class PlayerData {
 
     public void setLastFlagTick(int tick) {
         this.lastFlagTick = tick;
+    }
+
+    public int getLastFlagTick() {
+        return lastFlagTick;
     }
 
     public boolean isSlowItem() { return slowItemCache; }

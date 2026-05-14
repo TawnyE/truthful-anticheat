@@ -5,6 +5,9 @@ import org.bukkit.configuration.file.FileConfiguration;
 import ret.tawny.truthful.TruthfulPlugin;
 import ret.tawny.truthful.checks.api.data.CheckType;
 
+import java.util.Arrays;
+import java.util.Collections;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -104,6 +107,93 @@ public final class Configuration {
     public boolean isPunishmentBroadcastEnabled() { return this.config.getBoolean("options.punishment.broadcast", true); }
     public boolean isPunishmentAnimationEnabled() { return this.config.getBoolean("options.punishment.lightning", true); }
     public boolean isAlertsAutoEnableOnJoin() { return this.config.getBoolean("options.alerts.auto-enable-on-join", true); }
+
+    // --- LAGBACK SEVERITY MODE ---
+
+    /**
+     * Lagback severity modes control how aggressively the anti-cheat corrects player positions.
+     * BARELY: Minimal intervention — only when far from safe position.
+     * MODERATE: Balanced — setback when moderately displaced or airborne during a flag.
+     * STRICT: Aggressive — setback every flag with short cooldown.
+     * SUPER_STRICT: Grim-like — instant setback, no cooldown, freeze until confirmed.
+     */
+    public enum LagbackMode {
+        BARELY(500, 8.0, false),
+        // FIX: cooldown 250→80ms, distance 3.0→0.0.
+        // The old 3.0 threshold let players fly 3 blocks between setbacks.
+        // The old 250ms cooldown gave ~5 ticks of uncontested movement.
+        MODERATE(80, 0.0, true),
+        STRICT(100, 0.0, true),
+        SUPER_STRICT(0, 0.0, true);
+
+        public final int cooldownMs;
+        public final double distanceThreshold;
+        public final boolean setbackOnAirborne;
+
+        LagbackMode(int cooldownMs, double distanceThreshold, boolean setbackOnAirborne) {
+            this.cooldownMs = cooldownMs;
+            this.distanceThreshold = distanceThreshold;
+            this.setbackOnAirborne = setbackOnAirborne;
+        }
+    }
+
+    public LagbackMode getLagbackMode() {
+        String raw = this.config.getString("options.lagback-mode", "MODERATE").toUpperCase();
+        try {
+            return LagbackMode.valueOf(raw);
+        } catch (IllegalArgumentException e) {
+            return LagbackMode.MODERATE;
+        }
+    }
+
+    /** Maximum distance from safe location before using ground-snap teleport to prevent seizures. */
+    public double getLagbackGroundSnapDistance() {
+        return this.config.getDouble("options.lagback-ground-snap-distance", 5.0);
+    }
+
+    // --- CUSTOMIZABLE ALERT HOVER TEXT ---
+
+    public java.util.List<String> getAlertHoverLines() {
+        if (this.config.isList("messages.alert-settings.hover-lines")) {
+            return this.config.getStringList("messages.alert-settings.hover-lines");
+        }
+        return Arrays.asList(
+                "&7Check: &f%check%",
+                "&7VL: &f%vl%",
+                "&7Ping: &f%ping%ms",
+                "&7TPS: &f%tps%",
+                "&7Client: &f%brand%",
+                "&7Debug: &f%debug%"
+        );
+    }
+
+    public boolean isAlertHoverEnabled() {
+        return this.config.getBoolean("messages.alert-settings.hover-enabled", true);
+    }
+
+    public boolean isAlertShowCheckType() {
+        return this.config.getBoolean("messages.alert-settings.show-check-type", true);
+    }
+
+    public boolean isAlertShowPing() {
+        return this.config.getBoolean("messages.alert-settings.show-ping", true);
+    }
+
+    public boolean isAlertShowTps() {
+        return this.config.getBoolean("messages.alert-settings.show-tps", true);
+    }
+
+    public boolean isAlertShowVl() {
+        return this.config.getBoolean("messages.alert-settings.show-vl", true);
+    }
+
+    public boolean isAlertShowBrand() {
+        return this.config.getBoolean("messages.alert-settings.show-client-brand", true);
+    }
+
+    public boolean isAlertShowCoords() {
+        return this.config.getBoolean("messages.alert-settings.show-coordinates", false);
+    }
 
     // --- LATENCY KICKER ---
 

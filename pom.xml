@@ -6,7 +6,7 @@
 
     <groupId>ret.tawny</groupId>
     <artifactId>TruthfulAC</artifactId>
-    <version>ph1</version>
+    <version>ph3</version>
     <packaging>jar</packaging>
 
     <name>TruthfulAC</name>

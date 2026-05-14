@@ -106,6 +106,11 @@ public final class SimulationC extends Check {
         if (deltaY > 0.5D && lastDeltaY > 0.3D)    tags.add(Tag.BUBBLE_UP);
         if (deltaY < -0.4D && lastDeltaY < -0.3D)  tags.add(Tag.BUBBLE_DOWN);
 
+        if (WorldUtils.isNearBubbleColumn(data.getPlayer())) {
+            if (deltaY > 0.0D) tags.add(Tag.BUBBLE_UP);
+            else if (deltaY < 0.0D) tags.add(Tag.BUBBLE_DOWN);
+        }
+
         int blockX = (int) Math.floor(data.getX());
         int headY = (int) Math.floor(data.getY() + 1.62);
         int feetY = (int) Math.floor(data.getY());

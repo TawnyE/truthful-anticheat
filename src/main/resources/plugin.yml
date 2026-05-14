@@ -1,5 +1,5 @@
 name: TruthfulAC
-version: 'v2.6'
+version: 'ph3'
 main: ret.tawny.truthful.TruthfulPlugin
 api-version: '1.21'
 author: Tawny(CodeControl)
