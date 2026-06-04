@@ -1,0 +1,31 @@
+name: TruthfulAC
+version: 'ph3'
+main: ret.tawny.truthful.TruthfulPlugin
+api-version: '1.21'
+author: Tawny(CodeControl)
+description: Multi-version anti-cheat with modernized movement and combat checks
+load: POSTWORLD
+depend:
+  - packetevents
+
+commands:
+  truthful:
+    description: Main command for Truthful Anti-Cheat
+    usage: /truthful <help|logs|exempt|menu>
+    aliases: [tac, ac]
+    permission: truthful.admin
+  alerts:
+    description: Toggle anti-cheat alerts
+    usage: /alerts
+    permission: truthful.alerts
+  bandwave:
+    description: Manage BANDWAVE queue and execution
+    usage: /bandwave <add|remove|list|start|stop|clear|status>
+    permission: truthful.admin
+permissions:
+  truthful.admin:
+    description: Admin permission for Truthful
+    default: op
+  truthful.alerts:
+    description: Receive alerts
+    default: op
