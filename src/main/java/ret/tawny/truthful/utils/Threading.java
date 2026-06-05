@@ -20,13 +20,13 @@ public final class Threading {
             return;
         }
 
-        Bukkit.getScheduler().runTask(Truthful.getInstance().getPlugin(), runnable);
+        Truthful.getInstance().getServerScheduler().runGlobal(runnable);
     }
 
     /**
      * Run work asynchronously.
      */
     public static void runAsync(Runnable runnable) {
-        Bukkit.getScheduler().runTaskAsynchronously(Truthful.getInstance().getPlugin(), runnable);
+        Truthful.getInstance().getServerScheduler().runAsync(runnable);
     }
 }

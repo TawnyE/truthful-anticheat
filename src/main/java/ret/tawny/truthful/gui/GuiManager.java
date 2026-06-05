@@ -4,7 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.scheduler.BukkitRunnable;
+
 import ret.tawny.truthful.Truthful;
 import ret.tawny.truthful.gui.handlers.GuiClickHandler;
 import ret.tawny.truthful.gui.menus.*;
@@ -64,34 +64,31 @@ public final class GuiManager {
     // ═══════════════════════════════════════════════
 
     private void startUpdateTask() {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                for (Player admin : Bukkit.getOnlinePlayers()) {
-                    Inventory top = admin.getOpenInventory().getTopInventory();
-                    if (top == null)
-                        continue;
+        Truthful.getInstance().getServerScheduler().runGlobalTimer(() -> {
+            for (Player admin : Bukkit.getOnlinePlayers()) {
+                Inventory top = admin.getOpenInventory().getTopInventory();
+                if (top == null)
+                    continue;
 
-                    String title = admin.getOpenInventory().getTitle();
+                String title = admin.getOpenInventory().getTitle();
 
-                    // Update live inspector
-                    if (title.contains("Info: ")) {
-                        try {
-                            String targetName = ChatColor.stripColor(title.split("Info: ")[1]);
-                            Player target = Bukkit.getPlayer(targetName);
+                // Update live inspector
+                if (title.contains("Info: ")) {
+                    try {
+                        String targetName = ChatColor.stripColor(title.split("Info: ")[1]);
+                        Player target = Bukkit.getPlayer(targetName);
 
-                            if (target != null && target.isOnline()) {
-                                PlayerInfoMenu.update(top, target);
-                            } else {
-                                // Player disconnected - show red accent border
-                                GuiItemFactory.fillRow(top, 0,
-                                        GuiConstants.getMat("RED_STAINED_GLASS_PANE", "STAINED_GLASS_PANE"));
-                            }
-                        } catch (Exception ignored) {
+                        if (target != null && target.isOnline()) {
+                            PlayerInfoMenu.update(top, target);
+                        } else {
+                            // Player disconnected - show red accent border
+                            GuiItemFactory.fillRow(top, 0,
+                                    GuiConstants.getMat("RED_STAINED_GLASS_PANE", "STAINED_GLASS_PANE"));
                         }
+                    } catch (Exception ignored) {
                     }
                 }
             }
-        }.runTaskTimer(Truthful.getInstance().getPlugin(), 20L, 20L);
+        }, 20L, 20L);
     }
 }

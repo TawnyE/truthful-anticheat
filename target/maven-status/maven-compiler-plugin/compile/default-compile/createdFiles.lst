@@ -33,7 +33,6 @@ ret\tawny\truthful\gui\menus\CategoryMenu$1.class
 ret\tawny\truthful\checks\impl\movement\simulation\SimulationD.class
 ret\tawny\truthful\gui\menus\MainMenu.class
 ret\tawny\truthful\utils\reflection\Manager.class
-ret\tawny\truthful\Truthful$2.class
 ret\tawny\truthful\utils\math\MathHelper.class
 ret\tawny\truthful\checks\impl\movement\spoof\GroundSpoofD.class
 ret\tawny\truthful\checks\impl\combat\aim\AimB.class
@@ -46,7 +45,6 @@ ret\tawny\truthful\checks\impl\packet\badpacket\BadPacketC.class
 ret\tawny\truthful\checks\impl\combat\killaura\KillAuraH.class
 ret\tawny\truthful\checks\impl\movement\baritone\BaritoneA.class
 ret\tawny\truthful\checks\impl\combat\reach\ReachA.class
-ret\tawny\truthful\Truthful$1.class
 ret\tawny\truthful\event\api\IEvent.class
 ret\tawny\truthful\checks\impl\packet\badpacket\BadPacketI.class
 ret\tawny\truthful\checks\impl\packet\order\PacketOrderB$ItemUseState.class
@@ -87,7 +85,6 @@ ret\tawny\truthful\checks\impl\packet\badpacket\BadPacketD.class
 ret\tawny\truthful\data\processor\BanStateProcessor.class
 ret\tawny\truthful\checks\impl\packet\sprint\SprintA.class
 ret\tawny\truthful\checks\impl\packet\crasher\CrasherA.class
-ret\tawny\truthful\Truthful$3.class
 ret\tawny\truthful\listener\CheckListener.class
 ret\tawny\truthful\Truthful.class
 ret\tawny\truthful\checks\impl\packet\badpacket\BadPacketG.class
@@ -107,6 +104,7 @@ ret\tawny\truthful\checks\impl\combat\aim\AimF.class
 ret\tawny\truthful\checks\impl\combat\killaura\KillAuraG$TargetEntry.class
 ret\tawny\truthful\database\LogManager.class
 ret\tawny\truthful\checks\impl\movement\simulation\SimulationA$State.class
+ret\tawny\truthful\utils\ServerScheduler.class
 ret\tawny\truthful\checks\impl\combat\anchor\AnchorAuraA.class
 ret\tawny\truthful\checks\impl\combat\killaura\KillAuraH$IntervalData.class
 ret\tawny\truthful\checks\impl\movement\inventory\InventoryA.class
@@ -215,14 +213,12 @@ ret\tawny\truthful\checks\impl\packet\order\PacketOrderC.class
 ret\tawny\truthful\data\ExemptionType.class
 ret\tawny\truthful\debug\recorder\RecorderManager.class
 ret\tawny\truthful\gui\GuiConstants.class
-ret\tawny\truthful\commands\impl\CommandTools$4.class
 ret\tawny\truthful\utils\world\WorldUtils.class
 ret\tawny\truthful\checks\impl\movement\simulation\SimulationD$State.class
 ret\tawny\truthful\utils\world\BlockPropertyRegistry.class
 ret\tawny\truthful\checks\impl\combat\killaura\KillAuraD.class
 ret\tawny\truthful\utils\world\BlockPropertyRegistry$BlockProperties.class
 ret\tawny\truthful\checks\api\CheckBuffer.class
-ret\tawny\truthful\gui\GuiManager$1.class
 ret\tawny\truthful\checks\impl\movement\simulation\SimulationD$Tag.class
 ret\tawny\truthful\data\tracker\PositionTracker.class
 ret\tawny\truthful\utils\SafeLocation.class

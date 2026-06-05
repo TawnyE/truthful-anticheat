@@ -91,7 +91,7 @@ public final class CrystalAuraA extends Check {
                 }
 
 
-                Bukkit.getScheduler().runTask(Truthful.getInstance().getPlugin(), () -> {
+                Truthful.getInstance().getServerScheduler().runRegion(player, () -> {
                     if (!player.isOnline())
                         return;
 

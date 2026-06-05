@@ -3,7 +3,7 @@ package ret.tawny.truthful.debug.recorder;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitTask;
+import com.tcoded.folialib.wrapper.task.WrappedTask;
 import ret.tawny.truthful.Truthful;
 import ret.tawny.truthful.data.PlayerData;
 import ret.tawny.truthful.debug.recorder.data.RecordingSession;
@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class RecorderManager {
 
     private final Map<UUID, RecordingSession> activeSessions = new ConcurrentHashMap<>();
-    private final Map<UUID, BukkitTask> activeTimers = new ConcurrentHashMap<>();
+    private final Map<UUID, WrappedTask> activeTimers = new ConcurrentHashMap<>();
 
     // Users who are listening to the debug output (Admins)
     // Key: Target UUID, Value: Admin UUID
@@ -49,7 +49,7 @@ public final class RecorderManager {
         debugSubscribers.put(targetUUID, admin.getUniqueId());
 
         // Schedule 5-minute auto-stop
-        BukkitTask task = Bukkit.getScheduler().runTaskLater(Truthful.getInstance().getPlugin(), () -> {
+        WrappedTask task = Truthful.getInstance().getServerScheduler().runGlobalLater(() -> {
             if (isRecording(target)) {
                 stopRecording(target);
                 if (admin.isOnline()) {
@@ -65,7 +65,7 @@ public final class RecorderManager {
         UUID uuid = target.getUniqueId();
 
         // Cancel timer
-        BukkitTask task = activeTimers.remove(uuid);
+        WrappedTask task = activeTimers.remove(uuid);
         if (task != null) task.cancel();
 
         // Save Data

@@ -198,7 +198,7 @@ public final class SetbackHandler {
         }
 
         if (data.isInventoryOpen()) {
-            Bukkit.getScheduler().runTask(Truthful.getInstance().getPlugin(), () -> {
+            Truthful.getInstance().getServerScheduler().runRegion(player, () -> {
                 if (player.isOnline()) {
                     player.closeInventory();
                 }

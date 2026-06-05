@@ -49,8 +49,8 @@ public final class AimH extends Check {
             return;
         }
 
-        Entity target = data.getLastTarget();
-        if (target == null || !target.isValid()) {
+        int targetId = data.getLastTargetId();
+        if (targetId == -1) {
             dataMap.remove(player.getUniqueId());
             return;
         }
@@ -71,7 +71,7 @@ public final class AimH extends Check {
         float yaw = data.getYaw();
 
 
-        CompensationTracker.CompensatedEntity targetData = Truthful.getInstance().getCompensationTracker().getEntityData(target.getEntityId());
+        CompensationTracker.CompensatedEntity targetData = Truthful.getInstance().getCompensationTracker().getEntityData(targetId);
         if (targetData == null) return;
 
 

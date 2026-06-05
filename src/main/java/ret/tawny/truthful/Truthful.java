@@ -8,7 +8,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitRunnable;
+
 import ret.tawny.truthful.checks.registry.CheckRegistry;
 import ret.tawny.truthful.commands.impl.CommandAlerts;
 import ret.tawny.truthful.commands.impl.CommandManager;
@@ -56,12 +56,15 @@ public final class Truthful {
     private BandwaveManager bandwaveManager;
     private Plugin plugin;
     private EnvironmentTask environmentTask;
+    private ret.tawny.truthful.utils.ServerScheduler serverScheduler;
 
     private Truthful() {
     }
 
     public void start(final Plugin plugin) {
         this.plugin = plugin;
+
+        this.serverScheduler = new ret.tawny.truthful.utils.ServerScheduler(plugin);
 
         this.versionManager = new VersionManager();
         this.dataManager = new DataManager();
@@ -92,9 +95,9 @@ public final class Truthful {
 
         this.environmentTask = new EnvironmentTask();
         long envInterval = getConfiguration().getEnvironmentScanIntervalTicks();
-        this.environmentTask.runTaskTimer(plugin, envInterval, envInterval);
+        this.serverScheduler.runGlobalTimer(this.environmentTask, envInterval, envInterval);
 
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        this.serverScheduler.runGlobalLater(() -> {
             for (org.bukkit.World world : Bukkit.getWorlds()) {
                 for (Entity ent : world.getEntities()) {
                     this.compensationTracker.handleEntitySnapshot(ent);
@@ -105,57 +108,47 @@ public final class Truthful {
         int resetMinutes = getConfiguration().getViolationResetInterval();
         if (resetMinutes > 0) {
             long ticks = (long) resetMinutes * 60 * 20L;
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    checkManager.resetAllViolations();
-                    for (PlayerData data : dataManager.getCollection()) {
-                        data.resetTotalViolations();
-                    }
+            this.serverScheduler.runGlobalTimer(() -> {
+                checkManager.resetAllViolations();
+                for (PlayerData data : dataManager.getCollection()) {
+                    data.resetTotalViolations();
                 }
-            }.runTaskTimer(plugin, ticks, ticks);
+            }, ticks, ticks);
         }
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (compensationTracker != null) {
-                    compensationTracker.tick();
-                }
-                bandwaveManager.tickAutoStart();
+        this.serverScheduler.runGlobalTimer(() -> {
+            if (compensationTracker != null) {
+                compensationTracker.tick();
             }
-        }.runTaskTimer(plugin, 1L, 1L);
+            bandwaveManager.tickAutoStart();
+        }, 1L, 1L);
 
         final long transactionInterval = getConfiguration().getTransactionPingIntervalTicks();
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                for (PlayerData data : dataManager.getCollection()) {
-                    Player player = data.getPlayer();
-                    if (player == null || !player.isOnline() || isBedrockPlayer(player)) {
-                        continue;
-                    }
+        this.serverScheduler.runAsyncTimer(() -> {
+            for (PlayerData data : dataManager.getCollection()) {
+                Player player = data.getPlayer();
+                if (player == null || !player.isOnline() || isBedrockPlayer(player)) {
+                    continue;
+                }
 
-                    short id = (short) data.getNextTransactionId();
-                    data.recordTransactionSent(id);
+                short id = (short) data.getNextTransactionId();
+                data.recordTransactionSent(id);
 
-                    if (USE_MODERN_PING) {
-                        PacketEvents.getAPI().getPlayerManager().sendPacket(player, new WrapperPlayServerPing(id));
-                    } else {
-                        PacketEvents.getAPI().getPlayerManager().sendPacket(player,
-                                new WrapperPlayServerWindowConfirmation(0, id, false));
-                    }
+                if (USE_MODERN_PING) {
+                    PacketEvents.getAPI().getPlayerManager().sendPacket(player, new WrapperPlayServerPing(id));
+                } else {
+                    PacketEvents.getAPI().getPlayerManager().sendPacket(player,
+                            new WrapperPlayServerWindowConfirmation(0, id, false));
                 }
             }
-        }.runTaskTimerAsynchronously(plugin, transactionInterval, transactionInterval);
+        }, transactionInterval, transactionInterval);
     }
 
     public void shutdown() {
         if (logManager != null) logManager.shutdown();
         if (bandwaveManager != null) bandwaveManager.stop();
-        if (environmentTask != null && !environmentTask.isCancelled()) environmentTask.cancel();
         if (dataManager != null) dataManager.teardownAll();
-        if (plugin != null) Bukkit.getScheduler().cancelTasks(plugin);
+        if (serverScheduler != null) serverScheduler.cancelAll();
     }
 
     public static void startEngine(Plugin plugin) {
@@ -183,6 +176,7 @@ public final class Truthful {
     public Configuration getConfiguration() { return ((TruthfulPlugin) plugin).getConfiguration(); }
     public Plugin getPlugin() { return plugin; }
     public PlayerListener getPlayerListener() { return playerListener; }
+    public ret.tawny.truthful.utils.ServerScheduler getServerScheduler() { return serverScheduler; }
     public Scheduler getScheduler() { return scheduler; }
     public CompensationTracker getCompensationTracker() { return compensationTracker; }
     public LogManager getLogManager() { return logManager; }

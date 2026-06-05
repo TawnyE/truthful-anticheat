@@ -62,6 +62,10 @@
                                     <pattern>org.bstats</pattern>
                                     <shadedPattern>ret.tawny.truthful.bstats</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>com.tcoded.folialib</pattern>
+                                    <shadedPattern>ret.tawny.truthful.folialib</shadedPattern>
+                                </relocation>
                             </relocations>
                             <filters>
                                 <filter>
@@ -98,6 +102,10 @@
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
+        </repository>
+        <repository>
+            <id>nexomc-releases</id>
+            <url>https://repo.nexomc.com/releases/</url>
         </repository>
     </repositories>
 
@@ -155,6 +163,14 @@
             <groupId>org.bstats</groupId>
             <artifactId>bstats-bukkit</artifactId>
             <version>3.0.2</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- FoliaLib -->
+        <dependency>
+            <groupId>com.tcoded</groupId>
+            <artifactId>FoliaLib</artifactId>
+            <version>0.5.1</version>
             <scope>compile</scope>
         </dependency>
 

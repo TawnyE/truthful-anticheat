@@ -62,7 +62,7 @@ public final class GroundSpoofF extends Check {
                 // FIXED: Main-thread block verification for Tile Entities (Spawners, Chests)
                 Location loc = new Location(player.getWorld(), wrapper.getX(), wrapper.getY() - 0.2, wrapper.getZ());
 
-                Bukkit.getScheduler().runTask(Truthful.getInstance().getPlugin(), () -> {
+                Truthful.getInstance().getServerScheduler().runRegion(player, () -> {
                     if (!player.isOnline()) return;
                     org.bukkit.block.Block block = loc.getBlock();
 
