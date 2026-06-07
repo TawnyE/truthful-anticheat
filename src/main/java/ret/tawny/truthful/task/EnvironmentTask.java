@@ -4,7 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Vehicle;
-import org.bukkit.scheduler.BukkitRunnable;
+
 import ret.tawny.truthful.Truthful;
 import ret.tawny.truthful.data.PlayerData;
 
@@ -12,7 +12,7 @@ import ret.tawny.truthful.data.PlayerData;
  * Scheduled task to handle heavy environment checks.
  * Optimized to run more frequently (5 ticks) for accurate proximity detection.
  */
-public class EnvironmentTask extends BukkitRunnable {
+public class EnvironmentTask implements Runnable {
 
     private int playerIndex = 0;
 
@@ -33,47 +33,49 @@ public class EnvironmentTask extends BukkitRunnable {
             playerIndex++;
             processed++;
 
-            PlayerData data = Truthful.getInstance().getDataManager().getPlayerData(player);
-            if (data == null) continue;
+            Truthful.getInstance().getServerScheduler().runRegion(player, () -> {
+                PlayerData data = Truthful.getInstance().getDataManager().getPlayerData(player);
+                if (data == null) return;
 
-            if (Truthful.getInstance().isBedrockPlayer(player)) continue;
+                if (Truthful.getInstance().isBedrockPlayer(player)) return;
 
-            boolean vehicleNearby = false;
-            boolean entityNearby = false;
+                boolean vehicleNearby = false;
+                boolean entityNearby = false;
 
-            // Radius 1.25 covers immediate surroundings adequately.
-            // Using a smaller radius improves performance while maintaining detection.
-            for (Entity entity : player.getNearbyEntities(1.25, 1.25, 1.25)) {
+                // Radius 1.25 covers immediate surroundings adequately.
+                // Using a smaller radius improves performance while maintaining detection.
+                for (Entity entity : player.getNearbyEntities(1.25, 1.25, 1.25)) {
 
-                // Skip self
-                if (entity.getEntityId() == player.getEntityId()) continue;
+                    // Skip self
+                    if (entity.getEntityId() == player.getEntityId()) continue;
 
-                // Vehicle check
-                if (entity instanceof Vehicle) {
+                    // Vehicle check
+                    if (entity instanceof Vehicle) {
+                        vehicleNearby = true;
+                    }
+                    // General Entity / Boat check (Boats are sometimes not instanceof Vehicle in older APIs or weird forks)
+                    else if (entity.getType().name().contains("BOAT") || entity.getType().name().contains("MINECART")) {
+                        vehicleNearby = true;
+                    }
+
+                    // Living entity check (for phasing/crowding)
+                    if (entity.getType().isAlive()) {
+                        entityNearby = true;
+                    }
+
+                    if (vehicleNearby && entityNearby) {
+                        break;
+                    }
+                }
+
+                // Ensure vehicle state is true if they are actually riding one
+                if (player.isInsideVehicle()) {
                     vehicleNearby = true;
                 }
-                // General Entity / Boat check (Boats are sometimes not instanceof Vehicle in older APIs or weird forks)
-                else if (entity.getType().name().contains("BOAT") || entity.getType().name().contains("MINECART")) {
-                    vehicleNearby = true;
-                }
 
-                // Living entity check (for phasing/crowding)
-                if (entity.getType().isAlive()) {
-                    entityNearby = true;
-                }
-
-                if (vehicleNearby && entityNearby) {
-                    break;
-                }
-            }
-
-            // Ensure vehicle state is true if they are actually riding one
-            if (player.isInsideVehicle()) {
-                vehicleNearby = true;
-            }
-
-            data.setNearVehicle(vehicleNearby);
-            data.setNearEntity(entityNearby);
+                data.setNearVehicle(vehicleNearby);
+                data.setNearEntity(entityNearby);
+            });
         }
     }
 }

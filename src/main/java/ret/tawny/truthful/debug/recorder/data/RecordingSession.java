@@ -46,7 +46,7 @@ public final class RecordingSession {
 
     public void saveAndExport() {
         // Run I/O async to prevent lag spikes when saving large recordings
-        Bukkit.getScheduler().runTaskAsynchronously(Truthful.getInstance().getPlugin(), () -> {
+        Truthful.getInstance().getServerScheduler().runAsync(() -> {
             try {
                 File folder = new File(Truthful.getInstance().getPlugin().getDataFolder(), "recordings");
                 if (!folder.exists()) folder.mkdirs();

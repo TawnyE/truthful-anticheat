@@ -40,7 +40,7 @@ public final class DataManager {
         if (data != null) {
             data.teardown();
             UUID worldUid = player.getWorld().getUID();
-            org.bukkit.Bukkit.getScheduler().runTask(ret.tawny.truthful.Truthful.getInstance().getPlugin(), () -> {
+            ret.tawny.truthful.Truthful.getInstance().getServerScheduler().runGlobal(() -> {
                 org.bukkit.World world = org.bukkit.Bukkit.getWorld(worldUid);
                 if (world != null && world.getPlayers().isEmpty()) {
                     ret.tawny.truthful.Truthful.getInstance().getGlobalWorldCache().clearWorld(worldUid);

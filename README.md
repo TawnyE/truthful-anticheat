@@ -6,6 +6,10 @@ This used to be a paid plugin. It is not anymore. The license key is gone, the o
 
 ---
 
+# Folia Support
+**Version** - This plugin now supports 26.1 latest version.
+**Compatibility (New)** - It is now supported to Folia Versions **BETA**
+
 ## What it checks
 
 **Movement** — The core of the plugin. A full server-side physics engine that validates movement every tick against what vanilla actually allows. Covers fly, bhop, speed, elytra abuse, liquid movement, vehicle exploits, NoFall, velocity, and timer manipulation. This is where the most work has gone and where most future work will go.

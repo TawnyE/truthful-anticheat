@@ -94,6 +94,7 @@ public final class PlayerData {
     private long lastExplosionPacketTime = 0;
 
     private Entity lastTarget;
+    private int lastTargetId = -1;
     private double preExitVehicleSpeed;
     private PlayerBlockPlacePacketWrapper currentBlockPlacement;
     private double baritoneTrust = 100.0;
@@ -631,8 +632,16 @@ public final class PlayerData {
 
     public PlayerBlockPlacePacketWrapper getCurrentBlockPlacement() { return currentBlockPlacement; }
     public void setCurrentBlockPlacement(PlayerBlockPlacePacketWrapper p) { this.currentBlockPlacement = p; }
-    public void setLastTarget(Entity e) { this.lastTarget = e; }
+    public void setLastTarget(Entity e) { 
+        this.lastTarget = e; 
+        if (e != null) {
+            this.lastTargetId = e.getEntityId();
+        } else {
+            this.lastTargetId = -1;
+        }
+    }
     public Entity getLastTarget() { return lastTarget; }
+    public int getLastTargetId() { return lastTargetId; }
 
     public void setPreExitVehicleSpeed(double s) { this.preExitVehicleSpeed = s; }
     public double getBaritoneTrust() { return baritoneTrust; }

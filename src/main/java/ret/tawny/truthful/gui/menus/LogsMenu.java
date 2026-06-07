@@ -44,12 +44,12 @@ public final class LogsMenu {
         final UUID targetUUID = target.getUniqueId();
 
         // Async log fetch
-        Bukkit.getScheduler().runTaskAsynchronously(Truthful.getInstance().getPlugin(), new Runnable() {
+        Truthful.getInstance().getServerScheduler().runAsync(new Runnable() {
             @Override
             public void run() {
                 final List<LogManager.LogEntry> logs = Truthful.getInstance().getLogManager().getLogs(targetUUID, 36);
 
-                Bukkit.getScheduler().runTask(Truthful.getInstance().getPlugin(), new Runnable() {
+                Truthful.getInstance().getServerScheduler().runRegion(admin, new Runnable() {
                     @Override
                     public void run() {
                         if (!admin.isOnline())

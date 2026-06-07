@@ -75,7 +75,7 @@ public final class PlayerListener implements Listener {
             TruthfulPacketListener.updatePlayerBrand(player, brand);
         }
 
-        Bukkit.getScheduler().runTaskLater(Truthful.getInstance().getPlugin(), () -> {
+        Truthful.getInstance().getServerScheduler().runRegionLater(player, () -> {
             if (!player.isOnline()) return;
 
             String brand = null;
@@ -119,7 +119,7 @@ public final class PlayerListener implements Listener {
         Player player = event.getPlayer();
         PlayerData data = this.dataManager.getPlayerData(player);
         if (data != null) {
-            Bukkit.getScheduler().runTaskLater(Truthful.getInstance().getPlugin(), data::resetTransientState, 1L);
+            Truthful.getInstance().getServerScheduler().runRegionLater(player, data::resetTransientState, 1L);
         }
     }
 

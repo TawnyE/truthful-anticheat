@@ -4,7 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
+
 import org.bukkit.util.Vector;
 import ret.tawny.truthful.Truthful;
 import ret.tawny.truthful.data.PlayerData;
@@ -87,12 +87,13 @@ public final class CommandTools {
 
         final double kbMagnitude = kb.length();
 
-        Bukkit.getScheduler().runTask(Truthful.getInstance().getPlugin(), () -> {
+        Truthful.getInstance().getServerScheduler().runRegion(target, () -> {
             target.setVelocity(kb);
         });
 
         // Track the player's response over the next 20 ticks
-        new BukkitRunnable() {
+        final com.tcoded.folialib.wrapper.task.WrappedTask[] wrappedTask = new com.tcoded.folialib.wrapper.task.WrappedTask[1];
+        Runnable run = new Runnable() {
             int ticks = 0;
             double maxDeltaY = 0;
             double maxDeltaXZ = 0;
@@ -112,7 +113,7 @@ public final class CommandTools {
                 if (currentDeltaXZ > 0.15) processedHorizontal = true;
 
                 if (ticks >= 20) {
-                    cancel();
+                    if (wrappedTask[0] != null) wrappedTask[0].cancel();
 
                     double verticalPct = (maxDeltaY / 0.45) * 100.0;
                     double horizontalPct = (maxDeltaXZ / (0.6 * Math.sqrt(2))) * 100.0;
@@ -128,7 +129,8 @@ public final class CommandTools {
                     staff.sendMessage(DIVIDER);
                 }
             }
-        }.runTaskTimer(Truthful.getInstance().getPlugin(), 5L, 1L);
+        };
+        wrappedTask[0] = Truthful.getInstance().getServerScheduler().runGlobalTimer(run, 5L, 1L);
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
@@ -142,7 +144,8 @@ public final class CommandTools {
         final List<Float> pitchDeltas = new ArrayList<>();
         final List<Float> yawDeltas = new ArrayList<>();
 
-        new BukkitRunnable() {
+        final com.tcoded.folialib.wrapper.task.WrappedTask[] wrappedTask = new com.tcoded.folialib.wrapper.task.WrappedTask[1];
+        Runnable run = new Runnable() {
             int ticks = 0;
 
             @Override
@@ -156,7 +159,7 @@ public final class CommandTools {
                 if (dy > 0.001f && dy < 180.0f) yawDeltas.add(dy);
 
                 if (ticks >= 60) { // 3 seconds
-                    cancel();
+                    if (wrappedTask[0] != null) wrappedTask[0].cancel();
 
                     if (pitchDeltas.size() < 3) {
                         staff.sendMessage(PREFIX + "§cInsufficient rotation data. Player may be AFK.");
@@ -193,7 +196,8 @@ public final class CommandTools {
                     staff.sendMessage(DIVIDER);
                 }
             }
-        }.runTaskTimerAsynchronously(Truthful.getInstance().getPlugin(), 1L, 1L);
+        };
+        wrappedTask[0] = Truthful.getInstance().getServerScheduler().runAsyncTimer(run, 1L, 1L);
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
@@ -230,29 +234,26 @@ public final class CommandTools {
         final int startTick = data.getTicksTracked();
         final long startTime = System.nanoTime();
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                int endTick = data.getTicksTracked();
-                long endTime = System.nanoTime();
+        Truthful.getInstance().getServerScheduler().runGlobalLater(() -> {
+            int endTick = data.getTicksTracked();
+            long endTime = System.nanoTime();
 
-                int ticksCounted = endTick - startTick;
-                double secondsElapsed = (endTime - startTime) / 1_000_000_000.0;
-                double ticksPerSecond = ticksCounted / secondsElapsed;
-                double timerBalance = data.getTransactionTimerBalance();
+            int ticksCounted = endTick - startTick;
+            double secondsElapsed = (endTime - startTime) / 1_000_000_000.0;
+            double ticksPerSecond = ticksCounted / secondsElapsed;
+            double timerBalance = data.getTransactionTimerBalance();
 
-                // Normal is ~20 tps; anything significantly above indicates Timer
-                boolean pass = ticksPerSecond < 21.5 && timerBalance < 500.0;
+            // Normal is ~20 tps; anything significantly above indicates Timer
+            boolean pass = ticksPerSecond < 21.5 && timerBalance < 500.0;
 
-                staff.sendMessage(PREFIX + "§7Ticks Counted: §f" + ticksCounted);
-                staff.sendMessage(PREFIX + "§7Time Elapsed: §f" + String.format("%.2fs", secondsElapsed));
-                staff.sendMessage(PREFIX + "§7Effective TPS: §f" + String.format("%.2f", ticksPerSecond));
-                staff.sendMessage(PREFIX + "§7Timer Balance: §f" + String.format("%.1fms", timerBalance));
-                staff.sendMessage(PREFIX + "§7Result: " + (pass ? "§a✔ PASS" : "§c✘ FAIL") +
-                        (pass ? " §7(normal packet rate)" : " §7(abnormal packet rate — possible timer)"));
-                staff.sendMessage(DIVIDER);
-            }
-        }.runTaskLater(Truthful.getInstance().getPlugin(), 100L); // 5 seconds
+            staff.sendMessage(PREFIX + "§7Ticks Counted: §f" + ticksCounted);
+            staff.sendMessage(PREFIX + "§7Time Elapsed: §f" + String.format("%.2fs", secondsElapsed));
+            staff.sendMessage(PREFIX + "§7Effective TPS: §f" + String.format("%.2f", ticksPerSecond));
+            staff.sendMessage(PREFIX + "§7Timer Balance: §f" + String.format("%.1fms", timerBalance));
+            staff.sendMessage(PREFIX + "§7Result: " + (pass ? "§a✔ PASS" : "§c✘ FAIL") +
+                    (pass ? " §7(normal packet rate)" : " §7(abnormal packet rate — possible timer)"));
+            staff.sendMessage(DIVIDER);
+        }, 100L); // 5 seconds
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
@@ -267,7 +268,8 @@ public final class CommandTools {
         final List<Double> hitDistances = new ArrayList<>();
         final int startAttackTick = data.getLastAttackPacketTick();
 
-        new BukkitRunnable() {
+        final com.tcoded.folialib.wrapper.task.WrappedTask[] wrappedTask = new com.tcoded.folialib.wrapper.task.WrappedTask[1];
+        Runnable run = new Runnable() {
             int ticks = 0;
             int lastRecordedAttackTick = startAttackTick;
 
@@ -313,7 +315,7 @@ public final class CommandTools {
                 }
 
                 if (ticks >= 200) { // 10 seconds
-                    cancel();
+                    if (wrappedTask[0] != null) wrappedTask[0].cancel();
 
                     if (hitDistances.isEmpty()) {
                         staff.sendMessage(PREFIX + "§cNo attacks detected. Player did not attack anything.");
@@ -340,7 +342,8 @@ public final class CommandTools {
                     staff.sendMessage(DIVIDER);
                 }
             }
-        }.runTaskTimer(Truthful.getInstance().getPlugin(), 1L, 1L);
+        };
+        wrappedTask[0] = Truthful.getInstance().getServerScheduler().runGlobalTimer(run, 1L, 1L);
     }
 
     // ─────────────────────────────────────────────────────────────────────────────

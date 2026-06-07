@@ -2,6 +2,7 @@ package ret.tawny.truthful.database;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
+import ret.tawny.truthful.Truthful;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -85,7 +86,7 @@ public final class LogManager {
 
     private void startFlushTask() {
         // Batch insert asynchronously to keep main thread clean.
-        Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> {
+        Truthful.getInstance().getServerScheduler().runAsyncTimer(() -> {
             if (pending.isEmpty()) {
                 return;
             }
@@ -93,7 +94,7 @@ public final class LogManager {
         }, 20L, 20L);
 
         // Housekeeping: keep database growth bounded on busy servers.
-        Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::pruneOldLogs, 20L * 300L, 20L * 300L);
+        Truthful.getInstance().getServerScheduler().runAsyncTimer(this::pruneOldLogs, 20L * 300L, 20L * 300L);
     }
 
     private void flushNow() {

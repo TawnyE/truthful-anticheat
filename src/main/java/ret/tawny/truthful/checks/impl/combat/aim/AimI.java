@@ -82,10 +82,10 @@ public final class AimI extends Check {
         float currentYaw = data.getYaw();
 
 
-        Entity target = data.getLastTarget();
+        int targetId = data.getLastTargetId();
         double efficiencyScore = 0.0;
-        if (target != null && target.isValid()) {
-            efficiencyScore = calculateEfficiencyScore(data, target, currentYaw, deltaYaw);
+        if (targetId != -1) {
+            efficiencyScore = calculateEfficiencyScore(data, targetId, currentYaw, deltaYaw);
         }
 
 
@@ -156,8 +156,8 @@ public final class AimI extends Check {
     }
 
 
-    private double calculateEfficiencyScore(PlayerData data, Entity target, float currentYaw, float deltaYaw) {
-        CompensationTracker.CompensatedEntity targetData = Truthful.getInstance().getCompensationTracker().getEntityData(target.getEntityId());
+    private double calculateEfficiencyScore(PlayerData data, int targetId, float currentYaw, float deltaYaw) {
+        CompensationTracker.CompensatedEntity targetData = Truthful.getInstance().getCompensationTracker().getEntityData(targetId);
         if (targetData == null) return 0.0;
 
         SimpleHitbox targetBox = targetData.getHitboxAt(0);

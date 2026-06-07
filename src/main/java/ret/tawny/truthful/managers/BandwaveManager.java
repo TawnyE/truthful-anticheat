@@ -1,7 +1,7 @@
 package ret.tawny.truthful.managers;
 
 import org.bukkit.Bukkit;
-import org.bukkit.scheduler.BukkitTask;
+import com.tcoded.folialib.wrapper.task.WrappedTask;
 import ret.tawny.truthful.Truthful;
 import ret.tawny.truthful.config.api.Configuration;
 
@@ -16,7 +16,7 @@ import java.util.Set;
 public final class BandwaveManager {
 
     private final Set<String> queuedPlayers = new LinkedHashSet<>();
-    private BukkitTask executionTask;
+    private WrappedTask executionTask;
     private LocalDateTime lastAutoStartTrigger;
 
     public synchronized boolean addPlayer(String playerName) {
@@ -48,7 +48,7 @@ public final class BandwaveManager {
 
         Configuration config = Truthful.getInstance().getConfiguration();
         long intervalTicks = config.getBandwaveIntervalSeconds() * 20L;
-        executionTask = Bukkit.getScheduler().runTaskTimer(Truthful.getInstance().getPlugin(), () -> {
+        executionTask = Truthful.getInstance().getServerScheduler().runGlobalTimer(() -> {
             String next;
             int position;
             synchronized (BandwaveManager.this) {

@@ -114,7 +114,7 @@ public abstract class Check {
                 .replace("%debug%", "")
                 .trim();
 
-        Bukkit.getScheduler().runTask(Truthful.getInstance().getPlugin(), () -> {
+        Truthful.getInstance().getServerScheduler().runRegion(p, () -> {
             if (!p.isOnline()) return;
 
             if (shouldAlert) {

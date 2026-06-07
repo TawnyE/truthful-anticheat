@@ -141,7 +141,7 @@ public final class TruthfulPacketListener extends PacketListenerAbstract {
             int minHeight = data.getWorldMinHeight();
 
             if (shouldBuild) {
-                Bukkit.getScheduler().runTaskAsynchronously(Truthful.getInstance().getPlugin(), () -> {
+                Truthful.getInstance().getServerScheduler().runAsync(() -> {
                     try {
                         if (Truthful.getInstance().getGlobalWorldCache().getChunk(worldUid, chunkX, chunkZ) == null) {
                             ChunkSnapshot snapshot = new ChunkSnapshot();
@@ -312,7 +312,7 @@ public final class TruthfulPacketListener extends PacketListenerAbstract {
             String checkBrand = brand.toLowerCase();
             for (String blockedBrand : config.getBlockedBrands()) {
                 if (checkBrand.contains(blockedBrand.toLowerCase())) {
-                    Bukkit.getScheduler().runTask(truthful.getPlugin(), () -> {
+                    Truthful.getInstance().getServerScheduler().runRegion(player, () -> {
                         if (player.isOnline()) {
                             player.kickPlayer(config.getClientBlockerMessage());
                         }
@@ -343,7 +343,7 @@ public final class TruthfulPacketListener extends PacketListenerAbstract {
     public static void broadcastBrand(Player player, String brand) {
         if (brand == null || brand.equals("Unknown") || brand.equals("vanilla"))
             return;
-        Bukkit.getScheduler().runTask(Truthful.getInstance().getPlugin(), () -> {
+        Truthful.getInstance().getServerScheduler().runGlobal(() -> {
             String msg = Truthful.getInstance().getConfiguration().getBrandMessage()
                     .replace("%player%", player.getName()).replace("%brand%", brand);
             for (Player staff : Bukkit.getOnlinePlayers()) {

@@ -9,10 +9,16 @@ import org.bukkit.util.BoundingBox;
 import ret.tawny.truthful.utils.hitbox.SimpleHitbox;
 import ret.tawny.truthful.utils.tick.ITickable;
 
+import ret.tawny.truthful.Truthful;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class CompensationTracker implements ITickable {
+
+    public int getCurrentTick() {
+        return tickCounter;
+    }
 
     private static final int HISTORY_SIZE = 30;
     private static final int MAX_BACKTRACK_TICKS = 8;
@@ -26,13 +32,13 @@ public final class CompensationTracker implements ITickable {
 
     private final Map<Integer, CompensatedEntity> compensationMap = new ConcurrentHashMap<>();
     private final Map<Integer, java.lang.ref.WeakReference<Entity>> entityCache = new ConcurrentHashMap<>();
-    private int tickCounter = 0;
+    private volatile int tickCounter = 0;
 
     @Override
     public void tick() {
         tickCounter++;
         if (tickCounter % CLEANUP_INTERVAL == 0) {
-            int currentTick = Bukkit.getCurrentTick();
+            int currentTick = this.tickCounter;
             compensationMap.entrySet().removeIf(entry -> {
                 if (entry.getValue().isExpired(currentTick)) {
                     entityCache.remove(entry.getKey());
@@ -45,7 +51,7 @@ public final class CompensationTracker implements ITickable {
 
     public void handleSpawn(int id, UUID uuid, double x, double y, double z, double width, double height,
                             boolean isPlayer) {
-        int currentTick = Bukkit.getCurrentTick();
+        int currentTick = this.tickCounter;
         CompensatedEntity data = new CompensatedEntity(id, uuid, isPlayer);
         compensationMap.put(id, data);
         data.snapshot(currentTick, x, y, z, width, height);
@@ -54,7 +60,7 @@ public final class CompensationTracker implements ITickable {
     public void handleEntitySnapshot(Entity entity) {
         if (entity == null || !entity.isValid()) return;
 
-        int currentTick = Bukkit.getCurrentTick();
+        int currentTick = this.tickCounter;
         int entityId = entity.getEntityId();
         entityCache.put(entityId, new java.lang.ref.WeakReference<>(entity));
         EntityBox box = readEntityBox(entity);
@@ -65,7 +71,7 @@ public final class CompensationTracker implements ITickable {
     }
 
     public void handleTeleport(int id, double x, double y, double z) {
-        int currentTick = Bukkit.getCurrentTick();
+        int currentTick = this.tickCounter;
         CompensatedEntity data = compensationMap.get(id);
         if (data != null) {
             data.snapshot(currentTick, x, y, z, data.lastWidth, data.lastHeight);
@@ -73,7 +79,7 @@ public final class CompensationTracker implements ITickable {
     }
 
     public void handleRelMove(int id, double dx, double dy, double dz) {
-        int currentTick = Bukkit.getCurrentTick();
+        int currentTick = this.tickCounter;
         CompensatedEntity data = compensationMap.get(id);
         if (data != null) {
             EntitySnapshot last = data.getLatest();
@@ -84,7 +90,7 @@ public final class CompensationTracker implements ITickable {
     }
 
     public void handleVelocity(int id, double vx, double vy, double vz) {
-        int currentTick = Bukkit.getCurrentTick();
+        int currentTick = this.tickCounter;
         CompensatedEntity data = compensationMap.get(id);
         if (data != null) {
             EntitySnapshot last = data.getLatest();
@@ -97,7 +103,7 @@ public final class CompensationTracker implements ITickable {
     public void handleDestroy(int id) {
         CompensatedEntity data = compensationMap.get(id);
         if (data != null) {
-            data.markDestroyed(Bukkit.getCurrentTick());
+            data.markDestroyed(this.tickCounter);
         }
     }
 
@@ -106,7 +112,7 @@ public final class CompensationTracker implements ITickable {
         if (data == null)
             return null;
 
-        int currentTick = Bukkit.getCurrentTick();
+        int currentTick = this.tickCounter;
         if (data.isExpired(currentTick)) {
             compensationMap.remove(entityId, data);
             return null;
@@ -174,7 +180,7 @@ public final class CompensationTracker implements ITickable {
         }
 
         public synchronized SimpleHitbox getHitboxAt(int serverTickDelay) {
-            return getHitboxAt(serverTickDelay, Bukkit.getCurrentTick());
+            return getHitboxAt(serverTickDelay, Truthful.getInstance().getCompensationTracker().getCurrentTick());
         }
 
         public synchronized SimpleHitbox getHitboxAt(int serverTickDelay, int currentTick) {

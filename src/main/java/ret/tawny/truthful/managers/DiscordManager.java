@@ -44,7 +44,7 @@ public class DiscordManager {
         String footer = config.getDiscordFooter();
         boolean showHead = config.isDiscordHeadEnabled();
 
-        Bukkit.getScheduler().runTaskAsynchronously(Truthful.getInstance().getPlugin(), () -> {
+        Truthful.getInstance().getServerScheduler().runAsync(() -> {
             try {
                 DiscordWebhook webhook = new DiscordWebhook(webhookUrl);
                 webhook.setUsername(username);
