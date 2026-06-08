@@ -107,18 +107,18 @@ messages:
     # Fully customizable hover lines — supports placeholders:
     # %check%, %vl%, %ping%, %tps%, %brand%, %debug%, %player%, %world%, %x%, %y%, %z%
     hover-lines:
-      - '&8&m─────────────────'
+      - '&8─────────────────'
       - '&9Truthful &8» &eDetails'
-      - '&8&m─────────────────'
+      - '&8─────────────────'
       - '&7Check: &f%check%'
       - '&7VL: &c%vl%'
       - '&7Ping: &b%ping%ms'
       - '&7TPS: &a%tps%'
       - '&7Client: &f%brand%'
       - '&7World: &f%world%'
-      - '&8&m─────────────────'
+      - '&8─────────────────'
       - '&7Debug: &e%debug%'
-      - '&8&m─────────────────'
+      - '&8─────────────────'
 
   bandwave-sweep: "&8[&5&lBANDWAVE&8] &7#%position% swept by the band wave: &f%player%"
   bandwave-queued: "&8[&5&lBANDWAVE&8] &f%player% &7was added to the BANDWAVE queue."
@@ -152,137 +152,124 @@ checks:
 
   # ❖ BEDROCK & GEYSER ❖
   BEDROCK:
-    A: { enabled: true,  lagback: { enabled: true, vl: 15 }, punishment: { enabled: true, vl: 50, bandwave: false, command: "kick %player% [Truthful] Speed" } }
-    B: { enabled: true,  lagback: { enabled: true, vl: 15 }, punishment: { enabled: true, vl: 50, bandwave: false, command: "kick %player% [Truthful] Fly" } }
-    C: { enabled: true,  lagback: { enabled: true, vl: 15 }, punishment: { enabled: true, vl: 50, bandwave: false, command: "kick %player% [Truthful] Reach" } }
+    A: { enabled: true, lagback: { vl: 15 }, punishment: { enabled: true, vl: 50, command: "kick %player% [Truthful] Speed" } }
+    B: { enabled: true, lagback: { vl: 15 }, punishment: { enabled: true, vl: 50, command: "kick %player% [Truthful] Fly" } }
+    C: { enabled: true, lagback: { vl: 15 }, punishment: { enabled: true, vl: 50, command: "kick %player% [Truthful] Reach" } }
 
   # ❖ MOVEMENT & PHYSICS ❖
   SIMULATION:
-    A: { enabled: true,  lagback: { enabled: true, vl: 35 }, punishment: { enabled: true, vl: 350, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    B: { enabled: false, lagback: { enabled: true, vl: 15 }, punishment: { enabled: true, vl: 350, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    C: { enabled: true,  lagback: { enabled: true, vl: 75 }, punishment: { enabled: true, vl: 350, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    D: { enabled: true,  lagback: { enabled: true, vl: 75 }, punishment: { enabled: true, vl: 350, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
+    A: { enabled: true, lagback: { vl: 35 }, punishment: { enabled: true, vl: 350 } }
+    B: { enabled: false }
+    C: { enabled: true, lagback: { vl: 75 }, punishment: { enabled: true, vl: 350 } }
+    D: { enabled: true, lagback: { vl: 75 }, punishment: { enabled: true, vl: 350 } }
 
   VELOCITY:
-    A: { enabled: true,  lagback: { enabled: true, vl: 10 }, punishment: { enabled: true, vl: 150, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    B: { enabled: true,  lagback: { enabled: true, vl: 10 }, punishment: { enabled: true, vl: 150, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    C: { enabled: true,  lagback: { enabled: true, vl: 10 }, punishment: { enabled: true, vl: 150, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    D: { enabled: true,  lagback: { enabled: true, vl: 10 }, punishment: { enabled: true, vl: 150, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
+    A: { enabled: true, lagback: { vl: 10 }, punishment: { enabled: true, vl: 150 } }
+    B: { enabled: true, lagback: { vl: 10 }, punishment: { enabled: true, vl: 150 } }
+    C: { enabled: true, lagback: { vl: 10 }, punishment: { enabled: true, vl: 150 } }
+    D: { enabled: true, lagback: { vl: 10 }, punishment: { enabled: true, vl: 150 } }
 
   SPOOF:
-    A: { enabled: true,  lagback: { enabled: true, vl: 5  }, punishment: { enabled: true, vl: 150,  bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    B: { enabled: true,  lagback: { enabled: true, vl: 5  }, punishment: { enabled: true, vl: 100,  bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    C: { enabled: true,  lagback: { enabled: true, vl: 5  }, punishment: { enabled: true, vl: 150,  bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    D: { enabled: true,  lagback: { enabled: true, vl: 5  }, punishment: { enabled: true, vl: 100,  bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    E: { enabled: true,  lagback: { enabled: true, vl: 5  }, punishment: { enabled: true, vl: 150,  bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    F: { enabled: true,  lagback: { enabled: true, vl: 5  }, punishment: { enabled: true, vl: 150,  bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    G: { enabled: true,  lagback: { enabled: true, vl: 5  }, punishment: { enabled: true, vl: 150,  bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
+    B: { enabled: true, punishment: { enabled: true, vl: 100 } }
+    C: { enabled: true, punishment: { enabled: true, vl: 150 } }
+    D: { enabled: true, punishment: { enabled: true, vl: 100 } }
+    E: { enabled: true, punishment: { enabled: true, vl: 150 } }
+    F: { enabled: true, punishment: { enabled: true, vl: 150 } }
+    G: { enabled: true, punishment: { enabled: true, vl: 150 } }
 
   TIMER:
-    A: { enabled: true,  lagback: { enabled: true, vl: 5  }, punishment: { enabled: true, vl: 20,  bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
+    A: { enabled: true, punishment: { enabled: true } }
 
   # ❖ COMBAT & HEURISTICS ❖
   KILLAURA:
-    A: { enabled: true,  lagback: { enabled: true, vl: 15 }, punishment: { enabled: false, vl: 50, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    C: { enabled: true,  lagback: { enabled: true, vl: 15 }, punishment: { enabled: false, vl: 50, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    D: { enabled: true,  lagback: { enabled: true, vl: 5  }, punishment: { enabled: true,  vl: 15, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    E: { enabled: true,  lagback: { enabled: true, vl: 5  }, punishment: { enabled: true,  vl: 15, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    F: { enabled: true,  lagback: { enabled: true, vl: 5  }, punishment: { enabled: true,  vl: 15, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    G: { enabled: true,  lagback: { enabled: true, vl: 5  }, punishment: { enabled: true,  vl: 15, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    H: { enabled: true,  lagback: { enabled: true, vl: 10 }, punishment: { enabled: false, vl: 30, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
+    B: { enabled: true, lagback: { enabled: true, vl: 15 } }
+    C: { enabled: true, lagback: { enabled: true, vl: 15 } }
+    D: { enabled: true, lagback: { enabled: true }, punishment: { enabled: true, vl: 15 } }
+    E: { enabled: true, lagback: { enabled: true }, punishment: { enabled: true, vl: 15 } }
+    F: { enabled: true, lagback: { enabled: true }, punishment: { enabled: true, vl: 15 } }
+    G: { enabled: true, lagback: { enabled: true }, punishment: { enabled: true, vl: 15 } }
+    H: { enabled: true, lagback: { enabled: true, vl: 10 } }
 
   AIM:
-    A: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 35, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    B: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 35, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    C: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: true,  vl: 5,  bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    D: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 35, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    E: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: true,  vl: 40, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    F: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: true,  vl: 65, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    G: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: true,  vl: 65, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    H: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: true,  vl: 65, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    I: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: true,  vl: 65, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    J: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 65, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    K: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 65, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    L: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 65, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
+    A: { enabled: true }
+    B: { enabled: true }
+    D: { enabled: true }
+    E: { enabled: true, punishment: { enabled: true, vl: 40 } }
+    F: { enabled: true, punishment: { enabled: true, vl: 65 } }
+    G: { enabled: true, punishment: { enabled: true, vl: 65 } }
+    H: { enabled: true, punishment: { enabled: true, vl: 65 } }
+    I: { enabled: true, punishment: { enabled: true, vl: 65 } }
+    J: { enabled: true }
+    K: { enabled: true }
+    L: { enabled: true }
 
   AUTOCLICKER:
     max_cps: 22
     count_ground_punches: false
-    A: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 30, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    B: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 20, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    C: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 15, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    D: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 20, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    E: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 20, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
+    A: { enabled: true }
+    B: { enabled: true }
+    C: { enabled: true }
+    D: { enabled: true }
+    E: { enabled: true }
 
   HITBOX:
-    A: { enabled: true,  lagback: { enabled: false, vl: 10 }, punishment: { enabled: true, vl: 65,  bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
+    A: { enabled: true, punishment: { enabled: true, vl: 65 } }
 
   REACH:
-    A: { enabled: true,  lagback: { enabled: true, vl: 10 }, punishment: { enabled: true, vl: 65,  bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
+    A: { enabled: true, lagback: { enabled: true, vl: 10 }, punishment: { enabled: true, vl: 65 } }
 
   CRYSTAL:
-    A: { enabled: true,  lagback: { enabled: true, vl: 5  }, punishment: { enabled: true, vl: 10,  bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
+    A: { enabled: true, lagback: { enabled: true }, punishment: { enabled: true, vl: 10 } }
 
   ANCHOR:
-    A: { enabled: true,  lagback: { enabled: true, vl: 5  }, punishment: { enabled: true, vl: 10,  bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
+    A: { enabled: true, lagback: { enabled: true }, punishment: { enabled: true, vl: 10 } }
 
   # ❖ WORLD & AUTOMATION ❖
   SCAFFOLD:
-    A: { enabled: true,  lagback: { enabled: false, vl: 5  }, punishment: { enabled: true,  vl: 150, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    B: { enabled: true,  lagback: { enabled: false, vl: 10 }, punishment: { enabled: false, vl: 300, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    C: { enabled: true,  lagback: { enabled: false, vl: 5  }, punishment: { enabled: true,  vl: 150, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    D: { enabled: true,  lagback: { enabled: false, vl: 5  }, punishment: { enabled: true,  vl: 150, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    E: { enabled: true,  lagback: { enabled: false, vl: 10 }, punishment: { enabled: false, vl: 300, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    F: { enabled: true,  lagback: { enabled: false, vl: 5  }, punishment: { enabled: true,  vl: 150, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    G: { enabled: true,  lagback: { enabled: false, vl: 5  }, punishment: { enabled: true,  vl: 200, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    H: { enabled: true,  lagback: { enabled: false, vl: 5  }, punishment: { enabled: true,  vl: 200, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    I: { enabled: true,  lagback: { enabled: false, vl: 5  }, punishment: { enabled: true,  vl: 200, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    J: { enabled: true,  lagback: { enabled: false, vl: 5  }, punishment: { enabled: true,  vl: 200, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    K: { enabled: true,  lagback: { enabled: false, vl: 5  }, punishment: { enabled: true,  vl: 200, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    L: { enabled: true,  lagback: { enabled: false, vl: 10 }, punishment: { enabled: false, vl: 350, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    M: { enabled: true,  lagback: { enabled: false, vl: 10 }, punishment: { enabled: false, vl: 350, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
+    A: { enabled: true, lagback: { enabled: false }, punishment: { enabled: true, vl: 150 } }
 
   PHASE:
-    A: { enabled: false, lagback: { enabled: false, vl: 9999 }, punishment: { enabled: false, vl: 9999, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
+    A: { enabled: false, lagback: { enabled: false } }
 
   FAST_BREAK:
-    A: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: true, vl: 20, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
+    A: { enabled: true, punishment: { enabled: true } }
 
   RAYCAST:
-    A: { enabled: false,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: true, vl: 15, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
+    A: { enabled: false, punishment: { enabled: true, vl: 15 } }
 
   # ❖ PACKET INTEGRITY ❖
   BAD_PACKET:
-    A: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 10, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    B: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 5,  bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    C: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 10, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    D: { enabled: false, lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 9999, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    E: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 5,  bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    F: { enabled: true,  lagback: { enabled: true,  vl: 5 }, punishment: { enabled: false, vl: 10, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    G: { enabled: true,  lagback: { enabled: true,  vl: 5 }, punishment: { enabled: false, vl: 10, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    H: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 5,  bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    I: { enabled: true,  lagback: { enabled: true,  vl: 5 }, punishment: { enabled: false, vl: 10, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    J: { enabled: true,  lagback: { enabled: true,  vl: 5 }, punishment: { enabled: false, vl: 10, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    K: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 5,  bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
+    A: { enabled: true }
+    C: { enabled: true }
+    D: { enabled: false }
+    E: { enabled: true }
+    G: { enabled: true, lagback: { enabled: true } }
+    H: { enabled: true }
+    I: { enabled: true, lagback: { enabled: true } }
+    J: { enabled: true, lagback: { enabled: true } }
+    K: { enabled: true }
 
   PACKET_ORDER:
-    A: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: true, vl: 15, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    C: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: true, vl: 10, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    D: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: true, vl: 15, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    E: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: true, vl: 15, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
+    A: { enabled: true, punishment: { enabled: true, vl: 15 } }
+    B: { enabled: true }
+    C: { enabled: true, punishment: { enabled: true } }
+    D: { enabled: true, punishment: { enabled: true, vl: 15 } }
+    E: { enabled: true, punishment: { enabled: true, vl: 15 } }
 
   INVALID:
-    A: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: true,  vl: 5,  bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    B: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 20, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
+    A: { enabled: true, punishment: { enabled: true, vl: 5 } }
 
   CRASHER:
-    A: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: true, vl: 2, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
+    A: { enabled: true, punishment: { enabled: true, vl: 2 } }
 
   INVENTORY:
-    A: { enabled: true,  lagback: { enabled: true, vl: 5 }, punishment: { enabled: true,  vl: 15, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    C: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 30, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
+    A: { enabled: true, lagback: { enabled: true }, punishment: { enabled: true, vl: 15 } }
 
   BARITONE:
-    A: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 50, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    B: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 50, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
-    C: { enabled: true,  lagback: { enabled: false, vl: 0 }, punishment: { enabled: false, vl: 50, bandwave: false, command: "kick %player% [Truthful] Unfair Advantage" } }
+    A: { enabled: true }
+    B: { enabled: true }
+    C: { enabled: true }
+
+  SPRINT:
+    A: { enabled: true }
+    B: { enabled: true }

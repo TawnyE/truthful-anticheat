@@ -75,8 +75,7 @@ public final class CheckConfigMenu {
             lore.add(GuiConstants.DARK + GuiConstants.SYM_LINE + " " +
                     GuiConstants.MUTED + "Punish  " + punishStatus);
             lore.add("");
-            lore.add(GuiConstants.SECONDARY + "Left-click " + GuiConstants.DARK + "toggle check");
-            lore.add(GuiConstants.SECONDARY + "Right-click " + GuiConstants.DARK + "toggle punish");
+            lore.add(GuiConstants.SECONDARY + "Click " + GuiConstants.DARK + "for settings");
 
             String nameColor = enabled ? GuiConstants.SUCCESS : GuiConstants.MUTED;
             ItemStack item = GuiItemFactory.create(mat,
@@ -131,43 +130,6 @@ public final class CheckConfigMenu {
     // ═══════════════════════════════════════════════
     // TOGGLE ACTIONS
     // ═══════════════════════════════════════════════
-
-    public static void toggleCheck(Player player, String formattedName) {
-        for (Check check : Truthful.getInstance().getCheckManager().getCollection()) {
-            if (check.getFormattedName().equals(formattedName)) {
-                boolean newState = !check.isEnabled();
-                check.setEnabled(newState);
-                Truthful.getInstance().getConfiguration()
-                        .setCheckEnabled(check.getType().name(), String.valueOf(check.getOrder()), newState);
-
-                String msg = newState
-                        ? GuiConstants.SUCCESS + GuiConstants.SYM_CHECK + " Enabled"
-                        : GuiConstants.ERROR + GuiConstants.SYM_CROSS + " Disabled";
-                player.sendMessage(GuiConstants.PRIMARY + "Truthful " + GuiConstants.DARK + GuiConstants.SYM_ARROW + " " +
-                        GuiConstants.MUTED + formattedName + " " + msg);
-                return;
-            }
-        }
-    }
-
-    public static void togglePunishment(Player player, String formattedName) {
-        for (Check check : Truthful.getInstance().getCheckManager().getCollection()) {
-            if (check.getFormattedName().equals(formattedName)) {
-                boolean newState = !Truthful.getInstance().getConfiguration()
-                        .isPunishmentEnabled(check.getType().name(), String.valueOf(check.getOrder()));
-
-                Truthful.getInstance().getConfiguration()
-                        .setPunishmentEnabled(check.getType().name(), String.valueOf(check.getOrder()), newState);
-
-                String msg = newState
-                        ? GuiConstants.SUCCESS + GuiConstants.SYM_CHECK + " Enabled"
-                        : GuiConstants.ERROR + GuiConstants.SYM_CROSS + " Disabled";
-                player.sendMessage(GuiConstants.PRIMARY + "Truthful " + GuiConstants.DARK + GuiConstants.SYM_ARROW + " " +
-                        GuiConstants.MUTED + formattedName + " punishment " + msg);
-                return;
-            }
-        }
-    }
 
     public static void toggleAllForType(Player player, CheckType type) {
         boolean anyDisabled = false;

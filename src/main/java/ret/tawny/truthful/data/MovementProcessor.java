@@ -124,7 +124,7 @@ public final class MovementProcessor {
         // Jump detection: was on ground last tick AND (moving up OR still on ground)
         // More lenient jump detection to catch edge cases
         boolean jumpStart = data.isLastGround() && (deltaY > 0.0D || onGround);
-        boolean onGroundStaying = onGround && Math.abs(deltaY) <= STEP_HEIGHT;
+        boolean onGroundStaying = onGround && Math.abs(deltaY) <= Math.max(STEP_HEIGHT, data.getStepHeight());
         
         double gravity = resolveGravity();
 
@@ -133,7 +133,7 @@ public final class MovementProcessor {
             predictedVertical = sampledVelocityY;
         } else if (jumpStart && deltaY > 0.0D) {
             // Player jumped - use jump impulse
-            predictedVertical = PhysicsConstants.JUMP_IMPULSE + (data.getPotionLevel(PotionEffectType.JUMP_BOOST) * PhysicsConstants.JUMP_BOOST_MODIFIER) + sampledVelocityY;
+            predictedVertical = data.getJumpStrength() + (data.getPotionLevel(PotionEffectType.JUMP_BOOST) * PhysicsConstants.JUMP_BOOST_MODIFIER) + sampledVelocityY;
         } else {
             // Player is falling or in air - apply gravity
             predictedVertical = (lastDeltaY - gravity) * VERTICAL_DRAG + sampledVelocityY;
@@ -297,13 +297,13 @@ public final class MovementProcessor {
         double gravityPred = (lastDeltaY - gravity) * VERTICAL_DRAG + sampledVelocityY;
 
         // Jump from ground
-        double jumpPred = PhysicsConstants.JUMP_IMPULSE + (jumpBoost * PhysicsConstants.JUMP_BOOST_MODIFIER) + sampledVelocityY;
+        double jumpPred = data.getJumpStrength() + (jumpBoost * PhysicsConstants.JUMP_BOOST_MODIFIER) + sampledVelocityY;
 
         // On ground (no vertical movement, only velocity)
         double groundPred = sampledVelocityY;
 
         // Step up (within step height)
-        double stepPred = STEP_HEIGHT;
+        double stepPred = Math.max(STEP_HEIGHT, data.getStepHeight());
 
         // Terminal velocity floor
         double terminalPred = PhysicsConstants.TERMINAL_VELOCITY + sampledVelocityY;
@@ -350,7 +350,7 @@ public final class MovementProcessor {
 
         // Sneak: movement factor 0.3
         if (sneaking) {
-            base *= SNEAK_MULTIPLIER;
+            base *= Math.max(SNEAK_MULTIPLIER, data.getSneakingSpeed());
         }
 
         if (onGround) {
@@ -371,7 +371,7 @@ public final class MovementProcessor {
     private double resolveGravity() {
         if (data.hasPotionEffect(PotionEffectType.SLOW_FALLING)) return PhysicsConstants.SLOW_FALLING_GRAVITY;
         if (data.hasPotionEffect(PotionEffectType.LEVITATION)) return PhysicsConstants.GRAVITY * 0.15D;
-        return PhysicsConstants.GRAVITY;
+        return data.getGravity();
     }
 
     /**

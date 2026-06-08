@@ -137,6 +137,10 @@ public final class MovementCheckSupport {
             handler.add(0.08, "riptide_aftereffect");
         }
 
+        if (data.hasAttributeTransition()) {
+            handler.add(0.08, "attribute_transition");
+        }
+
         return handler;
     }
 
@@ -191,6 +195,10 @@ public final class MovementCheckSupport {
             base *= 1.3;
         }
 
+        if (data.isSneaking()) {
+            base *= Math.max(0.3D, data.getSneakingSpeed());
+        }
+
         // Ground acceleration formula: base * (0.1 * (0.216 / friction^3))
         // Maximum ground speed is when this acceleration balances friction
         // Terminal velocity on ground ≈ accel / (1 - friction)
@@ -213,6 +221,14 @@ public final class MovementCheckSupport {
             maxSpeed += 0.033 * depthStrider;
         }
 
+        if (data.getMovementEfficiency() > 0.0D && data.getTicksTracked() - data.getLastSoulSandTick() < 8) {
+            maxSpeed += 0.04D + data.getMovementEfficiency() * 0.18D;
+        }
+
+        if (data.getWaterMovementEfficiency() > 0.0D && data.isInLiquid()) {
+            maxSpeed += data.getWaterMovementEfficiency() * 0.22D;
+        }
+
         // Sprint-jump boost adds ~0.2 forward velocity
         if (data.isSprinting() && data.getAirTicks() < 6) {
             maxSpeed += 0.22D;
@@ -226,7 +242,7 @@ public final class MovementCheckSupport {
      */
     public static double computeMaxJump(PlayerData data) {
         int jumpBoost = data.getPotionLevel(PotionEffectType.JUMP_BOOST);
-        return 0.42D + (jumpBoost * 0.1D);
+        return data.getJumpStrength() + (jumpBoost * 0.1D);
     }
 
     /**

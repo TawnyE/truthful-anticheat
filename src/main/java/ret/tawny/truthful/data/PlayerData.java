@@ -17,6 +17,7 @@ import ret.tawny.truthful.data.tracker.PositionTracker;
 import ret.tawny.truthful.data.world.CompensatedWorld;
 import ret.tawny.truthful.sync.TeleportQueue;
 import ret.tawny.truthful.sync.VelocityQueue;
+import ret.tawny.truthful.attributes.AttributeEngine;
 import ret.tawny.truthful.utils.elytra.FireworkBoostTracker;
 import ret.tawny.truthful.wrapper.impl.client.action.PlayerBlockPlacePacketWrapper;
 import ret.tawny.truthful.wrapper.impl.client.position.RelMovePacketWrapper;
@@ -53,6 +54,7 @@ public final class PlayerData {
     // Trackers
     private final PositionTracker positionTracker;
     private final ActionTracker actionTracker;
+    private final AttributeEngine attributeEngine;
 
     // Ticks & Timing
     private int ticksTracked;
@@ -105,6 +107,12 @@ public final class PlayerData {
     private volatile Map<PotionEffectType, Integer> potionCache = new HashMap<>();
     private final Map<String, Integer> enchantmentCache = new ConcurrentHashMap<>();
     private double walkSpeedCache = 0.1;
+    private double gravityCache = 0.08;
+    private double jumpStrengthCache = 0.42;
+    private double stepHeightCache = 0.6;
+    private double movementEfficiencyCache = 0.0;
+    private double waterMovementEfficiencyCache = 0.0;
+    private double sneakingSpeedCache = 0.3;
     private int foodLevelCache = 20;
     private boolean allowFlightCache = false;
     private boolean flyingCache = false;
@@ -138,6 +146,7 @@ public final class PlayerData {
         this.setbackHandler = new SetbackHandler(this);
         this.positionTracker = new PositionTracker(this, player);
         this.actionTracker = new ActionTracker();
+        this.attributeEngine = new AttributeEngine(this);
 
         this.setExemption(ExemptionType.JOIN, 40);
 
@@ -276,6 +285,29 @@ public final class PlayerData {
             walkSpeedCache = attr.getValue();
         }
 
+        gravityCache = getAttributeValue(player, "GENERIC_GRAVITY", 0.08D);
+        jumpStrengthCache = getAttributeValue(player, "GENERIC_JUMP_STRENGTH", 0.42D);
+        stepHeightCache = getAttributeValue(player, "GENERIC_STEP_HEIGHT", 0.6D);
+        movementEfficiencyCache = getAttributeValue(player, "GENERIC_MOVEMENT_EFFICIENCY", 0.0D);
+        waterMovementEfficiencyCache = getAttributeValue(player, "GENERIC_WATER_MOVEMENT_EFFICIENCY", 0.0D);
+        sneakingSpeedCache = getAttributeValue(player, "PLAYER_SNEAKING_SPEED", 0.3D);
+
+        // Record snapshot in AttributeEngine
+        if (attributeEngine != null) {
+            attributeEngine.record(
+                walkSpeedCache,
+                gravityCache,
+                jumpStrengthCache,
+                stepHeightCache,
+                movementEfficiencyCache,
+                waterMovementEfficiencyCache,
+                sneakingSpeedCache,
+                newPotionCache.getOrDefault(PotionEffectType.SPEED, 0),
+                newPotionCache.getOrDefault(PotionEffectType.SLOWNESS, 0),
+                newPotionCache.getOrDefault(PotionEffectType.JUMP_BOOST, 0)
+            );
+        }
+
         foodLevelCache = player.getFoodLevel();
         allowFlightCache = player.getAllowFlight();
         flyingCache = player.isFlying();
@@ -363,6 +395,16 @@ public final class PlayerData {
         }
     }
 
+    private double getAttributeValue(Player player, String enumName, double fallback) {
+        try {
+            Attribute attribute = Attribute.valueOf(enumName);
+            AttributeInstance instance = player.getAttribute(attribute);
+            return instance != null ? instance.getValue() : fallback;
+        } catch (IllegalArgumentException | NullPointerException ignored) {
+            return fallback;
+        }
+    }
+
     public int getEnchantLevel(String key) { return enchantmentCache.getOrDefault(key, 0); }
     public int getFoodLevel() { return foodLevelCache; }
     public boolean isAllowFlight() { return allowFlightCache; }
@@ -372,9 +414,31 @@ public final class PlayerData {
     public void setInsideVehicleCache(boolean b) { this.insideVehicleCache = b; }
     public int getWorldMinHeight() { return worldMinHeightCache; }
     public int getWorldMaxHeight() { return worldMaxHeightCache; }
-    public int getPotionLevel(PotionEffectType type) { return potionCache.getOrDefault(type, 0); }
+    public int getPotionLevel(PotionEffectType type) { 
+        if (type == PotionEffectType.SPEED && attributeEngine != null) {
+            return attributeEngine.getMaxSpeedLevel();
+        }
+        if (type == PotionEffectType.SLOWNESS && attributeEngine != null) {
+            return attributeEngine.getMinSlownessLevel();
+        }
+        if (type == PotionEffectType.JUMP_BOOST && attributeEngine != null) {
+            return attributeEngine.getMaxJumpBoostLevel();
+        }
+        return potionCache.getOrDefault(type, 0); 
+    }
     public boolean hasPotionEffect(PotionEffectType type) { return potionCache.containsKey(type); }
-    public double getWalkSpeed() { return walkSpeedCache; }
+    public double getWalkSpeed() { 
+        return attributeEngine != null ? attributeEngine.getMaxWalkSpeed() : walkSpeedCache; 
+    }
+    public double getWalkSpeedCacheRaw() { return walkSpeedCache; }
+    public double getGravity() { return attributeEngine != null ? attributeEngine.getMinGravity() : gravityCache; }
+    public double getJumpStrength() { return attributeEngine != null ? attributeEngine.getMaxJumpStrength() : jumpStrengthCache; }
+    public double getStepHeight() { return attributeEngine != null ? attributeEngine.getMaxStepHeight() : stepHeightCache; }
+    public double getMovementEfficiency() { return attributeEngine != null ? attributeEngine.getMaxMovementEfficiency() : movementEfficiencyCache; }
+    public double getWaterMovementEfficiency() { return attributeEngine != null ? attributeEngine.getMaxWaterMovementEfficiency() : waterMovementEfficiencyCache; }
+    public double getSneakingSpeed() { return attributeEngine != null ? attributeEngine.getMaxSneakingSpeed() : sneakingSpeedCache; }
+    public boolean hasAttributeTransition() { return attributeEngine != null && attributeEngine.hasAttributeTransition(); }
+    public String getAttributeDebugTags() { return attributeEngine != null ? attributeEngine.getDebugTags() : "ATTR_DISABLED"; }
 
     public boolean isChunkLoaded() {
         int chunkX = (int) Math.floor(getX()) >> 4;

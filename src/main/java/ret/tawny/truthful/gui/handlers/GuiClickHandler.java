@@ -10,7 +10,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import ret.tawny.truthful.Truthful;
+import ret.tawny.truthful.checks.api.Check;
 import ret.tawny.truthful.checks.api.data.CheckType;
+import ret.tawny.truthful.config.api.Configuration;
 import ret.tawny.truthful.gui.GuiConstants;
 import ret.tawny.truthful.gui.menus.*;
 
@@ -93,7 +95,9 @@ public final class GuiClickHandler implements Listener {
                 CheckConfigMenu.open(player, type);
             }
         } else if (isCheckConfigMenu(title)) {
-            handleCheckConfig(player, title, item, matName, name, e.isLeftClick(), e.isRightClick());
+            handleCheckConfig(player, title, item, matName, name);
+        } else if (isCheckDetailsMenu(title)) {
+            handleCheckDetails(player, title, item, matName, name);
         } else if (title.contains("Logs:")) {
             // Log entries - no action
         } else if (title.contains("Info: ")) {
@@ -162,8 +166,7 @@ public final class GuiClickHandler implements Listener {
     // CHECK CONFIG
     // ═══════════════════════════════════════════════
 
-    private void handleCheckConfig(Player player, String title, ItemStack item, String matName,
-            String name, boolean left, boolean right) {
+    private void handleCheckConfig(Player player, String title, ItemStack item, String matName, String name) {
         // Toggle All button
         if (matName.contains("EMERALD") || matName.contains("REDSTONE_BLOCK")) {
             if (name.contains("Toggle All")) {
@@ -187,19 +190,76 @@ public final class GuiClickHandler implements Listener {
             return;
         }
 
-        // Individual check toggles (stained glass panes or dyes)
+        // Individual check clicked -> open CheckDetailsMenu
         if (matName.contains("GLASS_PANE") || matName.contains("DYE") || matName.contains("INK_SACK")) {
+            Check check = null;
+            for (Check c : Truthful.getInstance().getCheckManager().getCollection()) {
+                if (ChatColor.stripColor(c.getFormattedName()).equalsIgnoreCase(name)) {
+                    check = c;
+                    break;
+                }
+            }
+            if (check != null) {
+                playSound(player, Sound.UI_BUTTON_CLICK);
+                new CheckDetailsMenu(check).open(player);
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════
+    // CHECK DETAILS SUB-MENU
+    // ═══════════════════════════════════════════════
+
+    private void handleCheckDetails(Player player, String title, ItemStack item, String matName, String name) {
+        Check check = CheckDetailsMenu.getCheckFromTitle(title);
+        if (check == null) return;
+
+        Configuration config = Truthful.getInstance().getConfiguration();
+        String typeName = check.getType().name();
+        String orderStr = String.valueOf(check.getOrder());
+
+        if (name.contains("Check Status")) {
             playSound(player, Sound.BLOCK_NOTE_BLOCK_PLING);
-            if (left) {
-                CheckConfigMenu.toggleCheck(player, name);
-            } else if (right) {
-                CheckConfigMenu.togglePunishment(player, name);
-            }
+            boolean newState = !check.isEnabled();
+            check.setEnabled(newState);
+            config.setCheckEnabled(typeName, orderStr, newState);
+            
+            String statusMsg = newState
+                    ? GuiConstants.SUCCESS + GuiConstants.SYM_CHECK + " Enabled"
+                    : GuiConstants.ERROR + GuiConstants.SYM_CROSS + " Disabled";
+            player.sendMessage(GuiConstants.PRIMARY + "Truthful " + GuiConstants.DARK + GuiConstants.SYM_ARROW + " " +
+                    GuiConstants.MUTED + check.getFormattedName() + " " + statusMsg);
+            
             // Refresh
-            CheckType type = getCheckTypeFromTitle(title);
-            if (type != null) {
-                CheckConfigMenu.open(player, type);
-            }
+            new CheckDetailsMenu(check).open(player);
+            
+        } else if (name.contains("Lagback Status")) {
+            playSound(player, Sound.BLOCK_NOTE_BLOCK_PLING);
+            boolean newState = !config.isCheckLagbackEnabled(typeName, orderStr);
+            config.setCheckLagbackEnabled(typeName, orderStr, newState);
+            
+            String statusMsg = newState
+                    ? GuiConstants.SUCCESS + GuiConstants.SYM_CHECK + " Enabled"
+                    : GuiConstants.ERROR + GuiConstants.SYM_CROSS + " Disabled";
+            player.sendMessage(GuiConstants.PRIMARY + "Truthful " + GuiConstants.DARK + GuiConstants.SYM_ARROW + " " +
+                    GuiConstants.MUTED + check.getFormattedName() + " lagback " + statusMsg);
+            
+            // Refresh
+            new CheckDetailsMenu(check).open(player);
+            
+        } else if (name.contains("Punishment Status")) {
+            playSound(player, Sound.BLOCK_NOTE_BLOCK_PLING);
+            boolean newState = !config.isPunishmentEnabled(typeName, orderStr);
+            config.setPunishmentEnabled(typeName, orderStr, newState);
+            
+            String statusMsg = newState
+                    ? GuiConstants.SUCCESS + GuiConstants.SYM_CHECK + " Enabled"
+                    : GuiConstants.ERROR + GuiConstants.SYM_CROSS + " Disabled";
+            player.sendMessage(GuiConstants.PRIMARY + "Truthful " + GuiConstants.DARK + GuiConstants.SYM_ARROW + " " +
+                    GuiConstants.MUTED + check.getFormattedName() + " punishment " + statusMsg);
+            
+            // Refresh
+            new CheckDetailsMenu(check).open(player);
         }
     }
 
@@ -248,6 +308,13 @@ public final class GuiClickHandler implements Listener {
             } else {
                 CategoryMenu.open(player);
             }
+        } else if (isCheckDetailsMenu(title)) {
+            Check check = CheckDetailsMenu.getCheckFromTitle(title);
+            if (check != null) {
+                CheckConfigMenu.open(player, check.getType());
+            } else {
+                CategoryMenu.open(player);
+            }
         } else {
             MainMenu.open(player);
         }
@@ -283,6 +350,10 @@ public final class GuiClickHandler implements Listener {
                 return true;
         }
         return false;
+    }
+
+    private boolean isCheckDetailsMenu(String title) {
+        return CheckDetailsMenu.getCheckFromTitle(title) != null;
     }
 
     private CheckType getCheckTypeFromTitle(String title) {

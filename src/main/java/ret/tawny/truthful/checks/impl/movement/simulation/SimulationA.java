@@ -147,6 +147,9 @@ public final class SimulationA extends Check {
         // for an extra tick while already airborne.
         final boolean wasRecentlyOnGround = onGround || airTicks <= 1 || lastAirTicks == 0;
 
+        // Edge jump and slab jump tolerance: allow jump detection up to 2 air ticks
+        final boolean wasRecentlyOnGroundForJump = onGround || airTicks <= 2 || lastAirTicks == 0;
+
         final int levitation  = data.getPotionLevel(PotionEffectType.LEVITATION);
         final int slowFalling = data.getPotionLevel(PotionEffectType.SLOW_FALLING);
         final int jumpBoost   = data.getPotionLevel(PotionEffectType.JUMP_BOOST);
@@ -193,15 +196,15 @@ public final class SimulationA extends Check {
         if (ticksNow - data.getLastBlockPlaceTick() <= 3) tags.add(Tag.BLOCK_PLACE);
         if (ticksNow - data.getLastGhostBlockTick() <= 10) tags.add(Tag.GHOST_BLOCK);
 
-        boolean isJumpMotion = wasRecentlyOnGround && deltaY > (jumpImpulse - 0.002D) && deltaY < (jumpImpulse + 0.002D);
-        boolean isLikelyJump = wasRecentlyOnGround && deltaY > 0.3D;
+        boolean isJumpMotion = wasRecentlyOnGroundForJump && deltaY > (jumpImpulse - 0.002D) && deltaY < (jumpImpulse + 0.002D);
+        boolean isLikelyJump = wasRecentlyOnGroundForJump && deltaY > 0.3D;
         boolean isGhostJump  = (tags.contains(Tag.BLOCK_PLACE) || tags.contains(Tag.GHOST_BLOCK))
                 && deltaY > 0.0D && Math.abs(deltaY - jumpImpulse) < 0.05D;
 
         if ((airTicks <= 1 && wasRecentlyOnGround) || isJumpMotion || isLikelyJump || isGhostJump) tags.add(Tag.JUMP);
         if (wasRecentlyOnGround && airTicks == 0 && deltaY > 0.0D) tags.add(Tag.JUMP_START);
         if (tags.contains(Tag.SLIME_BLOCK) && deltaY > 0.0D) tags.add(Tag.JUMP_START);
-        if (isGhostJump) tags.add(Tag.JUMP_START);
+        if (isJumpMotion || isLikelyJump || isGhostJump) tags.add(Tag.JUMP_START);
         if (!onGround && airTicks < 25 && deltaY > 0.0D) tags.add(Tag.JUMPING);
 
         boolean isLegitStep = data.isServerGround() && deltaY > 0.0D && deltaY <= 0.601D;
