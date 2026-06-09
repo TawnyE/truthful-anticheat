@@ -63,8 +63,6 @@ public final class AnchorAuraA extends Check {
                 if (data.getCurrentBlockPlacement() != null) {
                     if (buffer.increase(player, 1.5) > 6.0) {
                         flag(data, String.format("Fast Anchor (Charge->Explode). Delay: %dms", diff));
-                        // Anchor macros are combat hacks -> lagback recommended
-                        data.executeLagback();
                         buffer.reset(player, 3.0);
                     }
                 }

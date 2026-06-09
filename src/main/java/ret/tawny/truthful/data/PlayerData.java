@@ -128,9 +128,9 @@ public final class PlayerData {
     private int lastCacheUpdate = -100;
 
     // Teleport & Setback state
-    private boolean nextMoveIsTeleport = false;
-    private boolean nextMoveIsLagbackTeleport = false;
-    private boolean isNextTeleportLagback = false;
+    public enum TeleportTag { NONE, NORMAL, LAGBACK }
+    private TeleportTag outgoingTeleportTag = TeleportTag.NONE;
+    private TeleportTag incomingTeleportTag = TeleportTag.NONE;
 
     public PlayerData(final Player player, int queueMaxEntries, long queueTtlMillis) {
         this.player = player;
@@ -190,20 +190,20 @@ public final class PlayerData {
         this.movementContext.update(this);
 
         if (event.isPositionUpdate()) {
-            boolean isTeleport = this.nextMoveIsTeleport;
+            boolean isTeleport = this.incomingTeleportTag != TeleportTag.NONE;
 
             if (isTeleport) {
-                this.nextMoveIsTeleport = false;
+                this.incomingTeleportTag = TeleportTag.NONE;
             } else if (teleportQueue.getPendingCount() > 0) {
                 TeleportQueue.Teleport matched = teleportQueue.match(event.getX(), event.getY(), event.getZ());
                 if (matched != null) {
                     isTeleport = true;
-                    this.nextMoveIsLagbackTeleport = matched.isLagback;
+                    this.incomingTeleportTag = matched.isLagback ? TeleportTag.LAGBACK : TeleportTag.NORMAL;
                 }
             }
 
             if (isTeleport) {
-                if (this.nextMoveIsLagbackTeleport) {
+                if (this.incomingTeleportTag == TeleportTag.LAGBACK) {
                     this.setExemption(ExemptionType.TELEPORT, 3);
                 } else {
                     this.setExemption(ExemptionType.TELEPORT, 40);
@@ -211,21 +211,10 @@ public final class PlayerData {
                 this.movementProcessor.handleTeleport();
                 this.positionTracker.reset(event.getX(), event.getY(), event.getZ(), event.getYaw(), event.getPitch());
                 this.timerBalanceRealTime = System.nanoTime();
-                this.nextMoveIsLagbackTeleport = false;
+                this.incomingTeleportTag = TeleportTag.NONE;
             }
 
-            // FIX: Only update safe location when genuinely on the ground with no
-            // recent flags. Previously updated after just 5 ticks without a flag,
-            // even while airborne — this let fly cheats slowly drift the setback
-            // position forward between flag bursts.
-            // Now requires: server ground + no velocity + no pending teleport + 12
-            // ticks without a flag. The SetbackHandler's updateSafeLocation() adds
-            // its own mode-specific checks on top of this.
-            if (!hasVelocity() && teleportQueue.getPendingCount() == 0 && !isTeleportPending()) {
-                if (isServerGround() && this.ticksTracked - this.lastFlagTick > 12) {
-                    setbackHandler.updateSafeLocation(getLocation());
-                }
-            }
+            setbackHandler.updateSafeLocation(getLocation());
 
             this.movementProcessor.predict();
         }
@@ -338,28 +327,21 @@ public final class PlayerData {
     public void handleTeleportConfirm(int teleportId) {
         TeleportQueue.Teleport tp = teleportQueue.confirm(teleportId);
         if (tp != null) {
-            this.nextMoveIsTeleport = true;
-            this.nextMoveIsLagbackTeleport = tp.isLagback;
-
+            this.incomingTeleportTag = tp.isLagback ? TeleportTag.LAGBACK : TeleportTag.NORMAL;
         }
     }
 
     public void acceptTeleport(SetPositionPacketWrapper wrapper) {
-        boolean lagback = this.isNextTeleportLagback;
+        TeleportTag tag = this.outgoingTeleportTag;
+        boolean lagback = tag == TeleportTag.LAGBACK;
         teleportQueue.add(wrapper.getTeleportId(), new Location(player.getWorld(), wrapper.getX(), wrapper.getY(), wrapper.getZ()), lagback);
 
         if (lagback) {
             this.setExemption(ExemptionType.TELEPORT, 20);
-            this.isNextTeleportLagback = false;
         } else {
             this.setExemption(ExemptionType.TELEPORT, 60);
         }
-    }
-
-    @Deprecated
-    public void executeLagback() {
-        // Redirect legacy calls to the centralized lagback system
-        forceLagback();
+        this.outgoingTeleportTag = TeleportTag.NONE;
     }
 
     // Called by the core Check.java engine
@@ -367,7 +349,7 @@ public final class PlayerData {
         if (this.velocityQueue.hasExplosionVelocity() || isInExplosionGraceWindow(1500L)) {
             return;
         }
-        this.isNextTeleportLagback = true; // Tag the next outgoing TP as a lagback
+        this.outgoingTeleportTag = TeleportTag.LAGBACK;
         this.setbackHandler.setback();
         if (!this.velocityQueue.hasExplosionVelocity()) {
             this.velocityQueue.clear();
@@ -583,6 +565,7 @@ public final class PlayerData {
 
     public MovementProcessor getProcessor() { return movementProcessor; }
     public VelocityQueue getVelocities() { return velocityQueue; }
+    public TeleportQueue getTeleportQueue() { return teleportQueue; }
     public PositionTracker getPositionTracker() { return positionTracker; }
     public ActionTracker getActionTracker() { return actionTracker; }
     public SetbackHandler getSetbackHandler() { return setbackHandler; }

@@ -79,8 +79,6 @@ public final class CrystalAuraA extends Check {
                     if (diff < 40) {
                         if (buffer.increase(player, 2.0) > 6.0) {
                             flag(data, String.format("Fast Crystal (Place->Break). Delay: %dms", diff));
-                            // ID Predict / Fast Crystal is a hard combat cheat -> lagback
-                            data.executeLagback();
                             buffer.reset(player, 3.0);
                         }
                     } else {
@@ -114,12 +112,9 @@ public final class CrystalAuraA extends Check {
                     }
 
                     if (target.getType() == EntityType.END_CRYSTAL) {
-                        // If the crystal has existed for 0 ticks, it JUST spawned.
-                        // Clients shouldn't be able to attack it that fast unless predictable.
                         if (target.getTicksLived() <= 0) {
                             if (buffer.increase(player, 1.5) > 5.0) {
                                 flag(data, "Crystal ID Predict (0-Tick Attack)");
-                                data.executeLagback();
                             }
                         }
                     }

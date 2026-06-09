@@ -83,7 +83,6 @@ public final class BadPacketJ extends Check {
             if (duration > 100) {
                 if (buffer.increase(player, 1.0) > 5.0) {
                     flag(data, "Impossible State: Sneak+Sprint > " + duration + "ms");
-                    data.executeLagback();
                     buffer.reset(player, 2.0);
                 }
             }

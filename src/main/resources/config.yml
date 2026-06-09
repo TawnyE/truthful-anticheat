@@ -9,15 +9,24 @@ settings:
 options:
   # Global lagback toggle. If a check does not have a specific lagback config, it falls back to this.
   lagback: true
+
   # Lagback severity mode: BARELY, MODERATE, STRICT, SUPER_STRICT
-  # BARELY    - Minimal intervention; only setback if >8 blocks from safe position (500ms cooldown)
-  # MODERATE  - Balanced; setback if >3 blocks away or airborne during flag (250ms cooldown)
-  # STRICT    - Aggressive; setback every flag with short cooldown (100ms)
-  # SUPER_STRICT - Grim-like; instant setback, no cooldown, freeze until confirmed
+  # BARELY        - Minimal intervention; only setback if >8 blocks from safe position
+  #                 (500ms cooldown, distance threshold 8.0 blocks, no airborne setback)
+  # MODERATE      - Balanced; setback when flagged while airborne
+  #                 (80ms cooldown, no distance threshold, airborne setback enabled)
+  # STRICT        - Aggressive; setback every flag with short cooldown
+  #                 (100ms cooldown, no distance threshold, airborne setback enabled)
+  # SUPER_STRICT  - Grim-like; instant setback, no cooldown, freeze until confirmed
+  #                 (0ms cooldown, no distance threshold, airborne setback enabled)
   lagback-mode: MODERATE
-  # If the player is airborne and this far from their safe location,
-  # snap them to nearest ground instead of the saved position (prevents rubber-banding seizures)
+
+  # Maximum distance between the player's current position and the resolved setback target.
+  # If the stored safe location is farther than this distance, the system will snap the
+  # setback target to the nearest ground beneath the player's current position instead,
+  # preventing rubber-banding across the map during fly/high-velocity cheats.
   lagback-ground-snap-distance: 5.0
+
   # Enable deep logging in the console for developer debugging
   debug-mode: false
   # Automatically reset player violation levels every X minutes
@@ -145,131 +154,838 @@ messages:
 #                                                                               #
 #  How to configure:                                                            #
 #  - lagback: Control exactly when the player gets rubber-banded (by VL).       #
-#  - punishment: Configure auto-bans.                                           #
-#  - bandwave: Set to 'true' to send them to the ban queue instead of kicking.  #
+#    When the player's violation level (VL) reaches the configured threshold,   #
+#    they receive a server-forced position teleport to their setback target.     #
+#  - punishment: Configure auto-kicks/bans at higher VL thresholds.             #
+#  - bandwave: Set to 'true' to queue them for the ban wave instead of kicking. #
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ #
 checks:
 
   # ❖ BEDROCK & GEYSER ❖
+  # Checks specifically for Bedrock (Geyser/Floodgate) players who have different
+  # physics and movement characteristics than Java players.
   BEDROCK:
-    A: { enabled: true, lagback: { vl: 15 }, punishment: { enabled: true, vl: 50, command: "kick %player% [Truthful] Speed" } }
-    B: { enabled: true, lagback: { vl: 15 }, punishment: { enabled: true, vl: 50, command: "kick %player% [Truthful] Fly" } }
-    C: { enabled: true, lagback: { vl: 15 }, punishment: { enabled: true, vl: 50, command: "kick %player% [Truthful] Reach" } }
+    # BSpeed(A) — Bedrock horizontal speed limiter. Detects speed cheats on
+    # bedrock players by capping ground/air speed with potion and ice modifiers.
+    A:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 15
+      punishment:
+        enabled: true
+        vl: 50
+        command: "kick %player% [Truthful] Speed"
+        bandwave: false
+    # BFly(A) — Bedrock fly detection. Detects hover/rise beyond valid jump
+    # apex (20 ticks + jump boost extension).
+    B:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 15
+      punishment:
+        enabled: true
+        vl: 50
+        command: "kick %player% [Truthful] Fly"
+        bandwave: false
+    # BReach(A) — Bedrock reach detection. Detects impossibly long melee
+    # attacks from bedrock players with ping-compensated hitbox checks.
+    C:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 15
+      punishment:
+        enabled: true
+        vl: 50
+        command: "kick %player% [Truthful] Reach"
+        bandwave: false
 
   # ❖ MOVEMENT & PHYSICS ❖
+  # Simulation checks — the core physics prediction engine. These detect
+  # vertical fly, horizontal speed, air strafe, and gravity bypasses.
   SIMULATION:
-    A: { enabled: true, lagback: { vl: 35 }, punishment: { enabled: true, vl: 350 } }
-    B: { enabled: false }
-    C: { enabled: true, lagback: { vl: 75 }, punishment: { enabled: true, vl: 350 } }
-    D: { enabled: true, lagback: { vl: 75 }, punishment: { enabled: true, vl: 350 } }
+    # SimulationA — Primary physics simulation. Detects vertical fly (air-walk,
+    # fly-dip, gravity bypass) and horizontal cheats (speed, air-strafe, ground
+    # speed over cap). Most important movement check.
+    A:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 35
+      punishment:
+        enabled: true
+        vl: 350
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # SimulationB — Elytra flight physics. Detects elytra speed cap violations,
+    # spurious XZ gain, low drag, stall, energy rate anomalies, and illegal air
+    # jumps. Only activates when gliding.
+    B:
+      enabled: false
+      lagback:
+        enabled: true
+        vl: 5
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # SimulationC — Liquid physics. Detects Jesus (water walking), vertical
+    # hover/ascend/descend caps, and horizontal speed/drag violations in water
+    # and lava. Includes depth strider, dolphin's grace, and bubble column support.
+    C:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 75
+      punishment:
+        enabled: true
+        vl: 350
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # SimulationD — Vehicle & entity push physics. Detects speed/fly cheats on
+    # boats (including ice variants), horses, camels, llamas, pigs, striders,
+    # minecarts, and entity push exploits.
+    D:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 75
+      punishment:
+        enabled: true
+        vl: 350
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
 
   VELOCITY:
-    A: { enabled: true, lagback: { vl: 10 }, punishment: { enabled: true, vl: 150 } }
-    B: { enabled: true, lagback: { vl: 10 }, punishment: { enabled: true, vl: 150 } }
-    C: { enabled: true, lagback: { vl: 10 }, punishment: { enabled: true, vl: 150 } }
-    D: { enabled: true, lagback: { vl: 10 }, punishment: { enabled: true, vl: 150 } }
+    # VelocityA — Horizontal velocity (knockback) take check. Detects players
+    # taking 0% or near-0% horizontal knockback after being hit.
+    A:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 10
+      punishment:
+        enabled: true
+        vl: 150
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # VelocityB — Vertical velocity (knockback) take check. Detects players
+    # taking 0% or near-0% vertical knockback.
+    B:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 10
+      punishment:
+        enabled: true
+        vl: 150
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # VelocityC — Delayed velocity (tick 2-3) check. Detects velocity that was
+    # delayed or partially taken on subsequent ticks after knockback.
+    C:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 10
+      punishment:
+        enabled: true
+        vl: 150
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # VelocityD — Velocity ACK withholding. Detects players moving while
+    # intentionally withholding velocity acknowledgment packets to hide
+    # knockback reduction.
+    D:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 10
+      punishment:
+        enabled: true
+        vl: 150
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
 
   SPOOF:
-    B: { enabled: true, punishment: { enabled: true, vl: 100 } }
-    C: { enabled: true, punishment: { enabled: true, vl: 150 } }
-    D: { enabled: true, punishment: { enabled: true, vl: 100 } }
-    E: { enabled: true, punishment: { enabled: true, vl: 150 } }
-    F: { enabled: true, punishment: { enabled: true, vl: 150 } }
-    G: { enabled: true, punishment: { enabled: true, vl: 150 } }
+    # GroundSpoofB — (Not currently implemented or disabled)
+    B:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 100
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # GroundSpoofC — Falling Ground Claim. Detects players claiming on-ground
+    # while having significant downward velocity (falling fast but saying grounded).
+    C:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 5
+      punishment:
+        enabled: true
+        vl: 100
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # GroundSpoofD — (Not currently implemented or disabled)
+    D:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: true
+        vl: 100
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # GroundSpoofE — (Not currently implemented or disabled)
+    E:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: true
+        vl: 150
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # GroundSpoofF — Physical Ground Spoof. Detects players claiming ground
+    # when no solid block exists beneath them (thread-safe via block cache).
+    F:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 5
+      punishment:
+        enabled: true
+        vl: 150
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # GroundSpoofG — Status Pulse Verification. Detects NoFall modules that
+    # send Ground=True on rotation-only / non-position packets.
+    G:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 5
+      punishment:
+        enabled: true
+        vl: 150
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
 
   TIMER:
-    A: { enabled: true, punishment: { enabled: true } }
+    # TimerA — Game speed (timer) check. Detects clients running faster or
+    # slower than normal game tick rate using transaction-based timing analysis.
+    A:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 5
+      punishment:
+        enabled: true
+        vl: 20
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
 
   # ❖ COMBAT & HEURISTICS ❖
   KILLAURA:
-    B: { enabled: true, lagback: { enabled: true, vl: 15 } }
-    C: { enabled: true, lagback: { enabled: true, vl: 15 } }
-    D: { enabled: true, lagback: { enabled: true }, punishment: { enabled: true, vl: 15 } }
-    E: { enabled: true, lagback: { enabled: true }, punishment: { enabled: true, vl: 15 } }
-    F: { enabled: true, lagback: { enabled: true }, punishment: { enabled: true, vl: 15 } }
-    G: { enabled: true, lagback: { enabled: true }, punishment: { enabled: true, vl: 15 } }
-    H: { enabled: true, lagback: { enabled: true, vl: 10 } }
+    # KillAuraB — Movement Correlation (KeepSprint). Detects omni-directional
+    # sprinting while attacking (directional dot check) and keep-sprint after hits.
+    B:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 15
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # KillAuraC — Robotic Aim Analysis. Detects snap-and-stop aim patterns
+    # (large rotation >30 deg followed instantly by <0.1 deg).
+    C:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 15
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # KillAuraD — Silent/Packet Rotation / Pitch Lock. Detects yaw changes
+    # >15 deg with exactly 0 pitch change (pitch lock) and pitch changes >10
+    # with near-zero yaw (vertical snap).
+    D:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 5
+      punishment:
+        enabled: true
+        vl: 15
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # KillAuraE — Wall Hit Detection (Async Raytrace). Detects attacks that
+    # pass through solid blocks using async raytrace with ping compensation.
+    E:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 5
+      punishment:
+        enabled: true
+        vl: 15
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # KillAuraF — Packet Criticals. Detects clients sending tiny hops
+    # (<0.2 vertical) mid-combat to fake critical hit conditions.
+    F:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 5
+      punishment:
+        enabled: true
+        vl: 15
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # KillAuraG — Multi-Target Detection. Detects 3+ unique attack targets
+    # within a 500ms window (impossible for legitimate players).
+    G:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 5
+      punishment:
+        enabled: true
+        vl: 15
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # KillAuraH — Attack Interval Analysis. Detects low-variance, quantized,
+    # or perfectly-rounded CPS values indicating autoclicker/aimbot patterns.
+    H:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 10
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
 
   AIM:
-    A: { enabled: true }
-    B: { enabled: true }
-    D: { enabled: true }
-    E: { enabled: true, punishment: { enabled: true, vl: 40 } }
-    F: { enabled: true, punishment: { enabled: true, vl: 65 } }
-    G: { enabled: true, punishment: { enabled: true, vl: 65 } }
-    H: { enabled: true, punishment: { enabled: true, vl: 65 } }
-    I: { enabled: true, punishment: { enabled: true, vl: 65 } }
-    J: { enabled: true }
-    K: { enabled: true }
-    L: { enabled: true }
+    # AimA through AimL — Rotation analysis checks. Detect aim-assist, silent
+    # aimbot, and smoothing/acceleration anomalies through various statistical
+    # and heuristic methods.
+    A:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    B:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    D:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    E:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: true
+        vl: 40
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    F:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: true
+        vl: 65
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    G:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: true
+        vl: 65
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    H:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: true
+        vl: 65
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    I:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: true
+        vl: 65
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    J:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    K:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    L:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
 
   AUTOCLICKER:
     max_cps: 22
     count_ground_punches: false
-    A: { enabled: true }
-    B: { enabled: true }
-    C: { enabled: true }
-    D: { enabled: true }
-    E: { enabled: true }
+    # AutoClickerA through E — Click pattern analysis. Detect autoclickers
+    # through CPS limits, consistency checks, and timing analysis.
+    A:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    B:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    C:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    D:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    E:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
 
   HITBOX:
-    A: { enabled: true, punishment: { enabled: true, vl: 65 } }
+    # HitboxA — Hitbox expansion detection. Detects players hitting outside
+    # the target's expanded hitbox with ping compensation and backtracking.
+    A:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 5
+      punishment:
+        enabled: true
+        vl: 65
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
 
   REACH:
-    A: { enabled: true, lagback: { enabled: true, vl: 10 }, punishment: { enabled: true, vl: 65 } }
+    # ReachA — Entity reach detection. Detects distance-based attacks beyond
+    # the reach limit (3.0 blocks base, ping-compensated, with sprint/velocity
+    # modifiers) using async raytrace.
+    A:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 10
+      punishment:
+        enabled: true
+        vl: 65
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
 
   CRYSTAL:
-    A: { enabled: true, lagback: { enabled: true }, punishment: { enabled: true, vl: 10 } }
+    # CrystalAuraA — Crystal place/break speed and ID prediction detection.
+    # Detects fast crystal macros (<40ms place-to-break) and zero-tick
+    # crystal attacks (attacking crystals before they exist on client).
+    A:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 5
+      punishment:
+        enabled: true
+        vl: 10
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
 
   ANCHOR:
-    A: { enabled: true, lagback: { enabled: true }, punishment: { enabled: true, vl: 10 } }
+    # AnchorAuraA — Respawn anchor charge/explode macro detection.
+    # Detects impossibly fast charge-to-exploit sequences (<80ms) that
+    # indicate a macro.
+    A:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 5
+      punishment:
+        enabled: true
+        vl: 10
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
 
   # ❖ WORLD & AUTOMATION ❖
   SCAFFOLD:
-    A: { enabled: true, lagback: { enabled: false }, punishment: { enabled: true, vl: 150 } }
+    # ScaffoldA — Scaffold/block placement assistance detection. Detects
+    # automated tower and bridging patterns.
+    A:
+      enabled: true
+      lagback:
+        enabled: false
+        vl: 5
+      punishment:
+        enabled: true
+        vl: 150
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
 
   PHASE:
-    A: { enabled: false, lagback: { enabled: false } }
+    # PhaseA — Phase/wall glitch detection. Detects players moving through
+    # solid blocks by checking if the AABB overlaps any solid block.
+    A:
+      enabled: false
+      lagback:
+        enabled: false
+        vl: 5
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
 
   FAST_BREAK:
-    A: { enabled: true, punishment: { enabled: true } }
+    # FastBreakA — Fast break detection. Detects players breaking blocks
+    # faster than the tool's allowed dig speed.
+    A:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: true
+        vl: 10
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
 
   RAYCAST:
-    A: { enabled: false, punishment: { enabled: true, vl: 15 } }
+    # RaycastA — Entity raycast detection. Detects attacks that bypass
+    # the server-side line-of-sight check (wall-hitting).
+    A:
+      enabled: false
+      lagback:
+        enabled: false
+      punishment:
+        enabled: true
+        vl: 15
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
 
   # ❖ PACKET INTEGRITY ❖
   BAD_PACKET:
-    A: { enabled: true }
-    C: { enabled: true }
-    D: { enabled: false }
-    E: { enabled: true }
-    G: { enabled: true, lagback: { enabled: true } }
-    H: { enabled: true }
-    I: { enabled: true, lagback: { enabled: true } }
-    J: { enabled: true, lagback: { enabled: true } }
-    K: { enabled: true }
+    # BadPacketA — Invalid packet data detection.
+    A:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 20
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # BadPacketC — Packet desync / invalid state detection.
+    C:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 20
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # BadPacketD — Disabled by default.
+    D:
+      enabled: false
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 20
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # BadPacketE — Invalid entity interaction detection.
+    E:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 20
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # BadPacketG — Invalid position data (NaN, infinite, extreme, out-of-bounds Y).
+    # Flags immediately on any invalid position value.
+    G:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 1
+      punishment:
+        enabled: false
+        vl: 20
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # BadPacketH — Packet spam detection.
+    H:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 20
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # BadPacketI — Duplicate position spam. Detects rapid-fire duplicate
+    # position packets (>5 duplicates in <100ms).
+    I:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 1
+      punishment:
+        enabled: false
+        vl: 20
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # BadPacketJ — Impossible state persistence. Detects sneak+sprint state
+    # persisting for >100ms (impossible on 1.9+ clients without cheats).
+    J:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 1
+      punishment:
+        enabled: false
+        vl: 20
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # BadPacketK — Other packet validation.
+    K:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 20
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
 
   PACKET_ORDER:
-    A: { enabled: true, punishment: { enabled: true, vl: 15 } }
-    B: { enabled: true }
-    C: { enabled: true, punishment: { enabled: true } }
-    D: { enabled: true, punishment: { enabled: true, vl: 15 } }
-    E: { enabled: true, punishment: { enabled: true, vl: 15 } }
+    # PacketOrderA through E — Packet ordering validation. Detect clients
+    # sending packets in an impossible order (indicating a hacked client).
+    A:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: true
+        vl: 15
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    B:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 20
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    C:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: true
+        vl: 10
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    D:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: true
+        vl: 15
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    E:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: true
+        vl: 15
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
 
   INVALID:
-    A: { enabled: true, punishment: { enabled: true, vl: 5 } }
+    # InvalidA — Invalid packet detection for malformed/non-compliant packets.
+    A:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: true
+        vl: 5
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
 
   CRASHER:
-    A: { enabled: true, punishment: { enabled: true, vl: 2 } }
+    # CrasherA — Crash exploit detection. Detects packets designed to crash
+    # the server (e.g., oversized book edits, nbt exploits).
+    A:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: true
+        vl: 2
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
 
   INVENTORY:
-    A: { enabled: true, lagback: { enabled: true }, punishment: { enabled: true, vl: 15 } }
+    # InventoryA — Inventory move speed. Detects players moving too fast
+    # while their inventory is open (cancel move packet when moving quickly
+    # with a recent window click).
+    A:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 5
+      punishment:
+        enabled: true
+        vl: 15
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
 
   BARITONE:
-    A: { enabled: true }
-    B: { enabled: true }
-    C: { enabled: true }
+    # BaritoneA through C — Baritone / automated mining detection. Tracks
+    # baritone trust level based on movement and block interaction patterns.
+    A:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    B:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    C:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
 
   SPRINT:
-    A: { enabled: true }
-    B: { enabled: true }
+    # SprintA — Invalid sprint state detection.
+    A:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # SprintB — Sprint direction / desync detection.
+    B:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false

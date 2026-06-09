@@ -319,7 +319,6 @@ public final class SimulationC extends Check {
             st.buffer += (float) severity;
             if (st.buffer > FLAG_BUFFER_THRESHOLD) {
                 flag(data, flagReason + String.format(" buffer=%.2f", st.buffer));
-                if (Truthful.getInstance().getConfiguration().isLagbacks()) data.executeLagback();
                 st.buffer = Math.min(st.buffer, FLAG_BUFFER_RESET);
             }
         } else {

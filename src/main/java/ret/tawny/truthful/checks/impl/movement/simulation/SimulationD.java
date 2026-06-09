@@ -353,8 +353,6 @@ public final class SimulationD extends Check {
                                 }
                                 player.teleport(data.getLastLocation());
                             });
-                } else if (Truthful.getInstance().getConfiguration().isLagbacks()) {
-                    data.executeLagback();
                 }
                 buffer.reset(player, BUFFER_RESET_VALUE);
             }

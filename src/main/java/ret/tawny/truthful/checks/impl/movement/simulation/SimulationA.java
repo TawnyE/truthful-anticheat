@@ -385,7 +385,6 @@ public final class SimulationA extends Check {
             flag(data, String.format(
                     "Area Fail (V) %s buf=%.3f vDiff=%.4f Y=%.4f lastY=%.4f air=%d tags=%s",
                     sub, st.verticalBuffer, vDiff, deltaY, lastDeltaY, airTicks, tags));
-            if (Truthful.getInstance().getConfiguration().isLagbacks()) data.executeLagback();
             st.verticalBuffer = Math.min(st.verticalBuffer, 1.5f);
         }
     }
@@ -537,7 +536,6 @@ public final class SimulationA extends Check {
                 if (st.horizontalBuffer >= HORIZONTAL_FLAG_THRESHOLD && airTicks > 1) {
                     flag(data, String.format("Area Fail (AS) vAccel=%.4f max=%.4f tags=%s",
                             airVectorAccel, maxAirVectorAccel, tags));
-                    if (Truthful.getInstance().getConfiguration().isLagbacks()) data.executeLagback();
                     st.horizontalBuffer = Math.min(st.horizontalBuffer, 2.0f);
                 }
             }
@@ -555,7 +553,6 @@ public final class SimulationA extends Check {
                         st.driftAccumulator, st.driftViolationTicks,
                         predictedVX, predictedVZ,
                         data.getDeltaX(), data.getDeltaZ(), tags));
-                if (Truthful.getInstance().getConfiguration().isLagbacks()) data.executeLagback();
                 st.driftAccumulator   = 0.12D;
                 st.driftViolationTicks = 0;
             }
@@ -597,7 +594,6 @@ public final class SimulationA extends Check {
                         st.horizontalBuffer, deltaXZ, groundResult.speedCap, groundResult.accel,
                         groundResult.accelCap, groundResult.vectorAccel, groundResult.vectorAccelCap,
                         st.groundSpeedTicks, st.groundAccelTicks, st.groundStrafeTicks, tags));
-                if (Truthful.getInstance().getConfiguration().isLagbacks()) data.executeLagback();
                 st.horizontalBuffer = Math.min(st.horizontalBuffer, 2.0f);
             }
             return;
@@ -627,7 +623,6 @@ public final class SimulationA extends Check {
         if (st.horizontalBuffer >= HORIZONTAL_FLAG_THRESHOLD) {
             flag(data, String.format("Area Fail (H) buf=%.3f hDiff=%.4f XZ=%.4f maxAllow=%.4f air=%d tags=%s",
                     st.horizontalBuffer, hDiff, deltaXZ, maxAllowed, airTicks, tags));
-            if (Truthful.getInstance().getConfiguration().isLagbacks()) data.executeLagback();
             st.horizontalBuffer = Math.min(st.horizontalBuffer, 2.0f);
         }
     }

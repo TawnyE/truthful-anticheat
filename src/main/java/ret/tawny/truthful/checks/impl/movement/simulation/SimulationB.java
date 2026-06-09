@@ -170,7 +170,6 @@ public final class SimulationB extends Check {
             tags.add(Tag.ILLEGAL_AIR_JUMP);
             flag(data, String.format("Area Fail (ElytraJump) Y=%.4f lastY=%.4f pitch=%.1f tags=%s",
                     deltaY, lastDeltaY, pitch, tags));
-            if (Truthful.getInstance().getConfiguration().isLagbacks()) data.executeLagback();
             return;
         }
 
@@ -184,7 +183,6 @@ public final class SimulationB extends Check {
             double severity = 2.0D + (deltaXZ - cap) * 7.0D;
             // Speed cap is serious; direct flag without dual-gate
             flag(data, String.format("Area Fail (SpeedCap) XZ=%.3f cap=%.3f tags=%s", deltaXZ, cap, tags));
-            if (Truthful.getInstance().getConfiguration().isLagbacks()) data.executeLagback();
             return;
         }
 
@@ -311,7 +309,6 @@ public final class SimulationB extends Check {
                         reason, deltaXZ, pred.predictedH, deltaY, pred.predictedV,
                         pred.hDiff, pred.vDiff, pred.vecDiff,
                         st.physicsVL, st.driftScore, tags));
-                if (Truthful.getInstance().getConfiguration().isLagbacks()) data.executeLagback();
 
                 // Reset: cap VL to avoid cascading, reduce drift
                 st.physicsVL  = Math.min(st.physicsVL, VL_FLAG_THRESHOLD * 0.6);

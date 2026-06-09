@@ -85,11 +85,6 @@ public final class BSpeedA extends Check {
             // (sending 2 movements in 1 tick essentially), creating a fake speed spike.
             if (buffer.increase(player, 1.0 + over) > 8.0) {
                 flag(data, String.format("Bedrock Speed limit. Speed: %.2f, Limit: %.2f", deltaXZ, limit));
-
-                // For Bedrock, lagback is safer than cancelling individual packets
-                if (Truthful.getInstance().getConfiguration().isLagbacks()) {
-                    data.executeLagback();
-                }
                 buffer.reset(player, 4.0);
             }
         } else {

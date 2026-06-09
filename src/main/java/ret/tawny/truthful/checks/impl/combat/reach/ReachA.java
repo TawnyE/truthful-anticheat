@@ -120,7 +120,6 @@ public final class ReachA extends Check {
                 if (trueReach > 10.0) return; // Ignore massive desyncs
                 if (buffer.increase(player, 1.0 + (over * 2.0)) > 10.0) {
                     flag(data, String.format("Reach dist=%.3f max=%.3f over=%.3f", trueReach, maxReach, over));
-                    data.executeLagback();
                     buffer.reset(player, 4.5);
                 }
             }

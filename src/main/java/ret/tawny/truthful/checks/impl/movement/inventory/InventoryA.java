@@ -42,7 +42,6 @@ public final class InventoryA extends Check {
         if (move > allowed) {
             if (buffer.increase(wrapper.getPlayer(), 1.0D) > 5.0D) {
                 flag(data, String.format("Inventory move speed=%.3f limit=%.3f clickDelta=%dms", move, allowed, clickDelta));
-                if (Truthful.getInstance().getConfiguration().isLagbacks()) data.executeLagback();
                 buffer.reset(wrapper.getPlayer(), 2.0D);
             }
         } else {

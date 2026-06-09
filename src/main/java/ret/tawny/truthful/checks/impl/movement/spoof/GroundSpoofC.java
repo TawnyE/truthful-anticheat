@@ -40,9 +40,6 @@ public final class GroundSpoofC extends Check {
             if (deltaY < -0.15 && !data.isOnGround()) {
                 if (buffer.increase(player, 1.0) > 6.0) {
                     flag(data, String.format("Ground Spoof (Falling). dY: %.4f", deltaY));
-                    if (Truthful.getInstance().getConfiguration().isLagbacks()) {
-                        data.executeLagback();
-                    }
                     buffer.reset(player, 3.0);
                 }
             } else {

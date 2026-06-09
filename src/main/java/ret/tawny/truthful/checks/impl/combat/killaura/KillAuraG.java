@@ -71,7 +71,6 @@ public final class KillAuraG extends Check {
             if (buffer.increase(player, severity) > 8.0) {
                 flag(data, String.format("Multi-Target. Targets: %d in %dms, FastestSwitch: %dms",
                         uniqueTargets, TIME_WINDOW_MS, fastestSwitch));
-                data.executeLagback();
                 buffer.reset(player, 4.0);
             }
         } else {

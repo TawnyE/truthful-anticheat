@@ -56,7 +56,6 @@ public final class KillAuraC extends Check {
             // Buffer increased slowly to avoid flagging legit "flicks" too easily
             if (buffer.increase(player, 2.0) > 8.0) {
                 flag(data, String.format("Snap Aim. Last: %.1f, Now: %.1f", lastDeltaYaw, deltaYaw));
-                data.executeLagback();
                 buffer.reset(player, 4.0);
             }
         }

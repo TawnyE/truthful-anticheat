@@ -56,7 +56,6 @@ public final class PhaseA extends Check {
         if (collision) {
             if (buffer.increase(player, 1.0D) > 3.0D) {
                 flag(data, "Phase inside solid block");
-                data.executeLagback();
                 buffer.reset(player, 1.0D);
             }
         } else buffer.decrease(player, 0.2D);

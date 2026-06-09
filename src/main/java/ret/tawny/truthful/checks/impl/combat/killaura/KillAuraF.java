@@ -81,7 +81,6 @@ public final class KillAuraF extends Check {
                 if (buffer.increase(player, 1.5) > 6.0) {
                     flag(data, String.format("Packet Criticals (Mini-Jump). Y: %.4f, AirTicks: %d", realDeltaY,
                             data.getAirTicks()));
-                    data.executeLagback();
                     buffer.reset(player, 3.0);
                 }
             }

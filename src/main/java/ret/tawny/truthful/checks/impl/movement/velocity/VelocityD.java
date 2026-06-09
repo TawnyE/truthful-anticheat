@@ -52,7 +52,6 @@ public final class VelocityD extends Check {
         if (flagged) {
             flag(data, flagReason);
             if (buffer.increase(data.getPlayer(), severity) > 8.0D) {
-                if (Truthful.getInstance().getConfiguration().isLagbacks()) data.executeLagback();
                 buffer.reset(data.getPlayer(), 2.0D);
             }
         } else {

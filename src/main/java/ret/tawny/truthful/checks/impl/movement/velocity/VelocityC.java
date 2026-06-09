@@ -64,7 +64,6 @@ public final class VelocityC extends Check {
         if (flagged) {
             flag(data, flagReason);
             if (buffer.increase(data.getPlayer(), severity) > 6.0D) {
-                if (Truthful.getInstance().getConfiguration().isLagbacks()) data.executeLagback();
                 buffer.reset(data.getPlayer(), 2.0D);
             }
         } else {

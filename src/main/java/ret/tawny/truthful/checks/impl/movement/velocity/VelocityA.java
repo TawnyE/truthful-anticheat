@@ -65,7 +65,6 @@ public final class VelocityA extends Check {
         if (flagged) {
             flag(data, flagReason);
             if (buffer.increase(data.getPlayer(), severity) > 5.0D) {
-                if (Truthful.getInstance().getConfiguration().isLagbacks()) data.executeLagback();
                 buffer.reset(data.getPlayer(), 1.0D);
             }
         } else {

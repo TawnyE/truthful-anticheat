@@ -72,9 +72,6 @@ public final class GroundSpoofF extends Check {
 
                     if (buffer.increase(player, 0.85) > 5.0) {
                         flag(data, "Physical Ground Spoof (No Collision)");
-                        if (Truthful.getInstance().getConfiguration().isLagbacks()) {
-                            data.executeLagback();
-                        }
                         buffer.reset(player, 2.0);
                     }
                 });

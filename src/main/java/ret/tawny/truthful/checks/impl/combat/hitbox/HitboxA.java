@@ -141,7 +141,6 @@ public final class HitboxA extends Check {
 
             if (buffer.increase(player, severity) > 10.0) {
                 flag(data, String.format("Hitbox Miss. Reach=%.3f Max=%.3f Over=%.3f", trueReach, maxReach, over));
-                data.executeLagback();
                 buffer.reset(player, 4.0);
             }
         } else {

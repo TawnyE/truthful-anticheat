@@ -53,7 +53,6 @@ public final class KillAuraD extends Check {
         if (deltaYaw > 15.0 && deltaPitch == 0.0) {
             if (buffer.increase(player, 1.5) > 10.0) {
                 flag(data, String.format("Silent/Pitch Lock. dYaw: %.2f, dPitch: %.5f", deltaYaw, deltaPitch));
-                data.executeLagback();
                 buffer.reset(player, 5.0);
             }
             return;
@@ -66,7 +65,6 @@ public final class KillAuraD extends Check {
         if (deltaPitch > 10.0 && deltaYaw < 0.01 && deltaYaw > 0.0) {
             if (buffer.increase(player, 1.0) > 12.0) {
                 flag(data, String.format("Vertical Snap. dPitch: %.2f", deltaPitch));
-                data.executeLagback();
             }
         } else {
             buffer.decrease(player, 0.25);

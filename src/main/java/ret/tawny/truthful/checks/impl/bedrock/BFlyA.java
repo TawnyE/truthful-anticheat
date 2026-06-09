@@ -86,10 +86,6 @@ public final class BFlyA extends Check {
 
                     if (buffer.increase(player, 1.0) > 6.0) {
                         flag(data, String.format("Bedrock Fly (Hover/Rise). AirTicks: %d, Y: %.4f", airTicks, deltaY));
-
-                        if (Truthful.getInstance().getConfiguration().isLagbacks()) {
-                            data.executeLagback();
-                        }
                         buffer.reset(player, 3.0);
                     }
                 } else {

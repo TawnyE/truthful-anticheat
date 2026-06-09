@@ -90,7 +90,6 @@ public final class KillAuraH extends Check {
             if (buffer.increase(player, severity) > 10.0) {
                 flag(data, String.format("Attack Pattern. Var: %.1f, Quant: %.2f, CPS: %.1f",
                         variance, quantizationScore, cps));
-                data.executeLagback();
                 buffer.reset(player, 5.0);
             }
         } else {

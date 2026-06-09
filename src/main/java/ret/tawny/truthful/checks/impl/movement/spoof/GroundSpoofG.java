@@ -73,9 +73,6 @@ public final class GroundSpoofG extends Check {
 
                 if (buffer.increase(player, 1.0) > 5.0) {
                     flag(data, "Ground Status Pulse (No Movement)");
-                    if (Truthful.getInstance().getConfiguration().isLagbacks()) {
-                        data.executeLagback();
-                    }
                     buffer.reset(player, 2.0);
                 }
             } else {

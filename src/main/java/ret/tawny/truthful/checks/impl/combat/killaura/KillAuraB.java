@@ -59,7 +59,6 @@ public final class KillAuraB extends Check {
             if (dot < 0.6) {
                 if (buffer.increase(player, 1.0) > 6.0) {
                     flag(data, String.format("Directional Sprint. Dot: %.2f", dot));
-                    data.executeLagback();
                     buffer.reset(player, 3.0);
                 }
                 return;
@@ -83,7 +82,6 @@ public final class KillAuraB extends Check {
 
                     if (buffer.increase(player, 1.5) > 8.0) {
                         flag(data, String.format("KeepSprint. Speed: %.4f", data.getDeltaXZ()));
-                        data.executeLagback();
                         buffer.reset(player, 4.0);
                     }
                 } else {

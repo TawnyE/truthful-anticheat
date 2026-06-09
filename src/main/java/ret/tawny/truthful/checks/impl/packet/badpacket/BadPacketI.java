@@ -55,7 +55,6 @@ public final class BadPacketI extends Check {
                 if (buffer.increase(player, 1.0) > 6.0) {
                     flag(data, String.format("Position Spam. Duplicates: %d in %dms",
                             posData.duplicateCount, timeSinceLast));
-                    data.executeLagback();
                     buffer.reset(player, 3.0);
                     posData.duplicateCount = 0;
                 }

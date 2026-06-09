@@ -29,14 +29,12 @@ public final class BadPacketG extends Check {
         // Check for NaN
         if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z)) {
             flag(data, String.format("NaN Position. X: %s, Y: %s, Z: %s", x, y, z));
-            data.executeLagback();
             return;
         }
 
         // Check for Infinity
         if (Double.isInfinite(x) || Double.isInfinite(y) || Double.isInfinite(z)) {
             flag(data, String.format("Infinite Position. X: %s, Y: %s, Z: %s", x, y, z));
-            data.executeLagback();
             return;
         }
 
@@ -44,7 +42,6 @@ public final class BadPacketG extends Check {
         double maxCoord = 30000000.0; // Slightly beyond world border limit
         if (Math.abs(x) > maxCoord || Math.abs(z) > maxCoord) {
             flag(data, String.format("Extreme Position. X: %.0f, Z: %.0f", x, z));
-            data.executeLagback();
             return;
         }
 
@@ -53,7 +50,6 @@ public final class BadPacketG extends Check {
         int maxY = data.getWorldMaxHeight() + 64;
         if (y < minY || y > maxY) {
             flag(data, String.format("Invalid Y Position: %.2f", y));
-            data.executeLagback();
         }
     }
 }

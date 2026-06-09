@@ -91,9 +91,6 @@ public final class KillAuraE extends Check {
         if (blocked) {
             if (buffer.increase(data.getPlayer(), 1.0) > 5.0) {
                 flag(data, "Wall Hit (Async Raytrace)");
-                if (!data.isServerFrozen()) {
-                    data.executeLagback();
-                }
             }
         } else {
             buffer.decrease(data.getPlayer(), 0.05);

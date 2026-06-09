@@ -36,24 +36,25 @@ public final class SetbackHandler {
     }
 
     /**
-     * Only updates the safe location if conditions allow it.
-     * In STRICT/SUPER_STRICT, the safe location is ONLY updated when the player
-     * is confirmed on the ground with no recent flags. This prevents the setback
-     * target from drifting to illegitimate positions during fly/air-jump.
+     * Updates the safe location if conditions allow it.
+     * All gating logic lives here — PlayerData calls this unconditionally
+     * every position tick and the handler decides whether to accept the update.
      *
-     * FIX: MODERATE mode now requires server ground (airTicks == 0) to prevent
-     * safe location drift during fly. The old airTicks <= 1 allowed the safe
-     * position to creep forward while the player was still airborne.
-     * Also blocks updates entirely when consecutiveSetbacks >= 2 — the player
-     * must fully recover before their safe location can update again.
+     * Gates (applied before mode-specific checks):
+     * - No active teleport/frozen state
+     * - No queued velocity
+     * - No pending teleport confirmations
+     * - Player must be on server ground
+     * - Must be more than 12 ticks since last flag
+     * - Must not have excessive consecutive setbacks
      */
     public void updateSafeLocation(Location location) {
         if (awaitingTeleport || frozen) return;
-
-        // FIX: If we've had multiple consecutive setbacks, lock the safe location.
-        // This prevents fly cheats from slowly drifting the safe position forward
-        // between setback cooldowns. The location only unlocks when the player
-        // reaches a genuinely safe state (ground + no flags for extended period).
+        if (data.hasVelocity()) return;
+        if (data.getTeleportQueue().getPendingCount() > 0) return;
+        if (data.isTeleportPending()) return;
+        if (!data.isServerGround()) return;
+        if (data.getTicksTracked() - data.getLastFlagTick() <= 12) return;
         if (consecutiveSetbacks >= 2) return;
 
         Configuration.LagbackMode mode = Truthful.getInstance().getConfiguration().getLagbackMode();
@@ -61,21 +62,14 @@ public final class SetbackHandler {
         switch (mode) {
             case SUPER_STRICT:
             case STRICT:
-                // Only save safe locations when the player is definitively on solid ground
-                // and hasn't been flagged recently. This is the key to preventing fly bypass.
-                if (data.isServerGround() && data.getAirTicks() == 0
+                if (data.getAirTicks() == 0
                         && data.getTicksTracked() - data.getLastFlagTick() > 10) {
                     this.lastSafeLocation = location.clone();
                     this.consecutiveSetbacks = 0;
                 }
                 break;
             case MODERATE:
-                // FIX: Now requires server ground + airTicks == 0 (previously airTicks <= 1).
-                // airTicks <= 1 let the safe location update on the first tick of leaving
-                // ground, which allowed fly cheats to slowly advance the setback position.
-                // Flag window increased from 5 to 8 ticks to prevent buffer-based checks
-                // from leaving gaps that reset the safe location mid-cheat.
-                if (data.isServerGround() && data.getAirTicks() == 0
+                if (data.getAirTicks() == 0
                         && data.getTicksTracked() - data.getLastFlagTick() > 8) {
                     this.lastSafeLocation = location.clone();
                     this.consecutiveSetbacks = 0;
@@ -83,7 +77,6 @@ public final class SetbackHandler {
                 break;
             case BARELY:
             default:
-                // Liberal — update whenever not actively being set back
                 this.lastSafeLocation = location.clone();
                 this.consecutiveSetbacks = 0;
                 break;
@@ -96,15 +89,72 @@ public final class SetbackHandler {
 
 
     private Location resolveSetbackTarget() {
-        Location safe = lastSafeLocation;
-        if (safe == null) safe = player.getLocation();
+        Configuration config = Truthful.getInstance().getConfiguration();
+        double snapDistance = config.getLagbackGroundSnapDistance();
 
-        // Validate safe location is in the same world
+        // Current reported player position is the primary target
+        double curX = data.getX();
+        double curY = data.getY();
+        double curZ = data.getZ();
+        Location currentPos = new Location(player.getWorld(), curX, curY, curZ, data.getYaw(), data.getPitch());
+
+        // 1. If the player is on server ground, use current position directly
+        if (data.isServerGround()) {
+            return currentPos;
+        }
+
+        // 2. If airborne, find the nearest solid ground beneath current XZ
+        Location groundSnap = findGroundBelow(curX, curY, curZ);
+        if (groundSnap != null) {
+            double distToSnap = currentPos.distanceSquared(groundSnap);
+            if (distToSnap <= snapDistance * snapDistance) {
+                return groundSnap;
+            }
+            // Ground is too far below — fall through to safe location check
+        }
+
+        // 3. Fall back to lastSafeLocation, but apply distance threshold
+        Location safe = lastSafeLocation;
+        if (safe == null) {
+            return currentPos;
+        }
+
         if (safe.getWorld() == null || !safe.getWorld().equals(player.getWorld())) {
-            safe = player.getLocation();
+            return currentPos;
+        }
+
+        double distToSafe = currentPos.distanceSquared(safe);
+        if (distToSafe > snapDistance * snapDistance) {
+            // Safe location is too far — prefer current-position ground-snap or current pos
+            if (groundSnap != null) {
+                return groundSnap;
+            }
+            return currentPos;
         }
 
         return safe;
+    }
+
+    /**
+     * Scans downward from the given position to find the nearest solid block surface.
+     * Returns a Location with yaw/pitch from the player's current rotation, or null
+     * if no ground is found within 10 blocks.
+     */
+    private Location findGroundBelow(double x, double y, double z) {
+        int startY = (int) Math.floor(y);
+        int minY = data.getWorldMinHeight();
+        int maxScan = 10;
+
+        for (int dy = 0; dy <= maxScan; dy++) {
+            int checkY = startY - dy;
+            if (checkY < minY) break;
+
+            if (ret.tawny.truthful.utils.world.BlockPropertyRegistry.isSolid(
+                    data.getWorldCache().getBlockState((int) Math.floor(x), checkY, (int) Math.floor(z)))) {
+                return new Location(player.getWorld(), x, checkY + 1.0, z, data.getYaw(), data.getPitch());
+            }
+        }
+        return null;
     }
 
     public void setback() {
