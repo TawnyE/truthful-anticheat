@@ -9,6 +9,7 @@ import org.bukkit.potion.PotionEffect;
 import ret.tawny.truthful.Truthful;
 import ret.tawny.truthful.data.PlayerData;
 import ret.tawny.truthful.gui.GuiConstants;
+import ret.tawny.truthful.gui.GuiHolder;
 import ret.tawny.truthful.gui.GuiItemFactory;
 
 import java.text.DecimalFormat;
@@ -27,9 +28,13 @@ public final class PlayerInfoMenu {
     }
 
     public static void open(Player admin, Player target) {
-        Inventory inv = Bukkit.createInventory(null, 54, getTitle(target.getName()));
+        GuiHolder holder = new GuiHolder(GuiHolder.MenuType.PLAYER_INFO, target.getName(), null, null, 0);
+        Inventory inv = Bukkit.createInventory(holder, 54, getTitle(target.getName()));
         GuiItemFactory.fillGradientBorder(inv);
         inv.setItem(49, GuiItemFactory.createBackButton("Player Selection"));
+
+        inv.setItem(4, GuiItemFactory.createPlayerHead(target, GuiConstants.ACCENT + GuiConstants.BOLD + target.getName()));
+
         update(inv, target);
         admin.openInventory(inv);
     }
@@ -40,14 +45,6 @@ public final class PlayerInfoMenu {
 
         int vl = data.getVl();
         String vlColor = vl == 0 ? GuiConstants.SUCCESS : vl < 10 ? GuiConstants.SECONDARY : vl < 50 ? GuiConstants.WARNING : GuiConstants.ERROR;
-
-        inv.setItem(4, GuiItemFactory.createPlayerHead(target,
-                GuiConstants.ACCENT + GuiConstants.BOLD + target.getName(),
-                List.of(
-                        GuiConstants.metric("UUID", shortUuid(target.getUniqueId().toString())),
-                        GuiConstants.metric("Mode", target.getGameMode().name()),
-                        GuiConstants.metric("Health", COORD.format(target.getHealth())),
-                        GuiConstants.DARK + GuiConstants.LINE + " " + GuiConstants.MUTED + "Total VL " + vlColor + vl)));
 
         inv.setItem(19, GuiItemFactory.createGlowing(
                 GuiConstants.getMat("COMPASS"),
@@ -61,14 +58,9 @@ public final class PlayerInfoMenu {
                         GuiConstants.metric("Pitch", COORD.format(data.getPitch())))));
 
         inv.setItem(20, GuiItemFactory.createGlowing(
-                GuiConstants.getMat("ARROW"),
-                GuiConstants.ACCENT + GuiConstants.BOLD + "Movement",
-                List.of(
-                        GuiConstants.metric("Speed XZ", SPEED.format(data.getDeltaXZ())),
-                        GuiConstants.metric("Delta Y", SPEED.format(data.getDeltaY())),
-                        GuiConstants.metric("Yaw Delta", COORD.format(data.getDeltaYaw())),
-                        GuiConstants.metric("Pitch Delta", COORD.format(data.getDeltaPitch())),
-                        GuiConstants.metric("Sprinting", yesNo(data.isSprinting())))));
+                GuiConstants.getMat("OAK_BUTTON", "WOOD_BUTTON"),
+                GuiConstants.SUCCESS + GuiConstants.BOLD + "Live KeyPresses",
+                formatKeyPressLore(data, target)));
 
         int ping = (int) data.getPing();
         inv.setItem(21, GuiItemFactory.createGlowing(
@@ -77,52 +69,130 @@ public final class PlayerInfoMenu {
                 List.of(
                         GuiConstants.DARK + GuiConstants.LINE + " " + GuiConstants.MUTED + "Ping " + getPingColor(ping) + ping + "ms",
                         GuiConstants.metric("Timer", String.format("%.2fms", data.getTransactionTimerBalance())),
-                        GuiConstants.metric("Last ping", data.getLastTransactionTime() == 0L ? "Pending" : "Tracked"))));
+                        GuiConstants.metric("VL Total", vlColor + vl))));
 
         boolean groundMismatch = data.isClientGround() != data.isServerGround();
         inv.setItem(22, GuiItemFactory.createGlowing(
                 GuiConstants.getMat("GRASS_BLOCK", "GRASS"),
-                (groundMismatch ? GuiConstants.WARNING : GuiConstants.SUCCESS) + GuiConstants.BOLD + "Ground",
+                (groundMismatch ? GuiConstants.WARNING : GuiConstants.SUCCESS) + GuiConstants.BOLD + "Ground State",
                 List.of(
-                        GuiConstants.metric("Client", yesNo(data.isClientGround())),
-                        GuiConstants.metric("Server", yesNo(data.isServerGround())),
-                        GuiConstants.metric("Mismatch", yesNo(groundMismatch)),
-                        GuiConstants.metric("Air ticks", String.valueOf(data.getAirTicks())),
-                        GuiConstants.metric("Ground ticks", String.valueOf(data.getGroundTicks())))));
+                        GuiConstants.metric("Client Ground", data.isClientGround() ? "Yes" : "No"),
+                        GuiConstants.metric("Server Ground", data.isServerGround() ? "Yes" : "No"),
+                        GuiConstants.metric("Desync", groundMismatch ? "Yes" : "No"),
+                        GuiConstants.metric("Air Ticks", String.valueOf(data.getAirTicks())))));
 
-        int sensitivity = data.getSensitivityPercent();
-        String sensitivityText = sensitivity < 0 ? GuiConstants.MUTED + "Learning" : GuiConstants.ACCENT + sensitivity + "%";
         inv.setItem(23, GuiItemFactory.createGlowing(
                 GuiConstants.getMat("ENDER_EYE", "EYE_OF_ENDER"),
-                GuiConstants.AQUA + GuiConstants.BOLD + "Sensitivity",
-                List.of(
-                        GuiConstants.DARK + "Rotation input estimate",
-                        "",
-                        GuiConstants.DARK + GuiConstants.LINE + " " + GuiConstants.MUTED + "Value " + sensitivityText,
-                        GuiConstants.metric("Bounds", "0-200%"))));
+                GuiConstants.AQUA + GuiConstants.BOLD + "Sensitivity & Hardware DPI",
+                formatSensitivityLore(data)));
 
         inv.setItem(24, GuiItemFactory.createGlowing(
                 GuiConstants.getMat("NAME_TAG"),
-                GuiConstants.LIGHT_PURPLE + GuiConstants.BOLD + "Client",
+                GuiConstants.LIGHT_PURPLE + GuiConstants.BOLD + "Client Metadata",
                 List.of(
-                        GuiConstants.metric("Brand", clean(data.getClientBrand())),
-                        GuiConstants.metric("Version", getClientVersionString(target)),
-                        GuiConstants.metric("Server", String.valueOf(Truthful.getInstance().getVersionManager().getAdapter().getServerVersion())))));
+                        GuiConstants.metric("Brand", data.getClientBrand()),
+                        GuiConstants.metric("Version", getClientVersionString(target)))));
 
         inv.setItem(25, GuiItemFactory.createGlowing(
                 GuiConstants.getMat("POTION"),
                 GuiConstants.PURPLE + GuiConstants.BOLD + "Effects",
                 buildPotionLore(target.getActivePotionEffects())));
+    }
 
-        double tps = Truthful.getInstance().getTps();
-        String tpsColor = tps >= 19.0D ? GuiConstants.SUCCESS : tps >= 17.5D ? GuiConstants.WARNING : GuiConstants.ERROR;
-        inv.setItem(31, GuiItemFactory.createGlowing(
-                GuiConstants.getMat("REDSTONE_BLOCK"),
-                GuiConstants.ERROR + GuiConstants.BOLD + "Server",
-                List.of(
-                        GuiConstants.DARK + GuiConstants.LINE + " " + GuiConstants.MUTED + "TPS " + tpsColor + String.format("%.2f", tps),
-                        GuiConstants.metric("Players", Bukkit.getOnlinePlayers().size() + "/" + Bukkit.getMaxPlayers()),
-                        GuiConstants.metric("Strict checks", data.shouldSkipChecks() ? "Paused" : "Active"))));
+    private static List<String> formatKeyPressLore(PlayerData data, Player target) {
+        double dvX = data.getDeltaX() - (data.getLastDeltaX() * 0.546D);
+        double dvZ = data.getDeltaZ() - (data.getLastDeltaZ() * 0.546D);
+
+        double yawRad = Math.toRadians(data.getYaw());
+        double sinYaw = Math.sin(yawRad);
+        double cosYaw = Math.cos(yawRad);
+
+        double localForward = -dvX * sinYaw + dvZ * cosYaw;
+        double localStrafe  = -dvX * cosYaw - dvZ * sinYaw;
+
+        boolean keyW = localForward > 0.003D;
+        boolean keyS = localForward < -0.003D;
+        boolean keyA = localStrafe < -0.003D;
+        boolean keyD = localStrafe > 0.003D;
+
+        boolean keySpace = (data.getAirTicks() > 0 && data.getAirTicks() <= 4 && data.getDeltaY() > 0.0D) || !data.isServerGround();
+
+        boolean keyShift = data.isSneaking() || (target != null && target.isSneaking());
+        boolean keyCtrl  = data.isSprinting();
+
+        int ticksNow = data.getTicksTracked();
+        boolean keyLMB = (ticksNow - data.getLastAttackPacketTick() <= 3) || data.isDigging();
+        boolean keyRMB = (ticksNow - data.getLastBlockPlaceTick() <= 3) || data.isUsingItem();
+
+        String w = keyW ? "§a§l[W]" : "§8[W]";
+        String a = keyA ? "§a§l[A]" : "§8[A]";
+        String s = keyS ? "§a§l[S]" : "§8[S]";
+        String d = keyD ? "§a§l[D]" : "§8[D]";
+
+        String space = keySpace ? "§a§l[SPACE]" : "§8[SPACE]";
+        String shift = keyShift ? "§a§l[SHIFT]" : "§8[SHIFT]";
+        String ctrl  = keyCtrl  ? "§a§l[CTRL]"  : "§8[CTRL]";
+
+        String lmb = keyLMB ? "§a§l[LMB]" : "§8[LMB]";
+        String rmb = keyRMB ? "§a§l[RMB]" : "§8[RMB]";
+
+        List<String> lore = new ArrayList<>();
+        lore.add(GuiConstants.DARK + "Live packet input vector");
+        lore.add("");
+        lore.add("   " + w);
+        lore.add(" " + a + " " + s + " " + d);
+        lore.add("");
+        lore.add(space + "  " + shift + "  " + ctrl);
+        lore.add(lmb + "  " + rmb);
+        lore.add("");
+        lore.add(GuiConstants.MUTED + "Updates live (100ms)");
+        return lore;
+    }
+
+    private static List<String> formatSensitivityLore(PlayerData data) {
+        int sensPercent = data.getSensitivityPercent();
+        List<String> lore = new ArrayList<>();
+
+        if (sensPercent < 0) {
+            lore.add(GuiConstants.MUTED + "Learning rotation step...");
+            lore.add(GuiConstants.DARK + "Player needs to rotate camera.");
+            return lore;
+        }
+
+        int displayPercent = Math.round(sensPercent);
+
+        double sensVal = displayPercent / 200.0D;
+        double f = sensVal * 0.6D + 0.2D;
+        double gcdStep = f * f * f * 1.2D;
+
+        double countsPer360 = 360.0D / gcdStep;
+        int estimatedDPI;
+        double cm360;
+
+        if (countsPer360 > 12000) {
+            estimatedDPI = 400;
+            cm360 = (countsPer360 * 2.54D) / 400.0D;
+        } else if (countsPer360 > 6000) {
+            estimatedDPI = 800;
+            cm360 = (countsPer360 * 2.54D) / 800.0D;
+        } else if (countsPer360 > 3000) {
+            estimatedDPI = 1200;
+            cm360 = (countsPer360 * 2.54D) / 1200.0D;
+        } else if (countsPer360 > 1500) {
+            estimatedDPI = 1600;
+            cm360 = (countsPer360 * 2.54D) / 1600.0D;
+        } else {
+            estimatedDPI = 3200;
+            cm360 = (countsPer360 * 2.54D) / 3200.0D;
+        }
+
+        lore.add(GuiConstants.metric("Sensitivity", displayPercent + "% (" + String.format("%.2fx", f) + ")"));
+        lore.add(GuiConstants.metric("GCD Step", String.format("%.6f", gcdStep)));
+        lore.add(GuiConstants.metric("Est. Mouse DPI", estimatedDPI + " DPI"));
+        lore.add(GuiConstants.metric("Turn Distance", String.format("%.1f cm/360", cm360)));
+        lore.add("");
+        lore.add(GuiConstants.SUCCESS + GuiConstants.SYM_CHECK + " Valid Vanilla Grid");
+        return lore;
     }
 
     private static List<String> buildPotionLore(Collection<PotionEffect> effects) {
@@ -131,15 +201,9 @@ public final class PlayerInfoMenu {
             lore.add(GuiConstants.MUTED + "None");
             return lore;
         }
-        int shown = 0;
         for (PotionEffect effect : effects) {
-            if (shown++ >= 6) {
-                lore.add(GuiConstants.MUTED + "+" + (effects.size() - 6) + " more");
-                break;
-            }
             lore.add(GuiConstants.DARK + GuiConstants.BULLET + " " + GuiConstants.HIGHLIGHT
-                    + formatEnum(effect.getType().getName()) + " " + (effect.getAmplifier() + 1)
-                    + GuiConstants.MUTED + " (" + formatTime(effect.getDuration() / 20) + ")");
+                    + effect.getType().getName() + " " + (effect.getAmplifier() + 1));
         }
         return lore;
     }
@@ -147,12 +211,8 @@ public final class PlayerInfoMenu {
     private static String getClientVersionString(Player player) {
         try {
             ClientVersion version = PacketEvents.getAPI().getPlayerManager().getClientVersion(player);
-            if (version != null) {
-                String name = version.name();
-                return name.startsWith("V_") ? name.substring(2).replace("_", ".") : name;
-            }
-        } catch (Throwable ignored) {
-        }
+            if (version != null) return version.name().replace("V_", "").replace("_", ".");
+        } catch (Throwable ignored) {}
         return "Unknown";
     }
 
@@ -161,35 +221,5 @@ public final class PlayerInfoMenu {
         if (ping < 100) return GuiConstants.SECONDARY;
         if (ping < 200) return GuiConstants.WARNING;
         return GuiConstants.ERROR;
-    }
-
-    private static String yesNo(boolean value) {
-        return value ? GuiConstants.SUCCESS + "Yes" : GuiConstants.ERROR + "No";
-    }
-
-    private static String clean(String value) {
-        return value == null || value.isBlank() ? "Unknown" : value;
-    }
-
-    private static String shortUuid(String uuid) {
-        return uuid.length() > 8 ? uuid.substring(0, 8) + "..." : uuid;
-    }
-
-    private static String formatEnum(String name) {
-        String[] parts = name.toLowerCase().split("_");
-        StringBuilder builder = new StringBuilder();
-        for (String part : parts) {
-            if (part.isEmpty()) continue;
-            builder.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1)).append(' ');
-        }
-        return builder.toString().trim();
-    }
-
-    private static String formatTime(int seconds) {
-        if (seconds < 60) return seconds + "s";
-        return (seconds / 60) + "m " + (seconds % 60) + "s";
-    }
-
-    private PlayerInfoMenu() {
     }
 }

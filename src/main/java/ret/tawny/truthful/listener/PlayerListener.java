@@ -1,6 +1,5 @@
 package ret.tawny.truthful.listener;
 
-import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
@@ -10,7 +9,6 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPl
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Vehicle;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -237,11 +235,6 @@ public final class PlayerListener implements Listener {
             }
         }
 
-        if (typeName.contains("WIND_CHARGE")) {
-            // Let the server-sided explosion/velocity handle the movement physics.
-            // Exempting right click directly allows abuse by just throwing it.
-        }
-
         if (typeName.contains("SPEAR") || typeName.contains("TRIDENT") || typeName.contains("SWORD")) {
             if (item.hasItemMeta()) {
                 String metaString = item.getItemMeta().toString().toLowerCase();
@@ -278,11 +271,7 @@ public final class PlayerListener implements Listener {
             if (cmd.getAction().name().equals("REQUEST_STATS")) playerData.setInventoryOpen(true);
         } else if (type == PacketType.Play.Client.CLOSE_WINDOW) {
             playerData.setInventoryOpen(false);
-        } else if (type == PacketType.Play.Client.ANIMATION) {
-            // Animation packet handled separately to not interfere
         } else if (type == PacketType.Play.Client.INTERACT_ENTITY) {
-            // FIXED: If they attack an entity, they are definitely NOT digging anymore.
-            // This instantly unlocks all AutoClicker checks.
             if (playerData.isInventoryOpen()) playerData.setInventoryOpen(false);
             playerData.setDigging(false);
             playerData.setLastAttackPacketTick(playerData.getTicksTracked());
@@ -290,10 +279,14 @@ public final class PlayerListener implements Listener {
             ret.tawny.truthful.wrapper.impl.client.action.PlayerBlockPlacePacketWrapper cached = playerData.getCurrentBlockPlacement();
             if (cached != null) {
                 Truthful.getInstance().getScheduler().onPacketReceive(cached);
-                if (playerData.isHoldingBlock()) playerData.setUsingItem(true);
+                playerData.setLastBlockPlaceTime(System.currentTimeMillis());
+                playerData.setLastBlockPlaceTick(playerData.getTicksTracked());
             }
         } else if (type == PacketType.Play.Client.USE_ITEM) {
-            if (playerData.isHoldingBlock() || playerData.isHoldingCrystal()) playerData.setUsingItem(true);
+            // Only set usingItem if holding an actual consumable/slowdown item (food, bow, potion, shield)
+            if (playerData.isSlowItem()) {
+                playerData.setUsingItem(true, playerData.getTicksTracked());
+            }
         } else if (type == PacketType.Play.Client.STEER_VEHICLE) {
             playerData.setInsideVehicleCache(true);
             playerData.setLastVehicleTick(playerData.getTicksTracked());
@@ -305,11 +298,6 @@ public final class PlayerListener implements Listener {
             playerData.setCurrentSlot(itemSwitch.getSlot());
             playerData.setLastSlotSwitchTime(System.currentTimeMillis());
             playerData.setUsingItem(false);
-        } else if (type == PacketType.Play.Client.USE_ITEM || type == PacketType.Play.Client.PLAYER_BLOCK_PLACEMENT) {
-            if (playerData.getCurrentBlockPlacement() != null) {
-                playerData.setLastBlockPlaceTime(System.currentTimeMillis());
-                playerData.setLastBlockPlaceTick(playerData.getTicksTracked());
-            }
         } else if (type == PacketType.Play.Client.PLAYER_DIGGING) {
             try {
                 WrapperPlayClientPlayerDigging dig = new WrapperPlayClientPlayerDigging(event);

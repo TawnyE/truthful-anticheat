@@ -2,7 +2,6 @@ package ret.tawny.truthful.checks.impl.movement.velocity;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerQuitEvent;
-import ret.tawny.truthful.Truthful;
 import ret.tawny.truthful.checks.api.Check;
 import ret.tawny.truthful.checks.api.CheckBuffer;
 import ret.tawny.truthful.checks.api.data.CheckData;
@@ -22,15 +21,13 @@ public final class VelocityD extends Check {
         final PlayerData data = wrapper.getPlayerData();
         if (data == null) return;
 
-        if (data.isServerFrozen() || data.isTeleportTick()) {
+        if (data.isServerFrozen() || data.isTeleportTick() || data.isMovementExempt()) {
             buffer.decrease(data.getPlayer(), 0.25D);
             return;
         }
 
         VelocityQueue queue = data.getVelocities();
-        if (queue.isEmpty()) {
-            return;
-        }
+        if (queue.isEmpty()) return;
 
         double deltaXZ = data.getDeltaXZ();
         boolean flagged = false;
@@ -40,17 +37,18 @@ public final class VelocityD extends Check {
         for (VelocityQueue.VelocityEntry entry : queue) {
             if (!entry.isAcked()) {
                 int ticksPending = entry.getAckTick();
-                if (ticksPending > 5 && deltaXZ > 0.12D) {
+                // Flag moving players who withhold velocity transaction ACKs
+                if (ticksPending > 4 && deltaXZ > 0.12D) {
                     flagged = true;
-                    severity += deltaXZ * 12.0D;
-                    flagReason = String.format("Moving while withholding velocity ACKs (pending=%d) dist=%.4f",
+                    severity += deltaXZ * 10.0D;
+                    flagReason = String.format("Moving while withholding velocity ACKs (pendingTicks=%d) dist=%.4f",
                             ticksPending, deltaXZ);
                 }
             }
         }
 
         if (flagged) {
-            flag(data, flagReason);
+            flag(data, flagReason, severity);
             if (buffer.increase(data.getPlayer(), severity) > 8.0D) {
                 buffer.reset(data.getPlayer(), 2.0D);
             }

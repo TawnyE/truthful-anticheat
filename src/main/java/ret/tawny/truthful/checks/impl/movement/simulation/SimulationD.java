@@ -1,10 +1,17 @@
 package ret.tawny.truthful.checks.impl.movement.simulation;
 
+import com.github.retrooper.packetevents.event.PacketReceiveEvent;
+import com.github.retrooper.packetevents.protocol.packettype.PacketType;
+import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientSteerVehicle;
+import org.bukkit.Material;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Horse;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Steerable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.vehicle.VehicleMoveEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 import ret.tawny.truthful.Truthful;
 import ret.tawny.truthful.checks.api.Check;
@@ -17,6 +24,8 @@ import ret.tawny.truthful.utils.world.WorldUtils;
 import ret.tawny.truthful.wrapper.impl.client.position.RelMovePacketWrapper;
 
 import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -28,28 +37,16 @@ public final class SimulationD extends Check {
     private static final double BOAT_BLUE_ICE_MAX_XZ = 9.5D;
     private static final double BOAT_MAX_Y            = 0.7D;
 
-    private static final double HORSE_MAX_XZ          = 1.15D;
+    private static final double HORSE_MAX_XZ          = 1.45D;
     private static final double HORSE_MAX_Y           = 1.05D;
-    private static final double CAMEL_MAX_XZ          = 1.40D;
+    private static final double CAMEL_MAX_XZ          = 1.85D;
     private static final double CAMEL_MAX_Y           = 1.05D;
 
     private static final double LLAMA_MAX_XZ          = 0.60D;
-    private static final double LLAMA_MAX_Y           = 0.65D;
-
     private static final double PIG_MAX_XZ            = 0.50D;
-    private static final double PIG_MAX_Y             = 0.52D;
-
     private static final double STRIDER_MAX_XZ        = 0.65D;
-    private static final double STRIDER_MAX_Y         = 0.50D;
-
     private static final double MINECART_MAX_XZ       = 8.50D;
-    private static final double MINECART_MAX_Y        = 1.00D;
-
     private static final double UNKNOWN_MAX_XZ        = 1.50D;
-    private static final double UNKNOWN_MAX_Y         = 1.05D;
-
-    private static final double ENTITY_PUSH_MAX_XZ    = 1.5D;
-    private static final double ENTITY_PUSH_MAX_Y     = 0.95D;
 
     private static final int MOUNT_GRACE_TICKS        = 15;
     private static final int DISMOUNT_GRACE_TICKS     = 20;
@@ -61,18 +58,38 @@ public final class SimulationD extends Check {
         BOAT, HORSE, DONKEY, MULE, LLAMA, PIG, STRIDER, CAMEL, MINECART, UNKNOWN_MOUNT,
         ON_ICE, ON_BLUE_ICE, IN_LIQUID, BOUNCY_BLOCK, NEAR_ENTITY_PUSH,
         MOUNT_GRACE, DISMOUNT_GRACE, TELEPORT_GRACE, VELOCITY_RECEIVED, SERVER_FROZEN,
-        SOURCE_PACKET, SOURCE_EVENT,
-        V_SPEED, V_FLY, V_PUSH_XZ, V_PUSH_Y,
+        UNAUTHORIZED_SEAT, UNSADDLED_MOUNT, NO_INPUT_ACCEL,
+        V_SPEED, V_FLY, V_PUSH_XZ, V_PUSH_Y
     }
 
     private static final class State {
-        int  mountTick   = -1000;
-        int  dismountTick = -1000;
+        int mountTick = -1000;
+        int dismountTick = -1000;
         String vehicleTypeName = "";
+
+        float steerForward = 0f;
+        float steerSideways = 0f;
+        int lastSteerTick = -1000;
     }
 
-    private final ConcurrentHashMap<UUID, State> states = new ConcurrentHashMap<>();
+    private final Map<UUID, State> states = new ConcurrentHashMap<>();
     private final CheckBuffer buffer = new CheckBuffer(BUFFER_FLAG_THRESHOLD);
+
+    @Override
+    public void handlePacketPlayerReceive(final PacketReceiveEvent event) {
+        if (event.getPacketType() != PacketType.Play.Client.STEER_VEHICLE) return;
+        if (!(event.getPlayer() instanceof Player player)) return;
+
+        PlayerData data = Truthful.getInstance().getDataManager().getPlayerData(player);
+        if (data == null) return;
+
+        WrapperPlayClientSteerVehicle steer = new WrapperPlayClientSteerVehicle(event);
+        State st = states.computeIfAbsent(player.getUniqueId(), k -> new State());
+
+        st.steerForward = steer.getForward();
+        st.steerSideways = steer.getSideways();
+        st.lastSteerTick = data.getTicksTracked();
+    }
 
     @Override
     public void handleRelMove(final RelMovePacketWrapper wrapper) {
@@ -102,20 +119,42 @@ public final class SimulationD extends Check {
             Entity vehicle = player.getVehicle();
             if (vehicle == null) return;
 
-            final EnumSet<Tag> tags = buildVehicleTags(data, vehicle, st, ticksNow, Tag.SOURCE_PACKET);
+            final EnumSet<Tag> tags = buildVehicleTags(data, vehicle, st, ticksNow);
 
-            double distXZ = data.getDeltaXZ();
-            double deltaY = data.getDeltaY();
-            Vector vehicleVel = vehicle.getVelocity();
+            List<Entity> passengers = vehicle.getPassengers();
+            if (!passengers.isEmpty() && passengers.get(0).getEntityId() != player.getEntityId()) {
+                tags.add(Tag.UNAUTHORIZED_SEAT);
+                if (data.getDeltaXZ() > 0.05D) {
+                    flag(data, String.format("Area Fail (VehicleSeat) Passenger in seat %d moving vehicle XZ=%.3f",
+                            passengers.indexOf(player), data.getDeltaXZ()));
+                    ejectAndSetback(data, player);
+                    return;
+                }
+            }
 
-            double[] limits = getLimits(tags);
-            double maxXZ = limits[0];
-            double maxY  = limits[1];
+            if (!isLegallyControllable(player, vehicle)) {
+                tags.add(Tag.UNSADDLED_MOUNT);
+                if (data.getDeltaXZ() > 0.15D && !data.hasVelocity()) {
+                    flag(data, String.format("Area Fail (UnsaddledSteer) Moving unsaddled mount type=%s XZ=%.3f",
+                            vehicle.getType().name(), data.getDeltaXZ()));
+                    ejectAndSetback(data, player);
+                    return;
+                }
+            }
 
-            if (tags.contains(Tag.MOUNT_GRACE) || tags.contains(Tag.DISMOUNT_GRACE)) {
-                if (deltaY > 1.5 || distXZ > 3.0) {
-                    tags.remove(Tag.MOUNT_GRACE);
-                    tags.remove(Tag.DISMOUNT_GRACE);
+            boolean hasSteerInput = (ticksNow - st.lastSteerTick <= 3) && (Math.abs(st.steerForward) > 0.01f || Math.abs(st.steerSideways) > 0.01f);
+            boolean isMountingTransition = (ticksNow - st.mountTick <= 5);
+            double friction = tags.contains(Tag.ON_BLUE_ICE) ? 0.989D : tags.contains(Tag.ON_ICE) ? 0.98D : 0.6D;
+            double unmotivatedAccel = data.getDeltaXZ() - (data.getLastDeltaXZ() * friction);
+
+            if (!hasSteerInput && !isMountingTransition && unmotivatedAccel > 0.08D && !tags.contains(Tag.MOUNT_GRACE) && !data.hasVelocity() && !tags.contains(Tag.IN_LIQUID)) {
+                tags.add(Tag.NO_INPUT_ACCEL);
+                if (buffer.increase(player, 1.5) > BUFFER_FLAG_THRESHOLD) {
+                    flag(data, String.format("Area Fail (NoInputAccel) Vehicle accel without key input XZ=%.3f accel=%.3f",
+                            data.getDeltaXZ(), unmotivatedAccel));
+                    buffer.reset(player, BUFFER_RESET_VALUE);
+                    ejectAndSetback(data, player);
+                    return;
                 }
             }
 
@@ -124,10 +163,14 @@ public final class SimulationD extends Check {
                 buffer.decrease(player, 0.25D);
                 return;
             }
-            if (tags.contains(Tag.VELOCITY_RECEIVED)) {
-                buffer.decrease(player, 0.3D);
-                return;
-            }
+
+            double distXZ = data.getDeltaXZ();
+            double deltaY = data.getDeltaY();
+            Vector vehicleVel = vehicle.getVelocity();
+
+            double[] limits = getLimits(tags);
+            double maxXZ = limits[0];
+            double maxY  = limits[1];
 
             String flagReason = null;
             double severity   = 0.0D;
@@ -155,11 +198,7 @@ public final class SimulationD extends Check {
         }
 
         if (data.isNearEntity()) {
-            if (data.hasVelocity() || data.isExempt(ExemptionType.VELOCITY)) {
-                buffer.decrease(player, 0.25D);
-                return;
-            }
-            if (data.isTeleportTick() || data.isServerFrozen()) {
+            if (data.hasVelocity() || data.isExempt(ExemptionType.VELOCITY) || data.isTeleportTick() || data.isServerFrozen()) {
                 buffer.decrease(player, 0.25D);
                 return;
             }
@@ -168,109 +207,42 @@ public final class SimulationD extends Check {
                 return;
             }
 
-            final EnumSet<Tag> tags = EnumSet.noneOf(Tag.class);
-            tags.add(Tag.NEAR_ENTITY_PUSH);
-            tags.add(Tag.SOURCE_PACKET);
-            if (WorldUtils.isNearIceWide(player)) tags.add(Tag.ON_ICE);
-            if (WorldUtils.isBouncy(player))  tags.add(Tag.BOUNCY_BLOCK);
-
             double distXZ = data.getDeltaXZ();
-            double deltaY = data.getDeltaY();
+            double pushMaxXZ = WorldUtils.isNearIceWide(player) ? 3.5D : 1.5D;
 
-            String flagReason = null;
-            double severity   = 0.0D;
-
-            double pushMaxXZ = tags.contains(Tag.ON_ICE) ? ENTITY_PUSH_MAX_XZ * 2.5D : ENTITY_PUSH_MAX_XZ;
             if (distXZ > pushMaxXZ) {
-                tags.add(Tag.V_PUSH_XZ);
-                double dev = distXZ - pushMaxXZ;
-                flagReason = String.format("Area Fail (V_PushXZ) XZ=%.4f max=%.4f tags=%s", distXZ, pushMaxXZ, tags);
-                severity = dev * 6.0D;
-            }
-
-            if (deltaY > ENTITY_PUSH_MAX_Y && !tags.contains(Tag.BOUNCY_BLOCK)) {
-                tags.add(Tag.V_PUSH_Y);
-                double dev = deltaY - ENTITY_PUSH_MAX_Y;
-                String extra = String.format("Area Fail (V_PushY) Y=%.4f max=%.4f tags=%s", deltaY, ENTITY_PUSH_MAX_Y, tags);
-                if (flagReason == null || dev * 5.0D > severity) {
-                    flagReason = extra;
-                    severity   = dev * 5.0D;
+                if (buffer.increase(player, 1.0) > BUFFER_FLAG_THRESHOLD) {
+                    flag(data, String.format("Area Fail (V_PushXZ) XZ=%.4f max=%.4f", distXZ, pushMaxXZ));
+                    buffer.reset(player, BUFFER_RESET_VALUE);
                 }
+                return;
             }
-
-            applyFlag(data, player, flagReason, severity, tags, false);
-            return;
         }
 
         buffer.decrease(player, 0.1D);
     }
 
-    @Override
-    public void onVehicleMove(final VehicleMoveEvent event) {
-        if (event.getVehicle().getPassengers().isEmpty()) return;
-        if (!(event.getVehicle().getPassengers().get(0) instanceof Player p)) return;
-
-        final PlayerData data = Truthful.getInstance().getDataManager().getPlayerData(p);
-        if (data == null) return;
-
-        final int ticksNow = data.getTicksTracked();
-        final State st = states.computeIfAbsent(p.getUniqueId(), k -> new State());
-
-        final EnumSet<Tag> tags = buildVehicleTags(data, event.getVehicle(), st, ticksNow, Tag.SOURCE_EVENT);
-
-        double vehicleDeltaX = event.getTo().getX() - event.getFrom().getX();
-        double vehicleDeltaY = event.getTo().getY() - event.getFrom().getY();
-        double vehicleDeltaZ = event.getTo().getZ() - event.getFrom().getZ();
-        double distXZ = Math.hypot(vehicleDeltaX, vehicleDeltaZ);
-
-        if (tags.contains(Tag.MOUNT_GRACE) || tags.contains(Tag.DISMOUNT_GRACE)) {
-            if (vehicleDeltaY > 1.5 || distXZ > 3.0) {
-                tags.remove(Tag.MOUNT_GRACE);
-                tags.remove(Tag.DISMOUNT_GRACE);
+    private boolean isLegallyControllable(Player player, Entity vehicle) {
+        if (vehicle instanceof Horse horse) {
+            return horse.getInventory().getSaddle() != null;
+        }
+        if (vehicle instanceof Steerable steerable) {
+            if (!steerable.hasSaddle()) return false;
+            ItemStack mainHand = player.getInventory().getItemInMainHand();
+            ItemStack offHand  = player.getInventory().getItemInOffHand();
+            if (vehicle.getType().name().contains("PIG")) {
+                return mainHand.getType() == Material.CARROT_ON_A_STICK || offHand.getType() == Material.CARROT_ON_A_STICK;
             }
-        }
-
-        if (tags.contains(Tag.MOUNT_GRACE) || tags.contains(Tag.TELEPORT_GRACE)
-                || tags.contains(Tag.SERVER_FROZEN) || tags.contains(Tag.DISMOUNT_GRACE)) {
-            buffer.decrease(p, 0.25D);
-            return;
-        }
-        if (tags.contains(Tag.VELOCITY_RECEIVED)) {
-            buffer.decrease(p, 0.25D);
-            return;
-        }
-
-        double[] limits = getLimits(tags);
-        double maxXZ = limits[0];
-        double maxY  = limits[1];
-
-        String flagReason = null;
-        double severity   = 0.0D;
-
-        if (distXZ > maxXZ) {
-            tags.add(Tag.V_SPEED);
-            double dev = distXZ - maxXZ;
-            flagReason = String.format("Area Fail (V_Speed/Evt) XZ=%.4f max=%.4f tags=%s", distXZ, maxXZ, tags);
-            severity = dev * 5.0D;
-        }
-
-        Vector vehicleVel = event.getVehicle().getVelocity();
-        if (vehicleDeltaY > maxY && !tags.contains(Tag.BOUNCY_BLOCK) && vehicleVel.getY() < vehicleDeltaY - 0.1D) {
-            tags.add(Tag.V_FLY);
-            double dev = vehicleDeltaY - maxY;
-            String extra = String.format("Area Fail (V_Fly/Evt) Y=%.4f max=%.4f tags=%s", vehicleDeltaY, maxY, tags);
-            if (flagReason == null || dev * 5.0D > severity) {
-                flagReason = extra;
-                severity   = dev * 5.0D;
+            if (vehicle.getType().name().contains("STRIDER")) {
+                return mainHand.getType() == Material.WARPED_FUNGUS_ON_A_STICK || offHand.getType() == Material.WARPED_FUNGUS_ON_A_STICK;
             }
+            return true;
         }
-
-        applyFlag(data, p, flagReason, severity, tags, true);
+        return true;
     }
 
-    private EnumSet<Tag> buildVehicleTags(PlayerData data, Entity vehicle, State st, int ticksNow, Tag source) {
-        final EnumSet<Tag> tags = EnumSet.noneOf(Tag.class);
-        tags.add(source);
+    private EnumSet<Tag> buildVehicleTags(PlayerData data, Entity vehicle, State st, int ticksNow) {
+        EnumSet<Tag> tags = EnumSet.noneOf(Tag.class);
 
         String vName = vehicle.getType().name().toUpperCase();
         if      (vName.contains("BOAT"))     tags.add(Tag.BOAT);
@@ -285,7 +257,7 @@ public final class SimulationD extends Check {
         else                                 tags.add(Tag.UNKNOWN_MOUNT);
 
         Player player = data.getPlayer();
-        if (WorldUtils.isNearIceWide(player))                    {
+        if (WorldUtils.isNearIceWide(player)) {
             tags.add(Tag.ON_ICE);
             if (WorldUtils.isNearBlueIce(player)) tags.add(Tag.ON_BLUE_ICE);
         }
@@ -302,42 +274,46 @@ public final class SimulationD extends Check {
     }
 
     private double[] getLimits(EnumSet<Tag> tags) {
-        double maxXZ;
-        double maxY;
+        double maxXZ, maxY;
 
         if (tags.contains(Tag.BOAT)) {
-            if (tags.contains(Tag.ON_BLUE_ICE)) {
-                maxXZ = BOAT_BLUE_ICE_MAX_XZ;
-            } else if (tags.contains(Tag.ON_ICE)) {
-                maxXZ = BOAT_ICE_MAX_XZ;
-            } else {
-                maxXZ = BOAT_MAX_XZ;
-            }
-            maxY  = BOAT_MAX_Y;
+            if (tags.contains(Tag.ON_BLUE_ICE)) maxXZ = BOAT_BLUE_ICE_MAX_XZ;
+            else if (tags.contains(Tag.ON_ICE)) maxXZ = BOAT_ICE_MAX_XZ;
+            else maxXZ = BOAT_MAX_XZ;
+            maxY = BOAT_MAX_Y;
         } else if (tags.contains(Tag.CAMEL)) {
             maxXZ = CAMEL_MAX_XZ;
-            maxY  = CAMEL_MAX_Y;
+            maxY = CAMEL_MAX_Y;
         } else if (tags.contains(Tag.HORSE) || tags.contains(Tag.DONKEY) || tags.contains(Tag.MULE)) {
             maxXZ = HORSE_MAX_XZ;
-            maxY  = HORSE_MAX_Y;
+            maxY = HORSE_MAX_Y;
         } else if (tags.contains(Tag.LLAMA)) {
             maxXZ = LLAMA_MAX_XZ;
-            maxY  = LLAMA_MAX_Y;
+            maxY = 0.65D;
         } else if (tags.contains(Tag.PIG)) {
             maxXZ = PIG_MAX_XZ;
-            maxY  = PIG_MAX_Y;
+            maxY = 0.52D;
         } else if (tags.contains(Tag.STRIDER)) {
             maxXZ = STRIDER_MAX_XZ;
-            maxY  = STRIDER_MAX_Y;
+            maxY = 0.50D;
         } else if (tags.contains(Tag.MINECART)) {
             maxXZ = MINECART_MAX_XZ;
-            maxY  = MINECART_MAX_Y;
+            maxY = 1.00D;
         } else {
             maxXZ = UNKNOWN_MAX_XZ;
-            maxY  = UNKNOWN_MAX_Y;
+            maxY = 1.05D;
         }
 
         return new double[]{ maxXZ, maxY };
+    }
+
+    private void ejectAndSetback(PlayerData data, Player player) {
+        Truthful.getInstance().getServerScheduler().runRegion(player, () -> {
+            if (player.isInsideVehicle() && player.getVehicle() != null) {
+                player.getVehicle().eject();
+            }
+            player.teleport(data.getLastLocation());
+        });
     }
 
     private void applyFlag(PlayerData data, Player player, String flagReason,
@@ -345,15 +321,7 @@ public final class SimulationD extends Check {
         if (flagReason != null) {
             if (buffer.increase(player, severity) > BUFFER_FLAG_THRESHOLD) {
                 flag(data, flagReason + String.format(" buffer=%.2f", buffer.get(player)));
-                if (canEject) {
-                    Truthful.getInstance().getPlugin().getServer().getScheduler().runTask(
-                            Truthful.getInstance().getPlugin(), () -> {
-                                if (data.isInsideVehicle() && player.getVehicle() != null) {
-                                    player.getVehicle().eject();
-                                }
-                                player.teleport(data.getLastLocation());
-                            });
-                }
+                if (canEject) ejectAndSetback(data, player);
                 buffer.reset(player, BUFFER_RESET_VALUE);
             }
         } else {

@@ -4,14 +4,15 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.util.BoundingBox;
+import ret.tawny.truthful.Truthful;
 import ret.tawny.truthful.utils.hitbox.SimpleHitbox;
 import ret.tawny.truthful.utils.tick.ITickable;
 
-import ret.tawny.truthful.Truthful;
-
-import java.util.*;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class CompensationTracker implements ITickable {
@@ -21,11 +22,8 @@ public final class CompensationTracker implements ITickable {
     }
 
     private static final int HISTORY_SIZE = 30;
-    private static final int MAX_BACKTRACK_TICKS = 8;
+    public static final int MAX_BACKTRACK_TICKS = 8;
     private static final int CLEANUP_INTERVAL = 100;
-    // FIX: Increased from 40 to 1200 (60 seconds).
-    // Vanilla doesn't send packets for standing-still entities.
-    // They should not expire just because they haven't moved recently.
     private static final int MAX_STALE_TICKS = 1200;
     private static final int DESTROY_GRACE_TICKS = 6;
     private static final double LIVE_RESYNC_DISTANCE_SQUARED = 4.0;
@@ -52,7 +50,7 @@ public final class CompensationTracker implements ITickable {
     public void handleSpawn(int id, UUID uuid, double x, double y, double z, double width, double height,
                             boolean isPlayer) {
         int currentTick = this.tickCounter;
-        CompensatedEntity data = new CompensatedEntity(id, uuid, isPlayer);
+        CompensatedEntity data = new CompensatedEntity(id, uuid, isPlayer, 3.0);
         compensationMap.put(id, data);
         data.snapshot(currentTick, x, y, z, width, height);
     }
@@ -64,10 +62,25 @@ public final class CompensationTracker implements ITickable {
         int entityId = entity.getEntityId();
         entityCache.put(entityId, new java.lang.ref.WeakReference<>(entity));
         EntityBox box = readEntityBox(entity);
+
+        double baseReach = getBaseReachForType(entity.getType(), entity instanceof Player);
+
         CompensatedEntity data = compensationMap.computeIfAbsent(entityId,
-                id -> new CompensatedEntity(id, entity.getUniqueId(), entity instanceof Player));
+                id -> new CompensatedEntity(id, entity.getUniqueId(), entity instanceof Player, baseReach));
 
         data.snapshot(currentTick, box.x, box.y, box.z, box.width, box.height);
+    }
+
+    private static double getBaseReachForType(EntityType type, boolean isPlayer) {
+        if (isPlayer) return 3.0;
+        if (type == null) return 3.0;
+        return switch (type) {
+            case BOAT -> 1.5;
+            case MINECART, CHEST_MINECART, HOPPER_MINECART, TNT_MINECART -> 1.0;
+            case ITEM_FRAME, GLOW_ITEM_FRAME, ARMOR_STAND -> 3.0;
+            case SHULKER -> 4.5;
+            default -> 3.0;
+        };
     }
 
     public void handleTeleport(int id, double x, double y, double z) {
@@ -129,6 +142,7 @@ public final class CompensationTracker implements ITickable {
         public final int entityId;
         public final UUID uuid;
         public final boolean isPlayer;
+        public final double baseReach;
         private volatile int lastSeenTick;
         private volatile int destroyedTick = -1;
         private final EntitySnapshot[] snapshots = new EntitySnapshot[HISTORY_SIZE];
@@ -139,10 +153,11 @@ public final class CompensationTracker implements ITickable {
         protected double lastWidth = 0.6;
         protected double lastHeight = 1.8;
 
-        public CompensatedEntity(int entityId, UUID uuid, boolean isPlayer) {
+        public CompensatedEntity(int entityId, UUID uuid, boolean isPlayer, double baseReach) {
             this.entityId = entityId;
             this.uuid = uuid;
             this.isPlayer = isPlayer;
+            this.baseReach = baseReach;
         }
 
         public synchronized void snapshot(int tick, double x, double y, double z, double width, double height) {
@@ -310,7 +325,7 @@ public final class CompensationTracker implements ITickable {
             this.height = height;
         }
 
-        SimpleHitbox toHitbox() {
+        public SimpleHitbox toHitbox() {
             return new SimpleHitbox(x, y, z, width, height);
         }
 

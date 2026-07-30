@@ -37,8 +37,6 @@ public final class KillAuraD extends Check {
         float deltaYaw = Math.abs(data.getDeltaYaw());
         float deltaPitch = Math.abs(data.getDeltaPitch());
 
-        // FIX: Pitch limit exemption
-        // Looking straight down (90) or up (-90) often locks pitch at the limit.
         if (Math.abs(data.getPitch()) > 85.0f) {
             buffer.decrease(player, 0.25);
             return;

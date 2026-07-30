@@ -42,21 +42,17 @@ public final class AimB extends Check {
         if (data == null || data.isRotationExempt())
             return;
 
-        // FIX: Boats use keyboard (A/D) steering which produces constant-velocity camera
-        // rotations that trigger smooth aim, and steering transitions that look like head snaps.
         if (data.isInsideVehicle()) {
             snapBuffer.decrease(player, 0.5);
             buffer.decrease(player, 0.5);
             return;
         }
 
-        // FIX: Knockback/Velocity causes erratic camera snaps
         if (data.hasVelocity() || data.isExempt(ExemptionType.VELOCITY)) {
             snapBuffer.decrease(player, 0.5);
             return;
         }
 
-        // FIX: Looking straight up/down allows valid snapping (Towering)
         if (Math.abs(data.getPitch()) > 89.0f) {
             snapBuffer.decrease(player, 0.5);
             return;

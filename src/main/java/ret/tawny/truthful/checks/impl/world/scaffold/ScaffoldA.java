@@ -35,9 +35,8 @@ public final class ScaffoldA extends Check {
         float pitch = data.getPitch();
         float deltaPitch = Math.abs(data.getDeltaPitch());
 
-        // Scaffold Pitch Snap Detection
-        // Humans smoothly pan their camera down. Scaffold clients instantly snap it.
-        if (pitch > 62.0F && deltaPitch > 15.0F && ctx.pitchError < 28.0F && ctx.yawError < 70.0F) {
+        // Relaxed thresholds: pitch > 70°, deltaPitch > 25.0° to prevent false flags on rapid legit mouse flicks
+        if (pitch > 70.0F && deltaPitch > 25.0F && ctx.pitchError < 15.0F && ctx.yawError < 45.0F) {
             if (buffer.increase(p, 1.25) > 5.0) {
                 flag(data, String.format("Pitch Snap. pitch=%.1f dPitch=%.1f req=%.1f pErr=%.1f yErr=%.1f",
                         pitch, deltaPitch, ctx.requiredPitch, ctx.pitchError, ctx.yawError));

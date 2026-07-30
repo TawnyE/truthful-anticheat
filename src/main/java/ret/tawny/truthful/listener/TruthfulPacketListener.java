@@ -48,8 +48,7 @@ public final class TruthfulPacketListener extends PacketListenerAbstract {
     @Override
     public void onPacketReceive(PacketReceiveEvent event) {
         Object rawPlayer = event.getPlayer();
-        if (!(rawPlayer instanceof Player)) return;
-        final Player player = (Player) rawPlayer;
+        if (!(rawPlayer instanceof Player player)) return;
 
         final PacketTypeCommon type = event.getPacketType();
         final PlayerData data = Truthful.getInstance().getDataManager().getPlayerData(player);
@@ -100,9 +99,12 @@ public final class TruthfulPacketListener extends PacketListenerAbstract {
                     final RelMovePacketWrapper relMovePacketWrapper = new RelMovePacketWrapper(
                             wrapper, player, (PacketType.Play.Client) type, data);
 
-                    // FIXED: Always tick the internal clock regardless of position updates!
-                    // This prevents exemptions and buffers from freezing when standing still.
                     data.update(relMovePacketWrapper);
+
+                    // Feed movement & rotation data into the Telemetry Recorder for AI analysis
+                    if (Truthful.getInstance().getTelemetryManager() != null) {
+                        Truthful.getInstance().getTelemetryManager().onPlayerTick(data);
+                    }
 
                     if (!data.isServerFrozen()) {
                         checkManager.getMovementChecks().forEach(check -> {
@@ -120,8 +122,7 @@ public final class TruthfulPacketListener extends PacketListenerAbstract {
     @Override
     public void onPacketSend(PacketSendEvent event) {
         Object rawPlayer = event.getPlayer();
-        if (!(rawPlayer instanceof Player)) return;
-        final Player player = (Player) rawPlayer;
+        if (!(rawPlayer instanceof Player player)) return;
 
         final PlayerData data = Truthful.getInstance().getDataManager().getPlayerData(player);
         if (data == null) return;
@@ -175,22 +176,16 @@ public final class TruthfulPacketListener extends PacketListenerAbstract {
                     }
                 });
             }
-        }
-
-        else if (event.getPacketType() == PacketType.Play.Server.BLOCK_CHANGE) {
+        } else if (event.getPacketType() == PacketType.Play.Server.BLOCK_CHANGE) {
             WrapperPlayServerBlockChange wrapper = new WrapperPlayServerBlockChange(event);
             Vector3i pos = wrapper.getBlockPosition();
             data.getWorldCache().updateBlock(pos.getX(), pos.getY(), pos.getZ(), wrapper.getBlockId());
-        }
-
-        else if (event.getPacketType() == PacketType.Play.Server.MULTI_BLOCK_CHANGE) {
+        } else if (event.getPacketType() == PacketType.Play.Server.MULTI_BLOCK_CHANGE) {
             WrapperPlayServerMultiBlockChange wrapper = new WrapperPlayServerMultiBlockChange(event);
             for (WrapperPlayServerMultiBlockChange.EncodedBlock block : wrapper.getBlocks()) {
                 data.getWorldCache().updateBlock(block.getX(), block.getY(), block.getZ(), block.getBlockId());
             }
-        }
-
-        else if (event.getPacketType() == PacketType.Play.Server.UNLOAD_CHUNK) {
+        } else if (event.getPacketType() == PacketType.Play.Server.UNLOAD_CHUNK) {
             WrapperPlayServerUnloadChunk wrapper = new WrapperPlayServerUnloadChunk(event);
             data.getWorldCache().removeChunk(wrapper.getChunkX(), wrapper.getChunkZ());
         }
@@ -204,22 +199,12 @@ public final class TruthfulPacketListener extends PacketListenerAbstract {
             UUID uuid = wrapper.getUUID().orElse(UUID.randomUUID());
             Truthful.getInstance().getCompensationTracker().handleSpawn(wrapper.getEntityId(), uuid,
                     wrapper.getPosition().x, wrapper.getPosition().y, wrapper.getPosition().z, 0.6, 1.8, false);
-        } else if (event.getPacketType() == PacketType.Play.Server.SPAWN_LIVING_ENTITY) {
-            com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSpawnLivingEntity wrapper = new com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSpawnLivingEntity(
-                    event);
-            Truthful.getInstance().getCompensationTracker().handleSpawn(wrapper.getEntityId(), UUID.randomUUID(),
-                    wrapper.getPosition().x, wrapper.getPosition().y, wrapper.getPosition().z, 0.6, 1.8, false);
         } else if (event.getPacketType() == PacketType.Play.Server.ENTITY_TELEPORT) {
             WrapperPlayServerEntityTeleport wrapper = new WrapperPlayServerEntityTeleport(event);
             Truthful.getInstance().getCompensationTracker().handleTeleport(wrapper.getEntityId(),
                     wrapper.getPosition().x, wrapper.getPosition().y, wrapper.getPosition().z);
-        } else if (event.getPacketType() == PacketType.Play.Server.ENTITY_RELATIVE_MOVE) {
+        } else if (event.getPacketType() == PacketType.Play.Server.ENTITY_RELATIVE_MOVE || event.getPacketType() == PacketType.Play.Server.ENTITY_RELATIVE_MOVE_AND_ROTATION) {
             WrapperPlayServerEntityRelativeMove wrapper = new WrapperPlayServerEntityRelativeMove(event);
-            Truthful.getInstance().getCompensationTracker().handleRelMove(wrapper.getEntityId(),
-                    wrapper.getDeltaX(), wrapper.getDeltaY(), wrapper.getDeltaZ());
-        } else if (event.getPacketType() == PacketType.Play.Server.ENTITY_RELATIVE_MOVE_AND_ROTATION) {
-            WrapperPlayServerEntityRelativeMoveAndRotation wrapper = new WrapperPlayServerEntityRelativeMoveAndRotation(
-                    event);
             Truthful.getInstance().getCompensationTracker().handleRelMove(wrapper.getEntityId(),
                     wrapper.getDeltaX(), wrapper.getDeltaY(), wrapper.getDeltaZ());
         } else if (event.getPacketType() == PacketType.Play.Server.DESTROY_ENTITIES) {
@@ -281,8 +266,7 @@ public final class TruthfulPacketListener extends PacketListenerAbstract {
             PacketEvents.getAPI().getPlayerManager().sendPacket(player, new WrapperPlayServerPing(id));
         } else {
             PacketEvents.getAPI().getPlayerManager().sendPacket(player,
-                    new com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerWindowConfirmation(0,
-                            (short) id, false));
+                    new com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerWindowConfirmation(0, (short) id, false));
         }
     }
 
@@ -302,8 +286,7 @@ public final class TruthfulPacketListener extends PacketListenerAbstract {
         }
 
         String currentBrand = data.getClientBrand();
-        if (!(currentBrand.equals("Unknown")
-                || (!brand.equalsIgnoreCase("vanilla") && !brand.equalsIgnoreCase(currentBrand)))) {
+        if (!(currentBrand.equals("Unknown") || (!brand.equalsIgnoreCase("vanilla") && !brand.equalsIgnoreCase(currentBrand)))) {
             return;
         }
 
@@ -323,7 +306,6 @@ public final class TruthfulPacketListener extends PacketListenerAbstract {
         }
 
         data.setClientBrand(brand);
-        broadcastBrand(player, brand);
     }
 
     private Object createMovementWrapper(PacketReceiveEvent event, PacketTypeCommon type) {
@@ -338,21 +320,5 @@ public final class TruthfulPacketListener extends PacketListenerAbstract {
         else if (type == PacketType.Play.Client.VEHICLE_MOVE)
             return new WrapperPlayClientVehicleMove(event);
         return null;
-    }
-
-    public static void broadcastBrand(Player player, String brand) {
-        if (brand == null || brand.equals("Unknown") || brand.equals("vanilla"))
-            return;
-        Truthful.getInstance().getServerScheduler().runGlobal(() -> {
-            String msg = Truthful.getInstance().getConfiguration().getBrandMessage()
-                    .replace("%player%", player.getName()).replace("%brand%", brand);
-            for (Player staff : Bukkit.getOnlinePlayers()) {
-                if (staff.hasPermission("truthful.alerts")) {
-                    PlayerData staffData = Truthful.getInstance().getDataManager().getPlayerData(staff);
-                    if (staffData != null && staffData.isAlertsEnabled())
-                        staff.sendMessage(msg);
-                }
-            }
-        });
     }
 }

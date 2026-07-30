@@ -2,15 +2,14 @@ package ret.tawny.truthful.checks.impl.movement.velocity;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
-import ret.tawny.truthful.Truthful;
 import ret.tawny.truthful.checks.api.Check;
 import ret.tawny.truthful.checks.api.CheckBuffer;
 import ret.tawny.truthful.checks.api.data.CheckData;
 import ret.tawny.truthful.checks.api.data.CheckType;
 import ret.tawny.truthful.data.PlayerData;
 import ret.tawny.truthful.sync.VelocityQueue;
-import ret.tawny.truthful.utils.world.WorldUtils;
 import ret.tawny.truthful.wrapper.impl.client.position.RelMovePacketWrapper;
 
 @CheckData(order = 'B', type = CheckType.VELOCITY)
@@ -24,19 +23,18 @@ public final class VelocityB extends Check {
         final PlayerData data = wrapper.getPlayerData();
         if (data == null) return;
 
-        if (data.isServerFrozen() || data.isTeleportTick()) {
+        if (data.isServerFrozen() || data.isTeleportTick() || data.isMovementExempt()) {
             buffer.decrease(data.getPlayer(), 0.25D);
             return;
         }
 
         VelocityQueue queue = data.getVelocities();
-        if (queue.isEmpty()) {
-            return;
-        }
+        if (queue.isEmpty()) return;
 
-        double deltaY = data.getDeltaY();
+        double actualY = data.getDeltaY();
+        double lastY = data.getLastDeltaY();
         boolean flagged = false;
-        double severity = 0;
+        double minVDev = Double.MAX_VALUE;
         String flagReason = null;
 
         for (VelocityQueue.VelocityEntry entry : queue) {
@@ -44,29 +42,50 @@ public final class VelocityB extends Check {
                 Vector initialVel = entry.getCurrent();
                 double expectedY = initialVel.getY();
 
-                // Check blocks above and general edge cases where a jump gets interrupted
-                if (expectedY < 0.1D || data.isUnderBlock() || WorldUtils.isNearStairOrSlab(data.getPlayer())) {
-                    continue;
+                if (expectedY < 0.08D || data.isUnderBlock()) continue;
+
+                double gravity = data.getGravity();
+                int jumpBoost = data.getPotionLevel(PotionEffectType.JUMP_BOOST);
+                double baseJumpStrength = data.getJumpStrength() + (jumpBoost * 0.1D);
+
+                // Candidate 1: Standard gravity continuation + velocity impulse
+                double predGravity = (lastY - gravity) * 0.98D + expectedY;
+
+                // Candidate 2: Jump takeoff + velocity impulse
+                double predJumpPlusVel = baseJumpStrength + expectedY;
+
+                double predPureJump = baseJumpStrength;
+
+                // Candidate 4: Direct Velocity Impulse
+                double predDirect = expectedY;
+
+                double dev1 = Math.abs(actualY - predGravity);
+                double dev2 = Math.abs(actualY - predJumpPlusVel);
+                double dev3 = Math.abs(actualY - predPureJump);
+                double dev4 = Math.abs(actualY - predDirect);
+
+                double bestDev = Math.min(dev1, Math.min(dev2, Math.min(dev3, dev4)));
+                if (bestDev < minVDev) {
+                    minVDev = bestDev;
                 }
 
-                // Lower yield to 20% to account for heavy gravity manipulation or partial edge steps
-                double minYield = expectedY * 0.20D;
+                double allowedVDev = 0.08D; // Expanded to 0.08m for sub-tick jump timing
 
-                if (deltaY < minYield && !data.isServerGround() && !data.isLastGround()) {
+                if (minVDev > allowedVDev && !data.isServerGround()) {
                     flagged = true;
-                    severity += (minYield - deltaY) * 18.0D;
-                    flagReason = String.format("Vertical 0%% yield Y=%.4f expected=%.4f", deltaY, minYield);
+                    flagReason = String.format("Vertical Impulse Fail Y=%.4f expectedY=%.4f dev=%.4f",
+                            actualY, expectedY, minVDev);
                 }
             }
         }
 
         if (flagged) {
-            flag(data, flagReason);
-            if (buffer.increase(data.getPlayer(), severity) > 5.0D) {
-                buffer.reset(data.getPlayer(), 1.0D);
+            flag(data, flagReason, 2.0 + (minVDev * 8.0));
+            if (buffer.increase(data.getPlayer(), 1.5) > 5.0D) {
+                buffer.reset(data.getPlayer(), 2.0D);
             }
         } else {
-            buffer.decrease(data.getPlayer(), 0.1D);
+            buffer.decrease(data.getPlayer(), 0.15D);
         }
     }
 

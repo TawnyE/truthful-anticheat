@@ -48,7 +48,6 @@ public final class TeleportQueue {
             double dz = tp.loc.getZ() - z;
             double distSq = dx * dx + dy * dy + dz * dz;
 
-            // FIX: 2.25 distSq = 1.5 blocks radius tolerance for collision resolution (Ender Pearls)
             if (distSq <= 2.25) {
                 iterator.remove();
                 return tp;

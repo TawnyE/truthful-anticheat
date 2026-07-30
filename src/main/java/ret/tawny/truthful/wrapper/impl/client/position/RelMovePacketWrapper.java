@@ -73,7 +73,6 @@ public final class RelMovePacketWrapper extends PacketWrapper {
             this.hasPosition = false;
             this.hasRotation = false;
         } else if (wrapper instanceof WrapperPlayClientVehicleMove) {
-            // FIX: Boat Fly / Vehicle Tick Unfreeze
             WrapperPlayClientVehicleMove vehicleMove = (WrapperPlayClientVehicleMove) wrapper;
             Vector3d pos = vehicleMove.getPosition();
             this.x = pos.x;
@@ -101,7 +100,7 @@ public final class RelMovePacketWrapper extends PacketWrapper {
                 type == PacketType.Play.Client.PLAYER_POSITION_AND_ROTATION ||
                 type == PacketType.Play.Client.PLAYER_ROTATION ||
                 type == PacketType.Play.Client.PLAYER_FLYING ||
-                type == PacketType.Play.Client.VEHICLE_MOVE; // FIX: Unfreeze anti-cheat clock in vehicles
+                type == PacketType.Play.Client.VEHICLE_MOVE;
     }
 
     public double getX() { return x; }

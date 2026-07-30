@@ -7,7 +7,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.potion.PotionEffectType;
 import ret.tawny.truthful.Truthful;
 import ret.tawny.truthful.checks.api.Check;
-import ret.tawny.truthful.checks.api.CheckBuffer;
 import ret.tawny.truthful.checks.api.data.CheckData;
 import ret.tawny.truthful.checks.api.data.CheckType;
 import ret.tawny.truthful.checks.impl.movement.MovementCheckSupport;
@@ -31,10 +30,7 @@ public final class SimulationC extends Check {
     private static final double MAX_ASCENT_SPEED     = 0.25D;
     private static final double MAX_DESCENT_SPEED    = -0.4D;
 
-    private static final double BUBBLE_UP_MAX        = 0.72D;
-    private static final double BUBBLE_DOWN_MAX      = -0.51D;
-
-    private static final double MAX_WATER_XZ_BASE    = 0.20D; // Tightened base speed to catch generic Jesus (sus)
+    private static final double MAX_WATER_XZ_BASE    = 0.20D;
     private static final double DEPTH_STRIDER_BONUS  = 0.133D;
     private static final double MAX_LAVA_XZ          = 0.18D;
 
@@ -42,7 +38,6 @@ public final class SimulationC extends Check {
     private static final int LIQUID_ENTRY_GRACE_TICKS = 4;
     private static final double SURFACE_Y_THRESHOLD  = 0.08D;
     private static final double WALL_ASCENT_MAX      = 0.36D;
-    private static final double WALL_ASCENT_CAP      = 0.12D;
     private static final float  FLAG_BUFFER_THRESHOLD = 8.0f;
     private static final float  FLAG_BUFFER_RESET     = 3.0f;
 
@@ -130,7 +125,8 @@ public final class SimulationC extends Check {
             tags.add(Tag.SUBMERGED);
         }
 
-        if (data.isSwimming()) tags.add(Tag.SWIM_MODE);
+        Player p = data.getPlayer();
+        if (p != null && p.isSwimming()) tags.add(Tag.SWIM_MODE);
 
         final int depthStriderLevel = data.getEnchantLevel("depth_strider");
         if (depthStriderLevel > 0 && tags.contains(Tag.WATER)) tags.add(Tag.DEPTH_STRIDER);
@@ -190,13 +186,8 @@ public final class SimulationC extends Check {
         if (flagReason == null && !skipVertical) {
             double maxUp = MAX_ASCENT_SPEED;
 
-            // Allow jumping out of water ONLY if touching physical ground
-            if (data.isServerGround() || data.isLastGround() || WorldUtils.isNearStairOrSlab(wrapper.getPlayer())) {
-                maxUp = 0.45D;
-            } else if (tags.contains(Tag.SURFACE)) {
-                // Jesus strict limit: cannot jump 0.42 off deep water.
-                // Vanilla water bounce is 0.04. Leniency to 0.1D.
-                maxUp = 0.15D;
+            if (data.isServerGround() || data.isLastGround() || WorldUtils.isNearStairOrSlab(wrapper.getPlayer()) || tags.contains(Tag.SURFACE)) {
+                maxUp = 0.42D;
             }
 
             if (tags.contains(Tag.WALL_TOUCH) && tags.contains(Tag.ASCENDING)) {
@@ -213,12 +204,9 @@ public final class SimulationC extends Check {
             double maxDown = MAX_DESCENT_SPEED;
             if (tags.contains(Tag.SLOW_FALLING)) maxDown = Math.max(maxDown, -0.1D);
 
-            double yCap = 0.06D; // Increased from 0.04D - water surface exit needs more leniency
-            if (tags.contains(Tag.SURFACE)) {
-                yCap = 0.10D; // Extra leniency for surface bobbing/exit
-            }
+            double yCap = tags.contains(Tag.SURFACE) ? 0.15D : 0.06D;
             if (tags.contains(Tag.WALL_TOUCH) && tags.contains(Tag.ASCENDING)) {
-                yCap = Math.max(yCap, WALL_ASCENT_CAP);
+                yCap = Math.max(yCap, 0.12D);
             }
             if (deltaY > maxUp + yCap) {
                 tags.add(Tag.V_CAP);
@@ -247,7 +235,6 @@ public final class SimulationC extends Check {
             if (tags.contains(Tag.SWIM_MODE)) threshold += 0.15D;
             if (tags.contains(Tag.SPRINTING) && !tags.contains(Tag.SWIM_MODE)) threshold += 0.04D;
 
-            // Allow surface bobbing
             if (tags.contains(Tag.SURFACE)) threshold += 0.06D;
             if (tags.contains(Tag.WALL_TOUCH)) threshold += 0.12D;
 
@@ -272,12 +259,11 @@ public final class SimulationC extends Check {
                     maxXZ = Math.max(maxXZ, 0.55D);
                 }
                 if (tags.contains(Tag.DOLPHIN_GRACE)) {
-                    maxXZ = Math.max(maxXZ, 0.95D);
+                    maxXZ = Math.max(maxXZ, 1.20D);
                 }
             }
 
             if (tags.contains(Tag.SURFACE) || tags.contains(Tag.BOBBING)) {
-                // FIXED: Only boost speed on surface if they jumped from ground recently, else cap it.
                 if (data.getAirTicks() <= 5) maxXZ += 0.1D;
             }
 
@@ -305,7 +291,7 @@ public final class SimulationC extends Check {
                 if (st.hDragTicks >= 3) {
                     tags.add(Tag.H_DRAG);
                     double dev = deltaXZ - expectedMax;
-                    flagReason = String.format("Area Fail (H_Drag) XZ=%.3f expect≤%.3f consecutive=%d tags=%s", deltaXZ, expectedMax, st.hDragTicks, tags);
+                    flagReason = String.format("Area Fail (H_Drag) XZ=%.3f expect<=%.3f consecutive=%d tags=%s", deltaXZ, expectedMax, st.hDragTicks, tags);
                     severity = 1.0D + dev * 6.0D;
                 }
             } else {
@@ -330,10 +316,7 @@ public final class SimulationC extends Check {
     }
 
     private boolean isNearHorizontalCollision(final PlayerData data) {
-        final double x = data.getX();
-        final double y = data.getY();
-        final double z = data.getZ();
-        final double radius = 0.36D;
+        final double x = data.getX(), y = data.getY(), z = data.getZ(), radius = 0.36D;
 
         return hasSolid(data, x + radius, y + 0.20D, z)
                 || hasSolid(data, x - radius, y + 0.20D, z)
@@ -347,9 +330,7 @@ public final class SimulationC extends Check {
 
     private boolean hasSolid(final PlayerData data, final double x, final double y, final double z) {
         return BlockPropertyRegistry.isSolid(data.getWorldCache().getBlockState(
-                floor(x),
-                floor(y),
-                floor(z)
+                floor(x), floor(y), floor(z)
         ));
     }
 

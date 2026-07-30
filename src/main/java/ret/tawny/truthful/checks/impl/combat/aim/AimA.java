@@ -19,9 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @CheckData(order = 'A', type = CheckType.AIM)
 public final class AimA extends Check {
 
-    private static final double MIN_VALID_SENSITIVITY = -0.05; // Slightly below 0 to allow rounding
-    private static final double MAX_VALID_SENSITIVITY = 5.0; // Very high
-
+    private static final double EXPANDER = 16777216.0D;
     private final CheckBuffer buffer = new CheckBuffer(10.0);
     private final Map<UUID, AimData> dataMap = new ConcurrentHashMap<>();
 
@@ -32,14 +30,7 @@ public final class AimA extends Check {
         final Player player = event.getPlayer();
         final PlayerData data = Truthful.getInstance().getDataManager().getPlayerData(player);
 
-        if (data == null || data.isRotationExempt()) return;
-
-        // FIX: Boats rotate the player's camera via keyboard (A/D), producing perfectly linear
-        // rotations with zero acceleration that look exactly like GCD-spoofing aimbots. (my sped)
-        if (data.isInsideVehicle()) {
-            buffer.decrease(player, 0.5);
-            return;
-        }
+        if (data == null || data.isRotationExempt() || data.isInsideVehicle()) return;
 
         if (data.isServerFrozen() || data.getTickFreezeGraceTicks() > 0) {
             buffer.decrease(player, 0.5);
@@ -52,74 +43,48 @@ public final class AimA extends Check {
         final float deltaYaw = data.getRotationDeviation(false);
         final float pitch = data.getPitch();
 
-        if (Math.abs(pitch) > 89.0f) {
+        if (Math.abs(pitch) > 89.0f || deltaPitch > 15.0f || deltaYaw > 15.0f) {
             aimData.lastDeltaPitch = deltaPitch;
-            buffer.decrease(player, 0.1);
-            return;
-        }
-
-        // Ignore extreme flicks
-        if (deltaPitch > 15.0 || deltaYaw > 15.0) {
-            aimData.lastDeltaPitch = deltaPitch;
-            buffer.decrease(player, 0.25);
-            return;
-        }
-
-        // Cinematic / Smooth camera check (OptiFine/Vanilla)
-        // Acceleration is very low and continuous
-        float accelPitch = Math.abs(deltaPitch - aimData.lastDeltaPitch);
-        if (accelPitch < 0.05 && deltaPitch > 0.0) {
-            aimData.cinematicSmoothTicks = Math.min(20, aimData.cinematicSmoothTicks + 1);
-        } else {
-            aimData.cinematicSmoothTicks = Math.max(0, aimData.cinematicSmoothTicks - 2);
-        }
-
-        if (aimData.cinematicSmoothTicks > 5) {
+            aimData.lastDeltaYaw = deltaYaw;
             buffer.decrease(player, 0.2);
-            aimData.lastDeltaPitch = deltaPitch;
             return;
         }
 
-        // FIX: Rised from 0.1 to 0.2 to handle high-DPI + low-sensitivity mice.
-        // Small deltas cause numerically unstable GCD calculations (precision loss in long cast).
-        if (deltaPitch < 0.2) {
+        if (deltaPitch < 0.15f || deltaYaw < 0.15f) {
             aimData.lastDeltaPitch = deltaPitch;
+            aimData.lastDeltaYaw = deltaYaw;
             return;
         }
 
-        // Calculate GCD for both pitch and yaw (vanilla sensitivity applies to both axes)
-        final long currentPitch = (long) (deltaPitch * 16777216.0);
-        final long lastPitch = (long) (aimData.lastDeltaPitch * 16777216.0);
+        final long currentPitch = (long) (deltaPitch * EXPANDER);
+        final long lastPitch = (long) (aimData.lastDeltaPitch * EXPANDER);
         final long gcdPitch = MathHelper.getGcd(currentPitch, lastPitch);
-        final double stepPitch = gcdPitch / 16777216.0;
+        final double stepPitch = gcdPitch / EXPANDER;
 
-        final long currentYaw = (long) (deltaYaw * 16777216.0);
-        final long lastYaw = (long) (aimData.lastDeltaYaw * 16777216.0);
+        final long currentYaw = (long) (deltaYaw * EXPANDER);
+        final long lastYaw = (long) (aimData.lastDeltaYaw * EXPANDER);
         final long gcdYaw = MathHelper.getGcd(currentYaw, lastYaw);
-        final double stepYaw = gcdYaw / 16777216.0;
+        final double stepYaw = gcdYaw / EXPANDER;
 
-        // Use the larger step (more likely to be the true sensitivity step)
         final double step = Math.max(stepPitch, stepYaw);
         final double primaryDelta = stepPitch >= stepYaw ? deltaPitch : deltaYaw;
 
-        if (step > 0.005) {
+        if (step > 0.005D) {
             double pixels = primaryDelta / step;
             double error = Math.abs(pixels - Math.round(pixels));
 
-            // If the cheat engine attempts to spoof a vanilla step, but fails to use a legitimate sensitivity scale
-            if (error < 0.001) {
-                double val = Math.pow(step / 1.2, 1.0 / 3.0);
-                double sens = (val - 0.2) / 0.6;
+            if (error < 0.001D) {
+                double val = Math.pow(step / 1.2D, 1.0D / 3.0D);
+                double sens = (val - 0.2D) / 0.6D;
 
-                if (sens < MIN_VALID_SENSITIVITY || sens > MAX_VALID_SENSITIVITY) {
+                if (sens < -0.05D || sens > 5.0D) {
                     if (buffer.increase(player, 1.0) > 6.0) {
-                        flag(data, String.format("Bad Sensitivity. Step: %.5f, Sens: %.2f%%", step, sens * 100));
+                        flag(data, String.format("Bad Sensitivity Step: %.5f, Sens: %.2f%%", step, sens * 100));
                     }
                 } else {
                     buffer.decrease(player, 0.15);
                 }
             } else {
-                // 1.14+ Raw Input and OptiFine Fast Math naturally cause floating-point drift
                 buffer.decrease(player, 0.05);
             }
         } else {
@@ -139,6 +104,5 @@ public final class AimA extends Check {
     private static class AimData {
         float lastDeltaPitch = 0f;
         float lastDeltaYaw = 0f;
-        int cinematicSmoothTicks = 0;
     }
 }

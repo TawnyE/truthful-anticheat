@@ -1,30 +1,29 @@
-# ❖ CORE SETTINGS ❖
+# ============================================================================== #
+#                                                                                #
+#               T R U T H F U L   A N T I - C H E A T   C O N F I G              #
+#                                                                                #
+# ============================================================================== #
+
+# -- CORE SETTINGS --
 settings:
   # The display name used in menus, prefix tags, and alerts
   plugin-name: "&9&lT&e&lAC"
   # Prefix used by Geyser/Floodgate to identify Bedrock players (e.g. ".", "*", or "_")
   bedrock-prefix: "."
 
-# ❖ GLOBAL OPTIONS ❖
+# -- GLOBAL OPTIONS --
 options:
   # Global lagback toggle. If a check does not have a specific lagback config, it falls back to this.
   lagback: true
 
   # Lagback severity mode: BARELY, MODERATE, STRICT, SUPER_STRICT
   # BARELY        - Minimal intervention; only setback if >8 blocks from safe position
-  #                 (500ms cooldown, distance threshold 8.0 blocks, no airborne setback)
-  # MODERATE      - Balanced; setback when flagged while airborne
-  #                 (80ms cooldown, no distance threshold, airborne setback enabled)
+  # MODERATE      - Balanced; setback when flagged while airborne or on ground violation
   # STRICT        - Aggressive; setback every flag with short cooldown
-  #                 (100ms cooldown, no distance threshold, airborne setback enabled)
   # SUPER_STRICT  - Grim-like; instant setback, no cooldown, freeze until confirmed
-  #                 (0ms cooldown, no distance threshold, airborne setback enabled)
   lagback-mode: MODERATE
 
-  # Maximum distance between the player's current position and the resolved setback target.
-  # If the stored safe location is farther than this distance, the system will snap the
-  # setback target to the nearest ground beneath the player's current position instead,
-  # preventing rubber-banding across the map during fly/high-velocity cheats.
+  # Maximum distance between player's current position and safe setback target before snapping to ground
   lagback-ground-snap-distance: 5.0
 
   # Enable deep logging in the console for developer debugging
@@ -36,18 +35,19 @@ options:
   # How often (in ticks) to scan a player's environment (vehicles, entities nearby)
   environment-scan-interval-ticks: 10
 
+  profiles:
+    enabled: true
+    default-recording-seconds: 30
+
   alerts:
-    # If true, staff with 'truthful.alerts' permission will have alerts enabled automatically on join.
     auto-enable-on-join: true
 
   punishment:
-    # Broadcast a message globally when a player is punished
     broadcast: true
-    # Strike lightning at the player's location upon ban/kick
     lightning: false
 
-# ❖ LATENCY KICKER ❖
-# Prevents extreme lag-spoofing and server desync exploits.
+# -- LATENCY KICKER --
+# Automatically disconnects extreme ping-spoofers and lag-exploiters.
 latency-kicker:
   enabled: true
   max-ping: 650
@@ -55,8 +55,8 @@ latency-kicker:
   probe-interval-ticks: 2
   kick-message: "&cInternal Exception: java.io.IOException: An existing connection was forcibly closed by the remote host"
 
-# ❖ CLIENT BLOCKER ❖
-# Blacklist specific modded clients by checking their internal payload brand.
+# -- CLIENT BLOCKER --
+# Blacklist specific modded clients by checking their internal payload brand on join.
 client-blocker:
   enabled: true
   blocked-brands:
@@ -64,24 +64,22 @@ client-blocker:
     - "worlddownloader"
   kick-message: "&cThis client modification is not permitted on this server."
 
-# ❖ PERFORMANCE SYNC ❖
-# Internal buffer sizes. Do not change unless instructed by support.
+# -- PERFORMANCE SYNC --
 sync:
   max-entries: 50
   entry-ttl-millis: 5000
 
-# ❖ BANDWAVE (PUNISHMENT QUEUE) ❖
-# Queue hackers to be banned all at once rather than instantly, causing paranoia among cheat developers.
+# -- BANDWAVE (PUNISHMENT QUEUE) --
+# Queue hackers to be banned in periodic waves rather than instantly.
 bandwave:
   enabled: false
-  # Delay between kicking each player during an active wave
   interval-seconds: 5
   auto-start:
     enabled: false
     day: "SUNDAY"
     time: "18:00"
 
-# ❖ DISCORD WEBHOOKS ❖
+# -- DISCORD WEBHOOKS --
 discord:
   enabled: false
   webhook-url: ""
@@ -93,80 +91,58 @@ discord:
     footer: "Truthful Anti-Cheat"
     show-player-head: true
 
-# ❖ MESSAGES ❖
+# -- MESSAGES --
 messages:
-  alert: '&8[&e🏹&8] &9%player% &ffailed &e%check% &8(&fVL:%vl%&8) &f%debug%'
-  brand: '&8[&e🏹&8] &f%player% &7is using &b%brand%'
-  punishment-broadcast: '&eANTI&9CHEAT &cRemoved &c❌ &f%player% &c❌'
-  alerts-enabled: "&8[&bTruthful&8] &7Alerts have been &aenabled&7."
-  alerts-disabled: "&8[&bTruthful&8] &7Alerts have been &cdisabled&7."
+  alert: '&8[&cTruthful&8] &c%player% &ffailed &c%check% &8(&fVL:%vl%&8)'
+  brand: '&8[&cTruthful&8] &f%player% &7is using &b%brand%'
+  punishment-broadcast: '&8[&cTruthful&8] &c%player% &fwas removed for cheating.'
+  alerts-enabled: "&8[&bTruthful&8] &7Alerts &aenabled&7."
+  alerts-disabled: "&8[&bTruthful&8] &7Alerts &cdisabled&7."
 
-  # ❖ ALERT HOVER TEXT CUSTOMIZATION ❖
-  # Controls the hover tooltip shown when staff hover over alert messages in chat.
   alert-settings:
-    # Whether to show hover text at all
     hover-enabled: true
-    # Toggle specific information in the alert system
     show-check-type: true
     show-ping: true
     show-tps: true
     show-vl: true
     show-client-brand: true
     show-coordinates: false
-    # Fully customizable hover lines — supports placeholders:
-    # %check%, %vl%, %ping%, %tps%, %brand%, %debug%, %player%, %world%, %x%, %y%, %z%
     hover-lines:
-      - '&8─────────────────'
-      - '&9Truthful &8» &eDetails'
-      - '&8─────────────────'
-      - '&7Check: &f%check%'
-      - '&7VL: &c%vl%'
-      - '&7Ping: &b%ping%ms'
-      - '&7TPS: &a%tps%'
-      - '&7Client: &f%brand%'
-      - '&7World: &f%world%'
-      - '&8─────────────────'
-      - '&7Debug: &e%debug%'
-      - '&8─────────────────'
+      - '&7Debug:'
+      - '&f%debug%'
 
-  bandwave-sweep: "&8[&5&lBANDWAVE&8] &7#%position% swept by the band wave: &f%player%"
-  bandwave-queued: "&8[&5&lBANDWAVE&8] &f%player% &7was added to the BANDWAVE queue."
-  bandwave-duplicate: "&8[&5&lBANDWAVE&8] &f%player% &7is already queued."
-  bandwave-started: "&8[&5&lBANDWAVE&8] &7Execution started."
-  bandwave-stopped: "&8[&5&lBANDWAVE&8] &7Execution stopped."
-  bandwave-empty: "&8[&5&lBANDWAVE&8] &7Queue is empty."
-  bandwave-cleared: "&8[&5&lBANDWAVE&8] &7Queue cleared."
-  bandwave-status: "&8[&5&lBANDWAVE&8] &7Running: &f%running% &8| &7Queued: &f%queued%"
-  bandwave-list-header: "&8[&5&lBANDWAVE&8] &7Queued players (&f%queued%&7):"
+  bandwave-sweep: "&8[&5BANDWAVE&8] &7#%position% swept: &f%player%"
+  bandwave-queued: "&8[&5BANDWAVE&8] &f%player% &7queued for ban wave."
+  bandwave-duplicate: "&8[&5BANDWAVE&8] &f%player% &7is already queued."
+  bandwave-started: "&8[&5BANDWAVE&8] &7Execution started."
+  bandwave-stopped: "&8[&5BANDWAVE&8] &7Execution stopped."
+  bandwave-empty: "&8[&5BANDWAVE&8] &7Queue is empty."
+  bandwave-cleared: "&8[&5BANDWAVE&8] &7Queue cleared."
+  bandwave-status: "&8[&5BANDWAVE&8] &7Running: &f%running% &8| &7Queued: &f%queued%"
+  bandwave-list-header: "&8[&5BANDWAVE&8] &7Queued players (&f%queued%&7):"
   bandwave-list-entry: "&8 - &f%position%. %player%"
   bandwave-usage: "&cUsage: /bandwave <add|remove|list|start|stop|clear|status> [player]"
-  bandwave-disabled: "&8[&5&lBANDWAVE&8] &cBANDWAVE is disabled in config."
-  bandwave-removed: "&8[&5&lBANDWAVE&8] &f%player% &7was removed from the queue."
-  bandwave-schedule: "&8[&5&lBANDWAVE&8] &7Auto-start: &f%enabled% &8| &7Day: &f%day% &8| &7Time: &f%time%"
+  bandwave-disabled: "&8[&5BANDWAVE&8] &cBANDWAVE is disabled in config."
+  bandwave-removed: "&8[&5BANDWAVE&8] &f%player% &7removed from queue."
+  bandwave-schedule: "&8[&5BANDWAVE&8] &7Auto-start: &f%enabled% &8| &7Day: &f%day% &8| &7Time: &f%time%"
 
   commands:
     only-players: "&cOnly players can use this command."
     no-permission: "&cNo permission."
     no-data: "&cError: No data found."
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ #
-#                               C H E C K S                                     #
-#                                                                               #
-#  How to configure:                                                            #
-#  - lagback: Control exactly when the player gets rubber-banded (by VL).       #
-#    When the player's violation level (VL) reaches the configured threshold,   #
-#    they receive a server-forced position teleport to their setback target.     #
-#  - punishment: Configure auto-kicks/bans at higher VL thresholds.             #
-#  - bandwave: Set to 'true' to queue them for the ban wave instead of kicking. #
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ #
+# ============================================================================== #
+#                             C H E C K S   C O N F I G                          #
+# ============================================================================== #
 checks:
 
-  # ❖ BEDROCK & GEYSER ❖
-  # Checks specifically for Bedrock (Geyser/Floodgate) players who have different
-  # physics and movement characteristics than Java players.
+  # ---------------------------------------------------------------------------- #
+  # 📱 BEDROCK & GEYSER PLATFORM CHECKS                                          #
+  # Custom checks for Geyser/Floodgate Bedrock edition players who have different #
+  # touch mechanics, higher natural reach, and unique physics translation.      #
+  # ---------------------------------------------------------------------------- #
   BEDROCK:
-    # BSpeed(A) — Bedrock horizontal speed limiter. Detects speed cheats on
-    # bedrock players by capping ground/air speed with potion and ice modifiers.
+    # BSpeed(A) - Bedrock horizontal speed limiter with ice & potion modifiers.
     A:
       enabled: true
       lagback:
@@ -177,8 +153,7 @@ checks:
         vl: 50
         command: "kick %player% [Truthful] Speed"
         bandwave: false
-    # BFly(A) — Bedrock fly detection. Detects hover/rise beyond valid jump
-    # apex (20 ticks + jump boost extension).
+    # BFly(A) - Bedrock fly detection (hover/rise beyond jump air-tick limits).
     B:
       enabled: true
       lagback:
@@ -189,8 +164,7 @@ checks:
         vl: 50
         command: "kick %player% [Truthful] Fly"
         bandwave: false
-    # BReach(A) — Bedrock reach detection. Detects impossibly long melee
-    # attacks from bedrock players with ping-compensated hitbox checks.
+    # BReach(A) - Bedrock ping-compensated reach check (4.5 block limit).
     C:
       enabled: true
       lagback:
@@ -202,13 +176,14 @@ checks:
         command: "kick %player% [Truthful] Reach"
         bandwave: false
 
-  # ❖ MOVEMENT & PHYSICS ❖
-  # Simulation checks — the core physics prediction engine. These detect
-  # vertical fly, horizontal speed, air strafe, and gravity bypasses.
+  # ---------------------------------------------------------------------------- #
+  # 🏃 SIMULATION & MOTION PHYSICS CHECKS                                         #
+  # Reconstructs Vanilla Minecraft physics engine to detect Fly, Speed, AirWalk,  #
+  # Elytra hacks, Jesus (WaterWalk), Mount exploits, and NoSlow bypasses.       #
+  # ---------------------------------------------------------------------------- #
   SIMULATION:
-    # SimulationA — Primary physics simulation. Detects vertical fly (air-walk,
-    # fly-dip, gravity bypass) and horizontal cheats (speed, air-strafe, ground
-    # speed over cap). Most important movement check.
+    # Simulation(A) - Flagship 3D Motion Engine. Detects vertical Fly, AirWalk,
+    # Gravity Bypasses, Ground Speed limits, and Air-Strafing drift.
     A:
       enabled: true
       lagback:
@@ -219,11 +194,10 @@ checks:
         vl: 350
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # SimulationB — Elytra flight physics. Detects elytra speed cap violations,
-    # spurious XZ gain, low drag, stall, energy rate anomalies, and illegal air
-    # jumps. Only activates when gliding.
+    # Simulation(B) - Elytra Flight Physics. Detects speed caps, illegal hovering,
+    # lift/dive thrust anomalies, and stall bypasses during elytra gliding.
     B:
-      enabled: false
+      enabled: true
       lagback:
         enabled: true
         vl: 5
@@ -232,9 +206,8 @@ checks:
         vl: 50
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # SimulationC — Liquid physics. Detects Jesus (water walking), vertical
-    # hover/ascend/descend caps, and horizontal speed/drag violations in water
-    # and lava. Includes depth strider, dolphin's grace, and bubble column support.
+    # Simulation(C) - Liquid Physics. Detects Jesus (WaterWalk), buoyancy caps,
+    # Depth Strider III & Dolphin's Grace speed bounds in water and lava.
     C:
       enabled: true
       lagback:
@@ -245,9 +218,8 @@ checks:
         vl: 350
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # SimulationD — Vehicle & entity push physics. Detects speed/fly cheats on
-    # boats (including ice variants), horses, camels, llamas, pigs, striders,
-    # minecarts, and entity push exploits.
+    # Simulation(D) - Mounts & Vehicles. Detects Boat Fly, Blue Ice speed hacks,
+    # 1.20+ Camel Dashes, Horse speed attributes, and unauthorized passenger control.
     D:
       enabled: true
       lagback:
@@ -258,10 +230,37 @@ checks:
         vl: 350
         command: "kick %player% Unfair Advantage"
         bandwave: false
+    # Simulation(E) - NoSlow & Slowdown Bypasses. Detects moving at normal speed
+    # while eating, drinking, blocking with a shield, in cobwebs, or on honey.
+    E:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 8
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # Simulation(F) - Vector-based experimental check (DISABLED in favor of Simulation A).
+    F:
+      enabled: false
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 100
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
 
+  # ---------------------------------------------------------------------------- #
+  # 🦘 VELOCITY & KNOCKBACK CHECKS                                                #
+  # Verifies player response to server knockback, explosions, and damage forces   #
+  # using transactional network handshake pairs.                                #
+  # ---------------------------------------------------------------------------- #
   VELOCITY:
-    # VelocityA — Horizontal velocity (knockback) take check. Detects players
-    # taking 0% or near-0% horizontal knockback after being hit.
+    # Velocity(A) - Horizontal Vector Simulation. Detects 0% KB, percentage KB
+    # (e.g. 50% or 80%), and Reverse Knockback (directional redirection).
     A:
       enabled: true
       lagback:
@@ -272,8 +271,8 @@ checks:
         vl: 150
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # VelocityB — Vertical velocity (knockback) take check. Detects players
-    # taking 0% or near-0% vertical knockback.
+    # Velocity(B) - Vertical Impulse Simulation. Detects 0% vertical lift,
+    # anti-vertical knockback, and jump-reset velocity cheats.
     B:
       enabled: true
       lagback:
@@ -284,8 +283,8 @@ checks:
         vl: 150
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # VelocityC — Delayed velocity (tick 2-3) check. Detects velocity that was
-    # delayed or partially taken on subsequent ticks after knockback.
+    # Velocity(C) - Multi-Tick Friction Decay. Detects cheats that accept KB on
+    # tick 1 but instantly brake or cancel momentum on tick 2 or 3.
     C:
       enabled: true
       lagback:
@@ -296,9 +295,8 @@ checks:
         vl: 150
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # VelocityD — Velocity ACK withholding. Detects players moving while
-    # intentionally withholding velocity acknowledgment packets to hide
-    # knockback reduction.
+    # Velocity(D) - Transaction ACK Withholding. Detects players moving while
+    # holding onto velocity confirmation packets to delay knockback.
     D:
       enabled: true
       lagback:
@@ -310,8 +308,12 @@ checks:
         command: "kick %player% Unfair Advantage"
         bandwave: false
 
+  # ---------------------------------------------------------------------------- #
+  # 🪨 GROUND SPOOF & NOFALL CHECKS                                              #
+  # Validates player ground state claims against physical block collision maps.   #
+  # ---------------------------------------------------------------------------- #
   SPOOF:
-    # GroundSpoofB — (Not currently implemented or disabled)
+    # GroundSpoof(B) - Height Modulo Alignment. Validates block/slab/stair boundaries.
     B:
       enabled: true
       lagback:
@@ -321,8 +323,7 @@ checks:
         vl: 100
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # GroundSpoofC — Falling Ground Claim. Detects players claiming on-ground
-    # while having significant downward velocity (falling fast but saying grounded).
+    # GroundSpoof(C) - Falling Ground Claim. Detects claiming ground while falling fast.
     C:
       enabled: true
       lagback:
@@ -333,7 +334,7 @@ checks:
         vl: 100
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # GroundSpoofD — (Not currently implemented or disabled)
+    # GroundSpoof(D) - Void Ground Claim. Detects ground claims below world min height.
     D:
       enabled: true
       lagback:
@@ -343,7 +344,7 @@ checks:
         vl: 100
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # GroundSpoofE — (Not currently implemented or disabled)
+    # GroundSpoof(E) - Fall Distance Reset / NoFall spoofing.
     E:
       enabled: true
       lagback:
@@ -353,8 +354,7 @@ checks:
         vl: 150
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # GroundSpoofF — Physical Ground Spoof. Detects players claiming ground
-    # when no solid block exists beneath them (thread-safe via block cache).
+    # GroundSpoof(F) - Physical Collision Verification via thread-safe chunk cache.
     F:
       enabled: true
       lagback:
@@ -365,8 +365,8 @@ checks:
         vl: 150
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # GroundSpoofG — Status Pulse Verification. Detects NoFall modules that
-    # send Ground=True on rotation-only / non-position packets.
+    # GroundSpoof(G) - Status Pulse Verification. Detects NoFall modules sending
+    # Ground=True on rotation-only packets without moving.
     G:
       enabled: true
       lagback:
@@ -378,9 +378,12 @@ checks:
         command: "kick %player% Unfair Advantage"
         bandwave: false
 
+  # ---------------------------------------------------------------------------- #
+  # ⏱️ GAME SPEED & TIMER CHECKS                                                 #
+  # Analyzes nanosecond network clock balance to detect game speed acceleration.  #
+  # ---------------------------------------------------------------------------- #
   TIMER:
-    # TimerA — Game speed (timer) check. Detects clients running faster or
-    # slower than normal game tick rate using transaction-based timing analysis.
+    # Timer(A) - Nanosecond transaction clock balance check (detects Timer/FastGames).
     A:
       enabled: true
       lagback:
@@ -392,10 +395,12 @@ checks:
         command: "kick %player% Unfair Advantage"
         bandwave: false
 
-  # ❖ COMBAT & HEURISTICS ❖
+  # ---------------------------------------------------------------------------- #
+  # ⚔️ KILLAURA & COMBAT AUTOMATION CHECKS                                        #
+  # Analyzes combat patterns, target switching, wall-hitting, and attack order. #
+  # ---------------------------------------------------------------------------- #
   KILLAURA:
-    # KillAuraB — Movement Correlation (KeepSprint). Detects omni-directional
-    # sprinting while attacking (directional dot check) and keep-sprint after hits.
+    # KillAura(B) - KeepSprint & Directional Sprinting during combat.
     B:
       enabled: true
       lagback:
@@ -406,8 +411,7 @@ checks:
         vl: 50
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # KillAuraC — Robotic Aim Analysis. Detects snap-and-stop aim patterns
-    # (large rotation >30 deg followed instantly by <0.1 deg).
+    # KillAura(C) - Snap & Stop Rotation Analysis (instant target lock/release).
     C:
       enabled: true
       lagback:
@@ -418,9 +422,7 @@ checks:
         vl: 50
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # KillAuraD — Silent/Packet Rotation / Pitch Lock. Detects yaw changes
-    # >15 deg with exactly 0 pitch change (pitch lock) and pitch changes >10
-    # with near-zero yaw (vertical snap).
+    # KillAura(D) - Silent Packet Rotations & Pitch Locking.
     D:
       enabled: true
       lagback:
@@ -431,8 +433,7 @@ checks:
         vl: 15
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # KillAuraE — Wall Hit Detection (Async Raytrace). Detects attacks that
-    # pass through solid blocks using async raytrace with ping compensation.
+    # KillAura(E) - Wall Hit Detection via async block raytracing.
     E:
       enabled: true
       lagback:
@@ -443,8 +444,7 @@ checks:
         vl: 15
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # KillAuraF — Packet Criticals. Detects clients sending tiny hops
-    # (<0.2 vertical) mid-combat to fake critical hit conditions.
+    # KillAura(F) - Packet Criticals (mini-jump/0.0625 vertical hops mid-combat).
     F:
       enabled: true
       lagback:
@@ -455,8 +455,7 @@ checks:
         vl: 15
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # KillAuraG — Multi-Target Detection. Detects 3+ unique attack targets
-    # within a 500ms window (impossible for legitimate players).
+    # KillAura(G) - Multi-Target Switching (< 500ms target changes).
     G:
       enabled: true
       lagback:
@@ -467,8 +466,7 @@ checks:
         vl: 15
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # KillAuraH — Attack Interval Analysis. Detects low-variance, quantized,
-    # or perfectly-rounded CPS values indicating autoclicker/aimbot patterns.
+    # KillAura(H) - Attack Interval Quantization & Low Variance CPS.
     H:
       enabled: true
       lagback:
@@ -480,10 +478,13 @@ checks:
         command: "kick %player% Unfair Advantage"
         bandwave: false
 
+  # ---------------------------------------------------------------------------- #
+  # 🎯 AIM & ROTATION ANALYSIS CHECKS                                           #
+  # Advanced statistical math (Shannon Entropy, Jerk derivatives, GCD steps)     #
+  # to detect AimAssist, Silent Aim, Smooth Aimbots, and Rotation Spoofing.     #
+  # ---------------------------------------------------------------------------- #
   AIM:
-    # AimA through AimL — Rotation analysis checks. Detect aim-assist, silent
-    # aimbot, and smoothing/acceleration anomalies through various statistical
-    # and heuristic methods.
+    # Aim(A) - Sensitivity GCD Validation (verifies rotations conform to mouse sensitivity).
     A:
       enabled: true
       lagback:
@@ -493,6 +494,7 @@ checks:
         vl: 50
         command: "kick %player% Unfair Advantage"
         bandwave: false
+    # Aim(B) - Head Snap & Cinematic Smooth Aim Analysis.
     B:
       enabled: true
       lagback:
@@ -502,6 +504,7 @@ checks:
         vl: 50
         command: "kick %player% Unfair Advantage"
         bandwave: false
+    # Aim(D) - Perfect Angular Acceleration Detection.
     D:
       enabled: true
       lagback:
@@ -511,6 +514,7 @@ checks:
         vl: 50
         command: "kick %player% Unfair Advantage"
         bandwave: false
+    # Aim(E) - Shannon Entropy & Z-Score Outlier Analysis.
     E:
       enabled: true
       lagback:
@@ -520,6 +524,7 @@ checks:
         vl: 40
         command: "kick %player% Unfair Advantage"
         bandwave: false
+    # Aim(F) - Temporal Consistency & Yaw/Pitch Coupling Ratio.
     F:
       enabled: true
       lagback:
@@ -529,6 +534,7 @@ checks:
         vl: 65
         command: "kick %player% Unfair Advantage"
         bandwave: false
+    # Aim(G) - Angular Velocity Jerk Analysis (2nd derivative of angle over time).
     G:
       enabled: true
       lagback:
@@ -538,6 +544,7 @@ checks:
         vl: 65
         command: "kick %player% Unfair Advantage"
         bandwave: false
+    # Aim(H) - Target Lock Oscillation & Convergence Scores.
     H:
       enabled: true
       lagback:
@@ -547,6 +554,7 @@ checks:
         vl: 65
         command: "kick %player% Unfair Advantage"
         bandwave: false
+    # Aim(I) - Bayesian Probability Evaluation for synthetic aim.
     I:
       enabled: true
       lagback:
@@ -556,6 +564,7 @@ checks:
         vl: 65
         command: "kick %player% Unfair Advantage"
         bandwave: false
+    # Aim(J) - Synthetic Jitter & Zero-Sum Stationary Rotation Analysis.
     J:
       enabled: true
       lagback:
@@ -565,6 +574,7 @@ checks:
         vl: 50
         command: "kick %player% Unfair Advantage"
         bandwave: false
+    # Aim(K) - Sensitivity Step Grid Mismatch & Modulo Error.
     K:
       enabled: true
       lagback:
@@ -574,6 +584,7 @@ checks:
         vl: 50
         command: "kick %player% Unfair Advantage"
         bandwave: false
+    # Aim(L) - Y-Axis Lock & Robotic Linearity Ratio.
     L:
       enabled: true
       lagback:
@@ -583,12 +594,26 @@ checks:
         vl: 50
         command: "kick %player% Unfair Advantage"
         bandwave: false
+    # Aim(X) - Intelligence System / Dynamic Profile Matcher (DISABLED).
+    X:
+      enabled: false
+      lagback:
+        enabled: false
+      punishment:
+        enabled: true
+        vl: 30
+        command: "kick %player% Unfair Advantage (Profile Match)"
+        bandwave: false
 
+  # ---------------------------------------------------------------------------- #
+  # 🖱️ AUTOCLICKER CHECKS                                                        #
+  # Analyzes left-click animation packets for statistical patterns, CPS caps,    #
+  # double-clicks, and GCD grid locking.                                         #
+  # ---------------------------------------------------------------------------- #
   AUTOCLICKER:
     max_cps: 22
     count_ground_punches: false
-    # AutoClickerA through E — Click pattern analysis. Detect autoclickers
-    # through CPS limits, consistency checks, and timing analysis.
+    # AutoClicker(A) - Statistical Consistency (Mean, Variance, CV).
     A:
       enabled: true
       lagback:
@@ -598,6 +623,7 @@ checks:
         vl: 50
         command: "kick %player% Unfair Advantage"
         bandwave: false
+    # AutoClicker(B) - Identical Click Delay Streak Detection.
     B:
       enabled: true
       lagback:
@@ -607,6 +633,7 @@ checks:
         vl: 50
         command: "kick %player% Unfair Advantage"
         bandwave: false
+    # AutoClicker(C) - Dynamic Hard CPS Cap with TPS compensation.
     C:
       enabled: true
       lagback:
@@ -616,6 +643,7 @@ checks:
         vl: 50
         command: "kick %player% Unfair Advantage"
         bandwave: false
+    # AutoClicker(D) - Hardware Double-Click & Micro-Burst Detection (< 8ms).
     D:
       enabled: true
       lagback:
@@ -625,6 +653,7 @@ checks:
         vl: 50
         command: "kick %player% Unfair Advantage"
         bandwave: false
+    # AutoClicker(E) - Click Delay GCD Grid Locking.
     E:
       enabled: true
       lagback:
@@ -635,9 +664,12 @@ checks:
         command: "kick %player% Unfair Advantage"
         bandwave: false
 
+  # ---------------------------------------------------------------------------- #
+  # 📐 HITBOX & REACH CHECKS                                                     #
+  # Sub-tick RTT transaction backtracked entity reach and hitbox expansion.     #
+  # ---------------------------------------------------------------------------- #
   HITBOX:
-    # HitboxA — Hitbox expansion detection. Detects players hitting outside
-    # the target's expanded hitbox with ping compensation and backtracking.
+    # Hitbox(A) - Crosshair Ray Miss Distance & Bounding Box Expansion.
     A:
       enabled: true
       lagback:
@@ -650,9 +682,7 @@ checks:
         bandwave: false
 
   REACH:
-    # ReachA — Entity reach detection. Detects distance-based attacks beyond
-    # the reach limit (3.0 blocks base, ping-compensated, with sprint/velocity
-    # modifiers) using async raytrace.
+    # Reach(A) - 3D Ray-Intercept Reach Distance (backtracked attacker & target).
     A:
       enabled: true
       lagback:
@@ -664,10 +694,12 @@ checks:
         command: "kick %player% Unfair Advantage"
         bandwave: false
 
+  # ---------------------------------------------------------------------------- #
+  # 💣 CRYSTAL & ANCHOR AURA CHECKS                                              #
+  # Fast place-to-break speed and zero-tick ID prediction macros.                #
+  # ---------------------------------------------------------------------------- #
   CRYSTAL:
-    # CrystalAuraA — Crystal place/break speed and ID prediction detection.
-    # Detects fast crystal macros (<40ms place-to-break) and zero-tick
-    # crystal attacks (attacking crystals before they exist on client).
+    # CrystalAura(A) - Fast Place-to-Break (< 40ms) & Zero-Tick ID Prediction.
     A:
       enabled: true
       lagback:
@@ -680,9 +712,7 @@ checks:
         bandwave: false
 
   ANCHOR:
-    # AnchorAuraA — Respawn anchor charge/explode macro detection.
-    # Detects impossibly fast charge-to-exploit sequences (<80ms) that
-    # indicate a macro.
+    # AnchorAura(A) - Respawn Anchor charge-to-explode macro sequences (< 80ms).
     A:
       enabled: true
       lagback:
@@ -694,10 +724,51 @@ checks:
         command: "kick %player% Unfair Advantage"
         bandwave: false
 
-  # ❖ WORLD & AUTOMATION ❖
+  # ---------------------------------------------------------------------------- #
+  # 🌐 LAG & LATENCY ABUSE CHECKS                                                 #
+  # Backtrack assist, entity desync, and Spearman rank ping-correlation.        #
+  # ---------------------------------------------------------------------------- #
+  LAG:
+    # Lag(A) - Backtrack Assist (hitting targets in historical ping-delayed positions).
+    A:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 10
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # Lag(B) - Entity Position Desync / Interpolation Reach Exploitation.
+    B:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 10
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # Lag(C) - Spearman Rank Correlation (detects chance-based reach via ping contrast).
+    C:
+      enabled: true
+      lagback:
+        enabled: true
+        vl: 10
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+
+  # ---------------------------------------------------------------------------- #
+  # 🧱 SCAFFOLD & BRIDGING AUTOMATION CHECKS                                    #
+  # Detects pitch snaps, face alternations, tower timing, and reach placements. #
+  # ---------------------------------------------------------------------------- #
   SCAFFOLD:
-    # ScaffoldA — Scaffold/block placement assistance detection. Detects
-    # automated tower and bridging patterns.
+    # Scaffold(A) - Instant Pitch-Snap Placement.
     A:
       enabled: true
       lagback:
@@ -708,10 +779,82 @@ checks:
         vl: 150
         command: "kick %player% Unfair Advantage"
         bandwave: false
+    # Scaffold(B) - Rapid Face Alternation (switching UP and side faces).
+    B:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # Scaffold(C) - Towering Interval Consistency & Coefficient of Variation.
+    C:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # Scaffold(D) - Placement Reach Limits (> 4.5 blocks backtracked).
+    D:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # Scaffold(E) - Face Normal Alignment & Nudge Detection.
+    E:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # Scaffold(F) - Placement Gap Delta Histograms (periodic concentration).
+    F:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # Scaffold(G) - Quantized Rotation Deltas during active scaffolding.
+    G:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
+    # Scaffold(H) - Balance & Angle Hold while bridging.
+    H:
+      enabled: true
+      lagback:
+        enabled: false
+      punishment:
+        enabled: false
+        vl: 50
+        command: "kick %player% Unfair Advantage"
+        bandwave: false
 
+  # ---------------------------------------------------------------------------- #
+  # 🧱 WORLD, PHASE & FAST BREAK CHECKS                                          #
+  # ---------------------------------------------------------------------------- #
   PHASE:
-    # PhaseA — Phase/wall glitch detection. Detects players moving through
-    # solid blocks by checking if the AABB overlaps any solid block.
+    # Phase(A) - Full-Body Bounding Box Clipping inside solid blocks.
     A:
       enabled: false
       lagback:
@@ -724,8 +867,7 @@ checks:
         bandwave: false
 
   FAST_BREAK:
-    # FastBreakA — Fast break detection. Detects players breaking blocks
-    # faster than the tool's allowed dig speed.
+    # FastBreak(A) - Digging time validation (tool, Haste, Efficiency limits).
     A:
       enabled: true
       lagback:
@@ -737,8 +879,7 @@ checks:
         bandwave: false
 
   RAYCAST:
-    # RaycastA — Entity raycast detection. Detects attacks that bypass
-    # the server-side line-of-sight check (wall-hitting).
+    # Raycast(A) - Block Interaction Range & Line-of-Sight Raytracing.
     A:
       enabled: false
       lagback:
@@ -749,9 +890,11 @@ checks:
         command: "kick %player% Unfair Advantage"
         bandwave: false
 
-  # ❖ PACKET INTEGRITY ❖
+  # ---------------------------------------------------------------------------- #
+  # 📦 PACKET INTEGRITY & PROTOCOL EXPLOIT CHECKS                                 #
+  # ---------------------------------------------------------------------------- #
   BAD_PACKET:
-    # BadPacketA — Invalid packet data detection.
+    # BadPacket(A) - Global Packet Rate Flood Limiter (> 800 pkts/sec).
     A:
       enabled: true
       lagback:
@@ -761,7 +904,7 @@ checks:
         vl: 20
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # BadPacketC — Packet desync / invalid state detection.
+    # BadPacket(C) - FastBow Release Duration (< 60ms draw time).
     C:
       enabled: true
       lagback:
@@ -771,7 +914,7 @@ checks:
         vl: 20
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # BadPacketD — Disabled by default.
+    # BadPacket(D) - Non-Existent Entity Interaction.
     D:
       enabled: false
       lagback:
@@ -781,7 +924,7 @@ checks:
         vl: 20
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # BadPacketE — Invalid entity interaction detection.
+    # BadPacket(E) - Self-Interaction (attacking own entity ID).
     E:
       enabled: true
       lagback:
@@ -791,8 +934,7 @@ checks:
         vl: 20
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # BadPacketG — Invalid position data (NaN, infinite, extreme, out-of-bounds Y).
-    # Flags immediately on any invalid position value.
+    # BadPacket(G) - Invalid Position Coordinates (NaN, Infinity, Height Limits).
     G:
       enabled: true
       lagback:
@@ -803,7 +945,7 @@ checks:
         vl: 20
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # BadPacketH — Packet spam detection.
+    # BadPacket(H) - Hotbar Slot Bounds (< 0 or > 8).
     H:
       enabled: true
       lagback:
@@ -813,8 +955,7 @@ checks:
         vl: 20
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # BadPacketI — Duplicate position spam. Detects rapid-fire duplicate
-    # position packets (>5 duplicates in <100ms).
+    # BadPacket(I) - Duplicate Position Packet Spam (> 5 duplicates in < 100ms).
     I:
       enabled: true
       lagback:
@@ -825,8 +966,7 @@ checks:
         vl: 20
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # BadPacketJ — Impossible state persistence. Detects sneak+sprint state
-    # persisting for >100ms (impossible on 1.9+ clients without cheats).
+    # BadPacket(J) - Impossible State Persistence (Sneak + Sprint > 100ms on 1.9+).
     J:
       enabled: true
       lagback:
@@ -837,7 +977,7 @@ checks:
         vl: 20
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # BadPacketK — Other packet validation.
+    # BadPacket(K) - Negative / Invalid Window Confirmation Transaction IDs.
     K:
       enabled: true
       lagback:
@@ -849,8 +989,7 @@ checks:
         bandwave: false
 
   PACKET_ORDER:
-    # PacketOrderA through E — Packet ordering validation. Detect clients
-    # sending packets in an impossible order (indicating a hacked client).
+    # PacketOrder(A) - Block Placement without Swing Animation.
     A:
       enabled: true
       lagback:
@@ -860,6 +999,7 @@ checks:
         vl: 15
         command: "kick %player% Unfair Advantage"
         bandwave: false
+    # PacketOrder(B) - Attacking while actively using slow items (AutoBlock/NoSlow).
     B:
       enabled: true
       lagback:
@@ -869,6 +1009,7 @@ checks:
         vl: 20
         command: "kick %player% Unfair Advantage"
         bandwave: false
+    # PacketOrder(C) - Same-Tick Crystal Placement + Attack Automation.
     C:
       enabled: true
       lagback:
@@ -878,6 +1019,7 @@ checks:
         vl: 10
         command: "kick %player% Unfair Advantage"
         bandwave: false
+    # PacketOrder(D) - Entity Attack without Swing Animation (NoSwing).
     D:
       enabled: true
       lagback:
@@ -887,6 +1029,7 @@ checks:
         vl: 15
         command: "kick %player% Unfair Advantage"
         bandwave: false
+    # PacketOrder(E) - Inventory Aura (attacking while GUI is open).
     E:
       enabled: true
       lagback:
@@ -898,7 +1041,7 @@ checks:
         bandwave: false
 
   INVALID:
-    # InvalidA — Invalid packet detection for malformed/non-compliant packets.
+    # Invalid(A) - Out-of-Bounds Pitch Angles (|Pitch| > 90 deg).
     A:
       enabled: true
       lagback:
@@ -910,8 +1053,7 @@ checks:
         bandwave: false
 
   CRASHER:
-    # CrasherA — Crash exploit detection. Detects packets designed to crash
-    # the server (e.g., oversized book edits, nbt exploits).
+    # Crasher(A) - CustomPayload Size & Channel Name Exploits (Oversized books/NBT).
     A:
       enabled: true
       lagback:
@@ -923,9 +1065,7 @@ checks:
         bandwave: false
 
   INVENTORY:
-    # InventoryA — Inventory move speed. Detects players moving too fast
-    # while their inventory is open (cancel move packet when moving quickly
-    # with a recent window click).
+    # Inventory(A) - Inventory Move Speed (moving rapidly while GUI is open).
     A:
       enabled: true
       lagback:
@@ -938,8 +1078,7 @@ checks:
         bandwave: false
 
   BARITONE:
-    # BaritoneA through C — Baritone / automated mining detection. Tracks
-    # baritone trust level based on movement and block interaction patterns.
+    # Baritone(A) - 45-degree Directional Grid Snap Density.
     A:
       enabled: true
       lagback:
@@ -949,6 +1088,7 @@ checks:
         vl: 50
         command: "kick %player% Unfair Advantage"
         bandwave: false
+    # Baritone(B) - Automated Mining Camera Rotations (zero pitch / locked yaw).
     B:
       enabled: true
       lagback:
@@ -958,6 +1098,7 @@ checks:
         vl: 50
         command: "kick %player% Unfair Advantage"
         bandwave: false
+    # Baritone(C) - Block Break Interval Consistency.
     C:
       enabled: true
       lagback:
@@ -969,7 +1110,7 @@ checks:
         bandwave: false
 
   SPRINT:
-    # SprintA — Invalid sprint state detection.
+    # Sprint(A) - OmniSprint during Blindness or Starvation (<= 6 hunger).
     A:
       enabled: true
       lagback:
@@ -979,7 +1120,7 @@ checks:
         vl: 50
         command: "kick %player% Unfair Advantage"
         bandwave: false
-    # SprintB — Sprint direction / desync detection.
+    # Sprint(B) - OmniSprint Directional Dot Product Violation.
     B:
       enabled: true
       lagback:

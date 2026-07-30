@@ -56,6 +56,10 @@ public abstract class Check {
     }
 
     public void flag(final PlayerData data, final String debug) {
+        flag(data, debug, 1.0D);
+    }
+
+    public void flag(final PlayerData data, final String debug, final double severity) {
         if (!this.enabled || data == null || data.isExempt())
             return;
 
@@ -72,17 +76,21 @@ public abstract class Check {
         }
 
         final UUID uuid = p.getUniqueId();
-        final int vl = violationLevels.merge(uuid, 1, Integer::sum);
-        data.addVl(1);
+        int vlAddition = Math.max(1, (int) Math.round(severity));
+        final int vl = violationLevels.merge(uuid, vlAddition, Integer::sum);
+        data.addVl(vlAddition);
 
-        // Tell PlayerData a flag just occurred so it stops saving "Safe Locations" temporarily
         data.setLastFlagTick(data.getTicksTracked());
 
         Truthful.getInstance().getDebugLoggingManager().logFlag(p, this.formattedName, vl, debug);
 
+        // Auto-record flag telemetry for AI analysis
+        if (Truthful.getInstance().getTelemetryManager() != null) {
+            Truthful.getInstance().getTelemetryManager().recordFlag(data, this.formattedName, debug, vl, -1);
+        }
+
         final Configuration config = Truthful.getInstance().getConfiguration();
 
-        // --- ALERT THROTTLING ---
         final long now = System.currentTimeMillis();
         final long lastAlert = lastAlertTimes.getOrDefault(uuid, 0L);
         final boolean shouldAlert = (now - lastAlert >= 500L);
@@ -92,7 +100,6 @@ public abstract class Check {
             Truthful.getInstance().getDiscordManager().sendAlert(data, this, debug, vl);
         }
 
-        // Snapshot values for use in async/main thread lambda
         final String playerName = p.getName();
         final long ping = data.getPing();
         final double tps = Truthful.getInstance().getTps();
@@ -111,14 +118,13 @@ public abstract class Check {
                 .replace("%ping%", String.valueOf(ping))
                 .replace("%tps%", String.format("%.1f", tps))
                 .replace("%brand%", brand)
-                .replace("%debug%", "")
+                .replace("%debug%", debug != null ? debug : "")
                 .trim();
 
         Truthful.getInstance().getServerScheduler().runRegion(p, () -> {
             if (!p.isOnline()) return;
 
             if (shouldAlert) {
-
                 final long nowMillis = System.currentTimeMillis();
                 final long lastLog = lastLogTimes.getOrDefault(uuid, 0L);
 
@@ -130,7 +136,6 @@ public abstract class Check {
                 net.md_5.bungee.api.chat.BaseComponent[] components = net.md_5.bungee.api.chat.TextComponent.fromLegacyText(
                         org.bukkit.ChatColor.translateAlternateColorCodes('&', chatMessage));
 
-                // --- CUSTOMIZABLE HOVER TEXT ---
                 if (config.isAlertHoverEnabled()) {
                     StringBuilder hoverBuilder = new StringBuilder();
                     java.util.List<String> hoverLines = config.getAlertHoverLines();
@@ -177,55 +182,53 @@ public abstract class Check {
                 toRemove.forEach(Truthful.getInstance().getDataManager().getAlertSubscribers()::remove);
             }
 
-            // --- CENTRALIZED LAGBACK & PUNISHMENT LOGIC ---
             // 1. Configurable Lagbacks
-                boolean lagbackEnabled = config.isCheckLagbackEnabled(checkType.name(), String.valueOf(order));
-                int lagbackVl = config.getCheckLagbackVl(checkType.name(), String.valueOf(order));
+            boolean lagbackEnabled = config.isCheckLagbackEnabled(checkType.name(), String.valueOf(order));
+            int lagbackVl = config.getCheckLagbackVl(checkType.name(), String.valueOf(order));
 
-                if (lagbackEnabled && vl >= lagbackVl && !data.isServerFrozen()) {
-                    if (!p.isDead()) {
+            if (lagbackEnabled && vl >= lagbackVl && !data.isServerFrozen()) {
+                if (!p.isDead()) {
+                    data.forceLagback();
+                }
+            }
+
+            // 2. Punishments
+            if (config.isPunishmentEnabled(checkType.name(), String.valueOf(order))) {
+                if (vl >= config.getPunishmentVl(checkType.name(), String.valueOf(order))) {
+
+                    data.setBanning(true);
+                    if (!data.isServerFrozen()) {
                         data.forceLagback();
                     }
-                }
 
-                // 2. Punishments
-                if (config.isPunishmentEnabled(checkType.name(), String.valueOf(order))) {
-                    if (vl >= config.getPunishmentVl(checkType.name(), String.valueOf(order))) {
+                    if (config.isPunishmentAnimationEnabled()) {
+                        p.getWorld().strikeLightningEffect(p.getLocation());
+                    }
 
-                        data.setBanning(true);
-                        if (!data.isServerFrozen()) {
-                            data.forceLagback();
-                        }
+                    if (config.shouldQueueBandwave(checkType.name(), String.valueOf(order)) && config.isBandwaveEnabled()) {
+                        boolean added = Truthful.getInstance().getBandwaveManager().addPlayer(p.getName());
+                        String queueMessage = (added ? config.getBandwaveQueuedMessage() : config.getBandwaveDuplicateMessage())
+                                .replace("%player%", playerName);
+                        Bukkit.getConsoleSender().sendMessage(queueMessage);
+                    } else {
+                        final String command = config.getPunishmentCommand(checkType.name(), String.valueOf(order))
+                                .replace("%player%", playerName);
+                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
 
-                        if (config.isPunishmentAnimationEnabled()) {
-                            p.getWorld().strikeLightningEffect(p.getLocation());
-                        }
-
-                        if (config.shouldQueueBandwave(checkType.name(), String.valueOf(order)) && config.isBandwaveEnabled()) {
-                            boolean added = Truthful.getInstance().getBandwaveManager().addPlayer(p.getName());
-                            String queueMessage = (added ? config.getBandwaveQueuedMessage() : config.getBandwaveDuplicateMessage())
+                        if (config.isPunishmentBroadcastEnabled()) {
+                            final String broadcastMessage = config.getPunishmentBroadcast()
                                     .replace("%player%", playerName);
-                            Bukkit.getConsoleSender().sendMessage(queueMessage);
-                        } else {
-                            final String command = config.getPunishmentCommand(checkType.name(), String.valueOf(order))
-                                    .replace("%player%", playerName);
-                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
-
-                            if (config.isPunishmentBroadcastEnabled()) {
-                                final String broadcastMessage = config.getPunishmentBroadcast()
-                                        .replace("%player%", playerName);
-                                Bukkit.broadcastMessage(broadcastMessage);
-                            }
+                            Bukkit.broadcastMessage(broadcastMessage);
                         }
                     }
                 }
-            });
+            }
+        });
 
         Truthful.getInstance().getLogManager().log(uuid, playerName, checkName, vl, ping, debug);
     }
 
     private boolean requiresStableSimulation(CheckType type) {
-        // Only movement-dependent checks that rely on prediction/simulation stability
         return type == CheckType.SIMULATION || type == CheckType.VELOCITY ||
                 type == CheckType.SPOOF || type == CheckType.SCAFFOLD ||
                 type == CheckType.PHASE || type == CheckType.TIMER ||
@@ -238,6 +241,10 @@ public abstract class Check {
 
     protected void debugSus(String message, double buffer) {
         Truthful.getInstance().getDebugManager().sendSuspicion(this.formattedName, message, buffer);
+    }
+
+    protected void debugStatus(PlayerData data, String details, double currentBuffer, double maxThreshold) {
+        Truthful.getInstance().getDebugManager().sendDebugStatus(data, this.formattedName, details, currentBuffer, maxThreshold);
     }
 
     public final char getOrder() { return this.order; }
@@ -272,15 +279,9 @@ public abstract class Check {
 
         final boolean isBedrockPlayer = Truthful.getInstance().isBedrockPlayer(player);
         if (this.checkType == CheckType.BEDROCK) {
-            // Only BEDROCK checks run on bedrock players
             return isBedrockPlayer;
         }
 
-        // FIX: Bedrock players must be fully exempt from ALL Java checks.
-        // Geyser's packet translation fundamentally changes rotation precision,
-        // packet timing, and hit registration — causing false flags across
-        // combat (Aim, KillAura, HitBox, Reach, AutoClicker), movement,
-        // and packet checks. Only dedicated BEDROCK checks should run.
         if (isBedrockPlayer) {
             return false;
         }

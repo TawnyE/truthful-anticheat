@@ -5,6 +5,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import ret.tawny.truthful.Truthful;
 import ret.tawny.truthful.gui.GuiConstants;
+import ret.tawny.truthful.gui.GuiHolder;
 import ret.tawny.truthful.gui.GuiItemFactory;
 
 import java.util.ArrayList;
@@ -28,7 +29,8 @@ public final class PluginInfoMenu {
     }
 
     public static void open(Player player) {
-        Inventory inv = Bukkit.createInventory(null, 45, getTitle());
+        GuiHolder holder = new GuiHolder(GuiHolder.MenuType.PLUGIN_INFO, null, null, "Credits", 0);
+        Inventory inv = Bukkit.createInventory(holder, 45, getTitle());
         GuiItemFactory.fillGradientBorder(inv);
 
         String version = Truthful.getInstance().getPlugin().getDescription().getVersion();
@@ -38,13 +40,8 @@ public final class PluginInfoMenu {
         bookLore.add(GuiConstants.metric("Version", version));
         bookLore.add(GuiConstants.metric("Core", "PacketEvents"));
         bookLore.add(GuiConstants.metric("License", "Open source ready"));
-        bookLore.add("");
-        bookLore.add(GuiConstants.MUTED + "Add people in PluginInfoMenu.CONTRIBUTORS.");
 
-        inv.setItem(4, GuiItemFactory.createGlowing(
-                GuiConstants.getMat("WRITABLE_BOOK", "BOOK_AND_QUILL"),
-                GuiConstants.SECONDARY + GuiConstants.BOLD + "Credits Book",
-                bookLore));
+        inv.setItem(4, GuiItemFactory.createGlowing(GuiConstants.getMat("WRITABLE_BOOK", "BOOK_AND_QUILL"), GuiConstants.SECONDARY + GuiConstants.BOLD + "Credits Book", bookLore));
 
         int[] slots = { 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34 };
         int index = 0;
@@ -57,10 +54,7 @@ public final class PluginInfoMenu {
             lore.add(GuiConstants.metric("Role", contributor.role()));
             lore.add(GuiConstants.metric("Work", contributor.note()));
 
-            inv.setItem(slots[index++], GuiItemFactory.createSkull(
-                    contributor.uuid(),
-                    GuiConstants.ACCENT + GuiConstants.BOLD + contributor.displayName(),
-                    lore.toArray(new String[0])));
+            inv.setItem(slots[index++], GuiItemFactory.createSkull(contributor.uuid(), GuiConstants.ACCENT + GuiConstants.BOLD + contributor.displayName(), lore.toArray(new String[0])));
         }
 
         GuiItemFactory.fillEmpty(inv, slots, index);
@@ -69,10 +63,7 @@ public final class PluginInfoMenu {
         supportLore.add(GuiConstants.DARK + "Support and releases");
         supportLore.add("");
         supportLore.add(GuiConstants.SECONDARY + GuiConstants.ARROW + " Click for invite");
-        inv.setItem(40, GuiItemFactory.createGlowing(
-                GuiConstants.getMat("KNOWLEDGE_BOOK", "BOOK"),
-                GuiConstants.SUCCESS + GuiConstants.BOLD + "Discord",
-                supportLore));
+        inv.setItem(40, GuiItemFactory.createGlowing(GuiConstants.getMat("KNOWLEDGE_BOOK", "BOOK"), GuiConstants.SUCCESS + GuiConstants.BOLD + "Discord", supportLore));
 
         inv.setItem(36, GuiItemFactory.createBackButton("Dashboard"));
         player.openInventory(inv);
@@ -86,9 +77,7 @@ public final class PluginInfoMenu {
         player.sendMessage(GuiConstants.separator());
     }
 
-    private record Contributor(UUID uuid, String displayName, String credit, String role, String note) {
-    }
+    private record Contributor(UUID uuid, String displayName, String credit, String role, String note) {}
 
-    private PluginInfoMenu() {
-    }
+    private PluginInfoMenu() {}
 }

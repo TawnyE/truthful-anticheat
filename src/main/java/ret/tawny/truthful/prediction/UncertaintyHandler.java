@@ -26,7 +26,6 @@ public final class UncertaintyHandler {
             add(0.03, "min_movement");
         }
 
-        // FIX: Massive uncertainty increase when pushed by entities to prevent SimulationA Speed flags
         if (data.isNearEntity()) {
             add(0.25, "entity_collision");
             add(0.15, "entity_push_variance");

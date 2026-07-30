@@ -39,8 +39,6 @@ public final class KillAuraE extends Check {
             return;
         }
 
-        // FIX: Vehicle passengers (boats) have solid hulls that intercept the raytrace.
-        // Also skip during teleport/velocity grace — position data is unreliable.
         if (data.isInsideVehicle() || data.isTeleportTick() || data.getTicksSinceTeleport() < 5
                 || data.hasVelocity() || data.isExempt(ret.tawny.truthful.data.ExemptionType.VELOCITY)) {
             return;
@@ -112,8 +110,6 @@ public final class KillAuraE extends Check {
     private static boolean rayIntersectsSolid(double ox, double oy, double oz,
                                               double dx, double dy, double dz,
                                               double maxDistance, PlayerData data) {
-        // FIX: Start ray further from eye (1.0) to avoid hitting blocks the player is
-        // standing next to. Use 0.4 step for better granularity.
         for (double d = 1.0; d < maxDistance - 0.5; d += 0.4) {
             final int bx = floor(ox + (dx * d));
             final int by = floor(oy + (dy * d));
@@ -146,8 +142,7 @@ public final class KillAuraE extends Check {
                name.contains("COMPARATOR") || name.contains("REDSTONE") || name.contains("RAIL") ||
                name.contains("TRIPWIRE") || name.contains("MUSHROOM") || name.contains("SAPLING") ||
                name.contains("CORAL") || name.contains("POTTED") ||
-               // FIX: Missing transparent/partial blocks that caused false wall-hit flags
-               name.contains("GLASS") || name.contains("LEAVES") || name.contains("BARS") ||
+                name.contains("GLASS") || name.contains("LEAVES") || name.contains("BARS") ||
                name.contains("CHAIN") || name.contains("CANDLE") || name.contains("AMETHYST") ||
                name.contains("POINTED_DRIPSTONE") || name.contains("HANGING") ||
                name.contains("AZALEA") || name.contains("MANGROVE_ROOTS") || name.contains("GLOW_LICHEN") ||

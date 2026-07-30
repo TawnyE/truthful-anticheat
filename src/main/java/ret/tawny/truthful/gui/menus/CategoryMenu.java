@@ -1,6 +1,7 @@
 package ret.tawny.truthful.gui.menus;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -8,6 +9,7 @@ import ret.tawny.truthful.Truthful;
 import ret.tawny.truthful.checks.api.Check;
 import ret.tawny.truthful.checks.api.data.CheckType;
 import ret.tawny.truthful.gui.GuiConstants;
+import ret.tawny.truthful.gui.GuiHolder;
 import ret.tawny.truthful.gui.GuiItemFactory;
 
 import java.util.ArrayList;
@@ -15,10 +17,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Premium Category Menu
- * Browse check categories with live stats and progress bars.
- */
 public final class CategoryMenu {
 
     public static String getTitle() {
@@ -27,38 +25,20 @@ public final class CategoryMenu {
     }
 
     public static void open(Player player) {
-        Inventory inv = Bukkit.createInventory(null, 54, getTitle());
+        GuiHolder holder = new GuiHolder(GuiHolder.MenuType.CATEGORIES, null, null, "Categories", 0);
+        Inventory inv = Bukkit.createInventory(holder, 54, getTitle());
         GuiItemFactory.fillGradientBorder(inv);
 
         Map<String, int[]> catStats = getCategoryStats();
 
-        // ── ROW 2: Movement / Combat / World ──
-        inv.setItem(20, buildCategoryItem("Movement", catStats,
-                GuiConstants.getMat("FEATHER"),
-                GuiConstants.ACCENT, "Simulation, Velocity, Timer"));
+        inv.setItem(20, buildCategoryItem("Movement", catStats, GuiConstants.getMat("FEATHER"), GuiConstants.ACCENT, "Simulation, Velocity, Timer"));
+        inv.setItem(22, buildCategoryItem("Combat", catStats, GuiConstants.getMat("IRON_SWORD"), GuiConstants.ERROR, "KillAura, Reach, Aim, Clicks"));
+        inv.setItem(24, buildCategoryItem("World", catStats, GuiConstants.getMat("GRASS_BLOCK", "GRASS"), GuiConstants.SUCCESS, "Scaffold, FastBreak, Raycast"));
 
-        inv.setItem(22, buildCategoryItem("Combat", catStats,
-                GuiConstants.getMat("IRON_SWORD"),
-                GuiConstants.ERROR, "KillAura, Reach, Aim, Clicks"));
+        inv.setItem(29, buildCategoryItem("Packet", catStats, GuiConstants.getMat("REPEATER", "DIODE"), GuiConstants.LIGHT_PURPLE, "BadPacket, Invalid, Crasher"));
+        inv.setItem(31, buildCategoryItem("Bot", catStats, GuiConstants.getMat("COMPASS"), GuiConstants.WARNING, "Baritone, Automation"));
+        inv.setItem(33, buildCategoryItem("Bedrock", catStats, GuiConstants.getMat("BEDROCK"), GuiConstants.BLUE, "Geyser/Floodgate profiles"));
 
-        inv.setItem(24, buildCategoryItem("World", catStats,
-                GuiConstants.getMat("GRASS_BLOCK", "GRASS"),
-                GuiConstants.SUCCESS, "Scaffold, FastBreak, Raycast"));
-
-        // ── ROW 3: Packet / Bot / Bedrock ──
-        inv.setItem(29, buildCategoryItem("Packet", catStats,
-                GuiConstants.getMat("REPEATER", "DIODE"),
-                GuiConstants.LIGHT_PURPLE, "BadPacket, Invalid, Crasher"));
-
-        inv.setItem(31, buildCategoryItem("Bot", catStats,
-                GuiConstants.getMat("COMPASS"),
-                GuiConstants.WARNING, "Baritone, Automation"));
-
-        inv.setItem(33, buildCategoryItem("Bedrock", catStats,
-                GuiConstants.getMat("BEDROCK"),
-                GuiConstants.BLUE, "Geyser/Floodgate profiles"));
-
-        // ── BOTTOM: Toggle All + Back ──
         int totalEnabled = 0, totalChecks = 0;
         for (int[] s : catStats.values()) {
             totalEnabled += s[0];
@@ -70,29 +50,20 @@ public final class CategoryMenu {
         player.openInventory(inv);
     }
 
-    private static ItemStack buildCategoryItem(String name, Map<String, int[]> stats,
-            org.bukkit.Material icon, String color, String desc) {
+    private static ItemStack buildCategoryItem(String name, Map<String, int[]> stats, Material icon, String color, String desc) {
         int[] s = stats.getOrDefault(name, new int[] { 0, 0 });
         int enabled = s[0], total = s[1];
 
         List<String> lore = new ArrayList<>();
         lore.add(GuiConstants.DARK + desc);
         lore.add("");
-        lore.add(GuiConstants.DARK + GuiConstants.SYM_LINE + " " +
-                GuiConstants.MUTED + "Enabled  " +
-                (enabled == total ? GuiConstants.SUCCESS : enabled > 0 ? GuiConstants.SECONDARY : GuiConstants.ERROR) +
-                enabled + GuiConstants.DARK + "/" + GuiConstants.MUTED + total);
+        lore.add(GuiConstants.DARK + GuiConstants.SYM_LINE + " " + GuiConstants.MUTED + "Enabled  " + (enabled == total ? GuiConstants.SUCCESS : enabled > 0 ? GuiConstants.SECONDARY : GuiConstants.ERROR) + enabled + GuiConstants.DARK + "/" + GuiConstants.MUTED + total);
         lore.add("  " + GuiConstants.buildProgressBar(enabled, total, 10));
         lore.add("");
         lore.add(GuiConstants.SECONDARY + GuiConstants.SYM_ARROW + " Click to configure");
 
-        return GuiItemFactory.createGlowing(icon,
-                color + GuiConstants.BOLD + name, lore);
+        return GuiItemFactory.createGlowing(icon, color + GuiConstants.BOLD + name, lore);
     }
-
-    // ═══════════════════════════════════════════════
-    // TOGGLE ALL
-    // ═══════════════════════════════════════════════
 
     public static void toggleAllChecks(Player player) {
         boolean anyDisabled = false;
@@ -102,26 +73,13 @@ public final class CategoryMenu {
                 break;
             }
         }
-        boolean newState = anyDisabled; // enable all if any disabled, disable all if all enabled
+        boolean newState = anyDisabled;
 
         for (Check check : Truthful.getInstance().getCheckManager().getCollection()) {
             check.setEnabled(newState);
             Truthful.getInstance().getConfiguration()
                     .setCheckEnabled(check.getType().name(), String.valueOf(check.getOrder()), newState);
         }
-
-        String msg = newState ? GuiConstants.SUCCESS + "Enabled all checks" : GuiConstants.ERROR + "Disabled all checks";
-        player.sendMessage(GuiConstants.PRIMARY + "Truthful " + GuiConstants.DARK + "> " + msg);
-    }
-
-    // ═══════════════════════════════════════════════
-    // STATS & CLASSIFICATION
-    // ═══════════════════════════════════════════════
-
-    private static String getStatLine(int enabled, int total) {
-        String color = enabled == total ? GuiConstants.SUCCESS
-                : enabled > 0 ? GuiConstants.SECONDARY : GuiConstants.ERROR;
-        return GuiConstants.DARK + "Enabled: " + color + enabled + "/" + total;
     }
 
     private static Map<String, int[]> getCategoryStats() {
@@ -138,8 +96,7 @@ public final class CategoryMenu {
             if (cat != null && stats.containsKey(cat)) {
                 int[] arr = stats.get(cat);
                 arr[1]++;
-                if (check.isEnabled())
-                    arr[0]++;
+                if (check.isEnabled()) arr[0]++;
             }
         }
         return stats;
@@ -147,37 +104,13 @@ public final class CategoryMenu {
 
     public static String getCategoryForType(CheckType type) {
         switch (type) {
-            case SIMULATION:
-            case VELOCITY:
-            case SPOOF:
-            case PHASE:
-            case TIMER:
-                return "Movement";
-            case KILLAURA:
-            case AIM:
-            case HITBOX:
-            case REACH:
-            case AUTOCLICKER:
-            case CRYSTAL:
-            case ANCHOR:
-                return "Combat";
-            case SCAFFOLD:
-            case FAST_BREAK:
-            case RAYCAST:
-                return "World";
-            case BAD_PACKET:
-            case CRASHER:
-            case INVALID:
-            case SPRINT:
-            case INVENTORY:
-            case PACKET_ORDER:
-                return "Packet";
-            case BARITONE:
-                return "Bot";
-            case BEDROCK:
-                return "Bedrock";
-            default:
-                return null;
+            case SIMULATION, VELOCITY, SPOOF, PHASE, TIMER -> { return "Movement"; }
+            case KILLAURA, AIM, HITBOX, REACH, AUTOCLICKER, CRYSTAL, ANCHOR -> { return "Combat"; }
+            case SCAFFOLD, FAST_BREAK, RAYCAST -> { return "World"; }
+            case BAD_PACKET, CRASHER, INVALID, SPRINT, INVENTORY, PACKET_ORDER -> { return "Packet"; }
+            case BARITONE -> { return "Bot"; }
+            case BEDROCK -> { return "Bedrock"; }
+            default -> { return null; }
         }
     }
 

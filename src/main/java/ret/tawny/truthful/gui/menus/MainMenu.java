@@ -6,6 +6,7 @@ import org.bukkit.inventory.Inventory;
 import ret.tawny.truthful.Truthful;
 import ret.tawny.truthful.checks.api.Check;
 import ret.tawny.truthful.gui.GuiConstants;
+import ret.tawny.truthful.gui.GuiHolder;
 import ret.tawny.truthful.gui.GuiItemFactory;
 
 import java.util.ArrayList;
@@ -20,7 +21,9 @@ public final class MainMenu {
 
     public static void open(Player player) {
         String pluginName = Truthful.getInstance().getConfiguration().getPluginDisplayName();
-        Inventory inv = Bukkit.createInventory(null, 45, getTitle());
+
+        GuiHolder holder = new GuiHolder(GuiHolder.MenuType.MAIN, null, null, "Dashboard", 0);
+        Inventory inv = Bukkit.createInventory(holder, 45, getTitle());
         GuiItemFactory.fillGradientBorder(inv);
 
         int totalChecks = 0;
@@ -63,10 +66,10 @@ public final class MainMenu {
                 GuiConstants.getMat("ENDER_EYE", "EYE_OF_ENDER"),
                 GuiConstants.ACCENT + GuiConstants.BOLD + "Live Inspector",
                 List.of(
-                        GuiConstants.DARK + "Fast player snapshot",
+                        GuiConstants.DARK + "Fast player snapshot & KeyPress tracker",
                         "",
-                        GuiConstants.metric("View", "Movement, network, client"),
-                        GuiConstants.metric("Updates", "Once per second"),
+                        GuiConstants.metric("View", "Keys, Sensitivity, DPI, Network"),
+                        GuiConstants.metric("Updates", "Live 100ms"),
                         "",
                         GuiConstants.ACCENT + GuiConstants.ARROW + " Select a player")));
 
@@ -90,6 +93,5 @@ public final class MainMenu {
         player.openInventory(inv);
     }
 
-    private MainMenu() {
-    }
+    private MainMenu() {}
 }

@@ -160,8 +160,8 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="untitled" />
         <module name="truthful" />
+        <module name="TruthfulAC" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="21">

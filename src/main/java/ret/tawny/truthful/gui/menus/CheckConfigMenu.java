@@ -4,22 +4,17 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
 import ret.tawny.truthful.Truthful;
 import ret.tawny.truthful.checks.api.Check;
 import ret.tawny.truthful.checks.api.data.CheckType;
 import ret.tawny.truthful.gui.GuiConstants;
+import ret.tawny.truthful.gui.GuiHolder;
 import ret.tawny.truthful.gui.GuiItemFactory;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-/**
- * Premium Check Config Menu
- * Toggle individual checks with clean visual status indicators.
- * No descriptions per user request - icons + status only.
- */
 public final class CheckConfigMenu {
 
     public static String getTitle(CheckType type) {
@@ -32,13 +27,13 @@ public final class CheckConfigMenu {
     }
 
     public static void open(Player player, CheckType type, int page) {
-        Inventory inv = Bukkit.createInventory(null, 54, getTitle(type) + " " + GuiConstants.DARK + "(Page " + (page + 1) + ")");
+        GuiHolder holder = new GuiHolder(GuiHolder.MenuType.CHECK_CONFIG, null, type, null, page);
+        Inventory inv = Bukkit.createInventory(holder, 54, getTitle(type) + " " + GuiConstants.DARK + "(Page " + (page + 1) + ")");
         GuiItemFactory.fillGradientBorder(inv);
 
         List<Check> checks = new ArrayList<>();
         for (Check check : Truthful.getInstance().getCheckManager().getCollection()) {
-            if (check.getType() == type)
-                checks.add(check);
+            if (check.getType() == type) checks.add(check);
         }
         checks.sort(Comparator.comparingInt(Check::getOrder));
 
@@ -55,70 +50,32 @@ public final class CheckConfigMenu {
             boolean punish = Truthful.getInstance().getConfiguration()
                     .isPunishmentEnabled(check.getType().name(), String.valueOf(check.getOrder()));
 
-            // Use glass panes for maximum visual pop
             Material mat = enabled
                     ? GuiConstants.getMat("LIME_STAINED_GLASS_PANE", "STAINED_GLASS_PANE")
                     : GuiConstants.getMat("RED_STAINED_GLASS_PANE", "STAINED_GLASS_PANE");
 
-            String checkStatus = enabled
-                    ? GuiConstants.SUCCESS + GuiConstants.SYM_CHECK + " Enabled"
-                    : GuiConstants.ERROR + GuiConstants.SYM_CROSS + " Disabled";
-
-            String punishStatus = punish
-                    ? GuiConstants.SUCCESS + GuiConstants.SYM_CHECK + " On"
-                    : GuiConstants.ERROR + GuiConstants.SYM_CROSS + " Off";
-
             List<String> lore = new ArrayList<>();
             lore.add("");
-            lore.add(GuiConstants.DARK + GuiConstants.SYM_LINE + " " +
-                    GuiConstants.MUTED + "Check   " + checkStatus);
-            lore.add(GuiConstants.DARK + GuiConstants.SYM_LINE + " " +
-                    GuiConstants.MUTED + "Punish  " + punishStatus);
+            lore.add(GuiConstants.DARK + GuiConstants.SYM_LINE + " " + GuiConstants.MUTED + "Check   " + (enabled ? GuiConstants.SUCCESS + "Enabled" : GuiConstants.ERROR + "Disabled"));
+            lore.add(GuiConstants.DARK + GuiConstants.SYM_LINE + " " + GuiConstants.MUTED + "Punish  " + (punish ? GuiConstants.SUCCESS + "On" : GuiConstants.ERROR + "Off"));
             lore.add("");
-            lore.add(GuiConstants.SECONDARY + "Click " + GuiConstants.DARK + "for settings");
+            lore.add(GuiConstants.SUCCESS + "Left-Click " + GuiConstants.DARK + "to toggle state");
+            lore.add(GuiConstants.SECONDARY + "Right-Click " + GuiConstants.DARK + "for check settings");
 
-            String nameColor = enabled ? GuiConstants.SUCCESS : GuiConstants.MUTED;
-            ItemStack item = GuiItemFactory.create(mat,
-                    nameColor + check.getFormattedName(), lore);
-
-            // Legacy stained glass data values
-            if (mat.name().equals("STAINED_GLASS_PANE")) {
-                item.setDurability((short) (enabled ? 5 : 14));
-            }
-
-            inv.setItem(slots[slotIndex++], item);
+            inv.setItem(slots[slotIndex++], GuiItemFactory.create(mat, (enabled ? GuiConstants.SUCCESS : GuiConstants.MUTED) + check.getFormattedName(), lore));
         }
 
-        // Fill remaining content slots
         GuiItemFactory.fillEmpty(inv, slots, slotIndex);
 
-        // Toggle All + Back
         boolean allEnabled = true;
         for (Check c : checks) {
-            if (!c.isEnabled()) {
-                allEnabled = false;
-                break;
-            }
+            if (!c.isEnabled()) { allEnabled = false; break; }
         }
         inv.setItem(49, GuiItemFactory.createToggleAll(allEnabled, type.getName() + " checks"));
         inv.setItem(45, GuiItemFactory.createBackButton(CategoryMenu.getCategoryForType(type)));
 
-        if (type == CheckType.AUTOCLICKER) {
-            boolean countGroundPunches = Truthful.getInstance().getConfiguration().shouldCountGroundPunches();
-            Material punchMat = countGroundPunches
-                    ? GuiConstants.getMat("ORANGE_DYE", "INK_SACK")
-                    : GuiConstants.getMat("GRAY_DYE", "INK_SACK");
-            inv.setItem(51, GuiItemFactory.create(punchMat,
-                    (countGroundPunches ? GuiConstants.WARNING : GuiConstants.MUTED) + "Ground Punches",
-                    GuiConstants.DARK + "Animation packets without an attack",
-                    "",
-                    GuiConstants.metric("Counted", countGroundPunches ? "Yes" : "No"),
-                    "",
-                    GuiConstants.SECONDARY + "Click to toggle"));
-        }
-
         if (page > 0) {
-            inv.setItem(45, GuiItemFactory.create(Material.ARROW, GuiConstants.SECONDARY + "Previous Page", GuiConstants.MUTED + "Go to page " + page));
+            inv.setItem(46, GuiItemFactory.create(Material.ARROW, GuiConstants.SECONDARY + "Previous Page", GuiConstants.MUTED + "Go to page " + page));
         }
         if (end < checks.size()) {
             inv.setItem(53, GuiItemFactory.create(Material.ARROW, GuiConstants.SECONDARY + "Next Page", GuiConstants.MUTED + "Go to page " + (page + 2)));
@@ -126,10 +83,6 @@ public final class CheckConfigMenu {
 
         player.openInventory(inv);
     }
-
-    // ═══════════════════════════════════════════════
-    // TOGGLE ACTIONS
-    // ═══════════════════════════════════════════════
 
     public static void toggleAllForType(Player player, CheckType type) {
         boolean anyDisabled = false;
@@ -148,16 +101,10 @@ public final class CheckConfigMenu {
                         .setCheckEnabled(check.getType().name(), String.valueOf(check.getOrder()), newState);
             }
         }
-
-        String msg = newState ? GuiConstants.SUCCESS + "Enabled all " : GuiConstants.ERROR + "Disabled all ";
-        player.sendMessage(
-                GuiConstants.PRIMARY + "Truthful " + GuiConstants.DARK + GuiConstants.SYM_ARROW + " " + msg + type.getName() + " checks");
     }
 
     public static void toggleGroundPunches(Player player) {
         boolean newState = !Truthful.getInstance().getConfiguration().shouldCountGroundPunches();
         Truthful.getInstance().getConfiguration().setCountGroundPunches(newState);
-        String msg = newState ? GuiConstants.WARNING + "Ground punches counted" : GuiConstants.SUCCESS + "Ground punches ignored";
-        player.sendMessage(GuiConstants.PRIMARY + "Truthful " + GuiConstants.DARK + GuiConstants.SYM_ARROW + " " + msg);
     }
 }

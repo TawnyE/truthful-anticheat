@@ -35,9 +35,6 @@ public final class KillAuraF extends Check {
         if (data == null)
             return;
 
-        // FIX: Exempt if taking Velocity, under a block, or moving via vehicle/elytra
-        // Improved thread safety by using data checkpoints instead of direct Bukkit
-        // calls
         if (data.isExempt(ExemptionType.LIQUID) || data.isExempt(ExemptionType.CLIMBABLE) ||
                 data.isExempt(ExemptionType.WEB) || data.isNearVehicle() || data.isMovementExempt() ||
                 data.hasVelocity() || data.isUnderBlock()) {
@@ -63,11 +60,6 @@ public final class KillAuraF extends Check {
             // Valid jump is usually ~0.42.
             // Packet crits are often < 0.1 or even 0.0.
 
-            // FIX: "Apex" Exception.
-            // If the player has been in the air for > 3 ticks, they might be at the peak of
-            // a valid jump.
-            // At the peak, vertical motion naturally hits ~0.0 before going negative.
-            // Packet Criticals usually happen at AirTicks 1 or 2.
             if (data.getAirTicks() > 3) {
                 buffer.decrease(player, 0.1);
                 return;

@@ -33,8 +33,6 @@ public final class AimF extends Check {
         final PlayerData data = Truthful.getInstance().getDataManager().getPlayerData(player);
         if (data == null || data.isRotationExempt()) return;
 
-        // FIX: Boat A/D steering produces tick-perfect rotation timing that triggers
-        // the temporal consistency detection.
         if (data.isInsideVehicle()) {
             dataMap.remove(player.getUniqueId());
             return;

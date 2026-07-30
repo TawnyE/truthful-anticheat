@@ -3,13 +3,13 @@ package ret.tawny.truthful.checks.impl.movement.velocity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.util.Vector;
-import ret.tawny.truthful.Truthful;
 import ret.tawny.truthful.checks.api.Check;
 import ret.tawny.truthful.checks.api.CheckBuffer;
 import ret.tawny.truthful.checks.api.data.CheckData;
 import ret.tawny.truthful.checks.api.data.CheckType;
 import ret.tawny.truthful.data.PlayerData;
 import ret.tawny.truthful.sync.VelocityQueue;
+import ret.tawny.truthful.utils.world.BlockPropertyRegistry;
 import ret.tawny.truthful.wrapper.impl.client.position.RelMovePacketWrapper;
 
 @CheckData(order = 'C', type = CheckType.VELOCITY)
@@ -23,15 +23,13 @@ public final class VelocityC extends Check {
         final PlayerData data = wrapper.getPlayerData();
         if (data == null) return;
 
-        if (data.isServerFrozen() || data.isTeleportTick()) {
+        if (data.isServerFrozen() || data.isTeleportTick() || data.isMovementExempt()) {
             buffer.decrease(data.getPlayer(), 0.25D);
             return;
         }
 
         VelocityQueue queue = data.getVelocities();
-        if (queue.isEmpty()) {
-            return;
-        }
+        if (queue.isEmpty()) return;
 
         double deltaXZ = data.getDeltaXZ();
         boolean flagged = false;
@@ -40,35 +38,39 @@ public final class VelocityC extends Check {
 
         for (VelocityQueue.VelocityEntry entry : queue) {
             int tick = entry.getAckTick();
-            if (entry.isAcked() && tick >= 2 && tick <= 3 && !entry.isExplosion()) {
+            if (entry.isAcked() && tick >= 2 && tick <= 5 && !entry.isExplosion()) {
                 Vector currentExpected = entry.getCurrent();
                 double expectedXZ = Math.hypot(currentExpected.getX(), currentExpected.getZ());
 
-                if (expectedXZ < 0.05D || data.isUnderBlock() || data.isServerGround() || isNearWall(data)) {
-                    continue;
-                }
+                if (expectedXZ < 0.08D || data.isUnderBlock() || isNearWall(data) || data.isNearEntity()) continue;
 
-                double minYield = expectedXZ * 0.15D;
-                if (!data.isServerGround()) {
-                    minYield = expectedXZ * 0.02D;
-                }
+                double friction = data.isServerGround() ? computeGroundFriction(data) : 0.91D;
+                double expectedDecaySpeed = (expectedXZ * friction);
 
-                if (deltaXZ < minYield) {
+                if (deltaXZ < expectedDecaySpeed * 0.30D && !data.isServerGround()) {
                     flagged = true;
-                    severity += (minYield - deltaXZ) * 15.0D;
-                    flagReason = String.format("Atypical velocity deceleration on tick %d XZ=%.4f exp=%.4f", tick, deltaXZ, minYield);
+                    severity += (expectedDecaySpeed - deltaXZ) * 12.0D;
+                    flagReason = String.format("Atypical Velocity Decay on tick %d XZ=%.4f expectedDecay=%.4f",
+                            tick, deltaXZ, expectedDecaySpeed);
                 }
             }
         }
 
         if (flagged) {
-            flag(data, flagReason);
+            flag(data, flagReason, severity);
             if (buffer.increase(data.getPlayer(), severity) > 6.0D) {
                 buffer.reset(data.getPlayer(), 2.0D);
             }
         } else {
             buffer.decrease(data.getPlayer(), 0.1D);
         }
+    }
+
+    private double computeGroundFriction(PlayerData data) {
+        int x = (int) Math.floor(data.getX());
+        int y = (int) Math.floor(data.getY() - 0.2D);
+        int z = (int) Math.floor(data.getZ());
+        return BlockPropertyRegistry.getFriction(data.getWorldCache().getBlockState(x, y, z)) * 0.91D;
     }
 
     private boolean isNearWall(PlayerData data) {
@@ -79,8 +81,8 @@ public final class VelocityC extends Check {
         for (int ox = -1; ox <= 1; ox++) {
             for (int oz = -1; oz <= 1; oz++) {
                 if (ox == 0 && oz == 0) continue;
-                if (ret.tawny.truthful.utils.world.BlockPropertyRegistry.isSolid(data.getWorldCache().getBlockState(px + ox, py, pz + oz)) ||
-                        ret.tawny.truthful.utils.world.BlockPropertyRegistry.isSolid(data.getWorldCache().getBlockState(px + ox, py + 1, pz + oz))) {
+                if (BlockPropertyRegistry.isSolid(data.getWorldCache().getBlockState(px + ox, py, pz + oz)) ||
+                        BlockPropertyRegistry.isSolid(data.getWorldCache().getBlockState(px + ox, py + 1, pz + oz))) {
                     return true;
                 }
             }

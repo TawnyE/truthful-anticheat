@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import ret.tawny.truthful.Truthful;
 import ret.tawny.truthful.data.PlayerData;
 import ret.tawny.truthful.debug.DebugManager;
+import ret.tawny.truthful.debug.telemetry.TelemetryManager;
 
 import java.io.File;
 import java.util.*;
@@ -93,35 +94,55 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         sender.sendMessage("§8§m----------------------------------");
         sender.sendMessage("§bTruthfulAC §7Commands:");
         sender.sendMessage("§7/truthful reload §8- §fReload config");
-        sender.sendMessage("§7/truthful debug <check> §8- §fToggle debug");
-        sender.sendMessage("§7/truthful record <player> §8- §fStart/Stop debug logging");
+        sender.sendMessage("§7/truthful debug [check|all] §8- §fToggle live debug HUD");
+        sender.sendMessage("§7/truthful record <player> [seconds] §8- §fStart AI telemetry recording");
         sender.sendMessage("§7/truthful export §8- §fExport debug logs folder path");
         sender.sendMessage("§7/truthful logs <player> [limit] §8- §fView recent logs");
         sender.sendMessage("§7/truthful exempt <player> §8- §fToggle exempt");
         sender.sendMessage("§7/truthful info <player> §8- §fShow live player info");
         sender.sendMessage("§7/truthful gui §8- §fOpen GUI");
-        sender.sendMessage("§7/truthful tools <player> <tool> §8- §fRun testing tools (kb/rotation/sensitivity/timer/reach)");
+        sender.sendMessage("§7/truthful tools <player> <tool> §8- §fRun testing tools");
         sender.sendMessage("§8§m----------------------------------");
     }
 
     private void handleRecord(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage("§cOnly players can start debug logging.");
+        if (!(sender instanceof Player admin)) {
+            sender.sendMessage("§cOnly in-game staff can start recordings.");
             return;
         }
 
         if (args.length < 2) {
-            sender.sendMessage("§cUsage: /truthful record <player>");
+            admin.sendMessage("§cUsage: /truthful record <player> [durationSeconds]");
+            admin.sendMessage("§7Example: /truthful record CodeControl 30");
             return;
         }
 
         Player target = Bukkit.getPlayer(args[1]);
         if (target == null) {
-            sender.sendMessage("§cPlayer not found.");
+            admin.sendMessage("§cPlayer not found: " + args[1]);
             return;
         }
 
-        Truthful.getInstance().getDebugLoggingManager().toggleLogging((Player) sender, target);
+        TelemetryManager tm = Truthful.getInstance().getTelemetryManager();
+
+        // If already recording, stop it
+        if (tm.getFullTelemetryRecorder().isRecording(target)) {
+            tm.stopTelemetryRecording(target);
+            admin.sendMessage("§eStopped telemetry recording for §f" + target.getName() + "§e.");
+            return;
+        }
+
+        int duration = 30;
+        if (args.length >= 3) {
+            try {
+                duration = Math.max(5, Math.min(300, Integer.parseInt(args[2])));
+            } catch (NumberFormatException e) {
+                admin.sendMessage("§cInvalid duration number: " + args[2]);
+                return;
+            }
+        }
+
+        tm.startTelemetryRecording(admin, target, duration);
     }
 
     private void handleExempt(CommandSender sender, String[] args) {
@@ -173,27 +194,42 @@ public class CommandManager implements CommandExecutor, TabCompleter {
     }
 
     private void handleDebug(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player)) {
+        if (!(sender instanceof Player debugger)) {
             sender.sendMessage("§cOnly players can use this command.");
             return;
         }
-        Player debugger = (Player) sender;
-
-        if (debuggers.contains(debugger.getUniqueId())) {
-            debuggers.remove(debugger.getUniqueId());
-            sender.sendMessage("§cDebug disabled.");
-        } else {
-            debuggers.add(debugger.getUniqueId());
-            sender.sendMessage("§aDebug enabled.");
-        }
 
         DebugManager dm = Truthful.getInstance().getDebugManager();
+
         if (args.length >= 2) {
-            String checkName = args[1];
-            dm.startDebuggingCheck(debugger, checkName);
-            sender.sendMessage("§7Debugging check: §f" + checkName);
+            String checkFilter = args[1];
+
+            // If already debugging, update the filter
+            if (debuggers.contains(debugger.getUniqueId())) {
+                if (checkFilter.equalsIgnoreCase("off") || checkFilter.equalsIgnoreCase("stop")) {
+                    debuggers.remove(debugger.getUniqueId());
+                    dm.stopDebuggingCheck(debugger);
+                    sender.sendMessage("§cDebug HUD disabled.");
+                    return;
+                }
+            }
+
+            debuggers.add(debugger.getUniqueId());
+            dm.startDebuggingCheck(debugger, checkFilter);
+            sender.sendMessage("§aDebug HUD enabled §7- Filtering: §f" + checkFilter);
+            sender.sendMessage("§8Status indicators: §a[CLEAR] §e[NEAR_FLAG] §c[FLAGGED]");
         } else {
-            dm.stopDebuggingCheck(debugger);
+            // Toggle on/off with no filter = ALL checks
+            if (debuggers.contains(debugger.getUniqueId())) {
+                debuggers.remove(debugger.getUniqueId());
+                dm.stopDebuggingCheck(debugger);
+                sender.sendMessage("§cDebug HUD disabled.");
+            } else {
+                debuggers.add(debugger.getUniqueId());
+                dm.startDebuggingCheck(debugger, "ALL");
+                sender.sendMessage("§aDebug HUD enabled §7- Showing §fALL §7checks.");
+                sender.sendMessage("§8Status indicators: §a[CLEAR] §e[NEAR_FLAG] §c[FLAGGED]");
+            }
         }
     }
 
@@ -213,7 +249,11 @@ public class CommandManager implements CommandExecutor, TabCompleter {
     private void handleExport(CommandSender sender) {
         File dataFolder = Truthful.getInstance().getPlugin().getDataFolder();
         File debugLogs = new File(dataFolder, "debug_logs");
-        sender.sendMessage("§7Debug Logs folder: §f" + debugLogs.getAbsolutePath());
+        File flagRecordings = new File(dataFolder, "recordings/flags");
+        File telemetryRecordings = new File(dataFolder, "recordings/telemetry");
+        sender.sendMessage("§7Debug Logs: §f" + debugLogs.getAbsolutePath());
+        sender.sendMessage("§7Flag Recordings: §f" + flagRecordings.getAbsolutePath());
+        sender.sendMessage("§7AI Telemetry: §f" + telemetryRecordings.getAbsolutePath());
     }
 
     @Override
@@ -229,6 +269,14 @@ public class CommandManager implements CommandExecutor, TabCompleter {
 
         if (args.length == 2) {
             String sub = args[0].toLowerCase();
+
+            if (sub.equals("debug")) {
+                String partial = args[1].toLowerCase();
+                List<String> options = new ArrayList<>(Arrays.asList("all", "off", "SimulationA", "SimulationB",
+                        "SimulationC", "SimulationF", "ReachA", "HitboxA", "TimerA", "VelocityA"));
+                return options.stream().filter(s -> s.toLowerCase().startsWith(partial)).collect(Collectors.toList());
+            }
+
             if (PLAYER_SUBCOMMANDS.contains(sub)) {
                 String partial = args[1].toLowerCase();
                 return Bukkit.getOnlinePlayers().stream()
@@ -238,7 +286,10 @@ public class CommandManager implements CommandExecutor, TabCompleter {
             }
         }
 
-        // Tools-specific tab completion for the 3rd argument
+        if (args.length == 3 && args[0].equalsIgnoreCase("record")) {
+            return Arrays.asList("15", "30", "60", "120", "300");
+        }
+
         if (args.length == 3 && args[0].equalsIgnoreCase("tools")) {
             return CommandTools.tabComplete(args);
         }

@@ -4,7 +4,6 @@ import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPing;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerWindowConfirmation;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -21,6 +20,7 @@ import ret.tawny.truthful.data.PlayerData;
 import ret.tawny.truthful.database.LogManager;
 import ret.tawny.truthful.debug.DebugManager;
 import ret.tawny.truthful.debug.logging.DebugLoggingManager;
+import ret.tawny.truthful.debug.telemetry.TelemetryManager;
 import ret.tawny.truthful.gui.GuiManager;
 import ret.tawny.truthful.listener.CheckListener;
 import ret.tawny.truthful.listener.PlayerListener;
@@ -53,13 +53,13 @@ public final class Truthful {
     private DebugManager debugManager;
     private DiscordManager discordManager;
     private DebugLoggingManager debugLoggingManager;
+    private TelemetryManager telemetryManager;
     private BandwaveManager bandwaveManager;
     private Plugin plugin;
     private EnvironmentTask environmentTask;
     private ret.tawny.truthful.utils.ServerScheduler serverScheduler;
 
-    private Truthful() {
-    }
+    private Truthful() {}
 
     public void start(final Plugin plugin) {
         this.plugin = plugin;
@@ -75,6 +75,7 @@ public final class Truthful {
         this.debugManager = new DebugManager();
         this.discordManager = new DiscordManager();
         this.debugLoggingManager = new DebugLoggingManager();
+        this.telemetryManager = new TelemetryManager();
         this.bandwaveManager = new BandwaveManager();
 
         this.versionManager.load();
@@ -169,6 +170,7 @@ public final class Truthful {
         }
         return INSTANCE;
     }
+
     public VersionManager getVersionManager() { return this.versionManager; }
     public DataManager getDataManager() { return this.dataManager; }
     public ret.tawny.truthful.data.world.GlobalWorldCache getGlobalWorldCache() { return this.globalWorldCache; }
@@ -184,6 +186,7 @@ public final class Truthful {
     public DebugManager getDebugManager() { return debugManager; }
     public DiscordManager getDiscordManager() { return discordManager; }
     public DebugLoggingManager getDebugLoggingManager() { return debugLoggingManager; }
+    public TelemetryManager getTelemetryManager() { return telemetryManager; }
     public BandwaveManager getBandwaveManager() { return bandwaveManager; }
 
     public void reload() {
@@ -204,8 +207,7 @@ public final class Truthful {
                 final Object value = getTPSMethod.invoke(Bukkit.getServer());
                 if (value instanceof double[] tps && tps.length > 0) return tps[0];
             }
-        } catch (Throwable t) {
-        }
+        } catch (Throwable t) {}
         return 20.0;
     }
 }

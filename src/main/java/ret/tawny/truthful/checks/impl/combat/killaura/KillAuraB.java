@@ -43,8 +43,6 @@ public final class KillAuraB extends Check {
         // === 1. ANGLE CHECK (Omni-Sprint in Combat) ===
         if (data.isSprinting() && data.getDeltaXZ() > 0.22) {
 
-            // FIX: If player took KB, they might move backward while client says
-            // "Sprinting".
             if (data.hasVelocity() || data.isExempt(ExemptionType.VELOCITY)) {
                 buffer.decrease(player, 0.5);
                 return;

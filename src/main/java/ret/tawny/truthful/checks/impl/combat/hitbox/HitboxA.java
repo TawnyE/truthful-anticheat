@@ -16,180 +16,146 @@ import ret.tawny.truthful.checks.api.data.CheckType;
 import ret.tawny.truthful.compensation.CompensationTracker;
 import ret.tawny.truthful.data.PlayerData;
 import ret.tawny.truthful.utils.hitbox.SimpleHitbox;
-import ret.tawny.truthful.wrapper.impl.client.position.RelMovePacketWrapper;
 
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.List;
 
 @CheckData(order = 'A', type = CheckType.HITBOX)
 public final class HitboxA extends Check {
 
     private final CheckBuffer buffer = new CheckBuffer(10.0);
-    private final Map<UUID, Integer> pendingAttacks = new ConcurrentHashMap<>();
-
-    private static final int MAX_BACKTRACK = 8;
-    // Vanilla: Player hitbox is 0.6×1.8 (standing) / 0.6×1.5 (sneaking) / 0.6×0.6 (swimming)
-    private static final double PLAYER_EXPANSION = 0.08;
-    private static final double NON_PLAYER_EXPANSION = 0.25;
 
     @Override
-    public void handlePacketPlayerReceive(final PacketReceiveEvent event) {
+    public void handlePacketPlayerReceive(PacketReceiveEvent event) {
         if (event.getPacketType() != PacketType.Play.Client.INTERACT_ENTITY) return;
+        WrapperPlayClientInteractEntity wrapper = new WrapperPlayClientInteractEntity(event);
+        if (wrapper.getAction() != WrapperPlayClientInteractEntity.InteractAction.ATTACK) return;
 
-        final WrapperPlayClientInteractEntity wrapper = new WrapperPlayClientInteractEntity(event);
-        if (wrapper.getAction() == WrapperPlayClientInteractEntity.InteractAction.ATTACK) {
-            final Player player = (Player) event.getPlayer();
-            pendingAttacks.put(player.getUniqueId(), wrapper.getEntityId());
-        }
-    }
+        Player player = (Player) event.getPlayer();
+        PlayerData data = Truthful.getInstance().getDataManager().getPlayerData(player);
+        if (data == null || data.isExempt()
+                || player.getGameMode() == GameMode.CREATIVE
+                || Truthful.getInstance().isBedrockPlayer(player)) return;
 
-    @Override
-    public void handleRelMove(final RelMovePacketWrapper wrapper) {
-        final Player player = wrapper.getPlayer();
-        Integer entityId = pendingAttacks.remove(player.getUniqueId());
-        if (entityId == null) return;
-
-        final PlayerData data = wrapper.getPlayerData();
-        if (data == null || data.isExempt() || player.getGameMode() == GameMode.CREATIVE || Truthful.getInstance().isBedrockPlayer(player)) return;
-
-        final CompensationTracker tracker = Truthful.getInstance().getCompensationTracker();
+        int entityId = wrapper.getEntityId();
+        CompensationTracker tracker = Truthful.getInstance().getCompensationTracker();
         if (tracker == null) return;
 
-        final CompensationTracker.CompensatedEntity comp = tracker.getEntityData(entityId);
+        CompensationTracker.CompensatedEntity comp = tracker.getEntityData(entityId);
         if (comp == null) return;
 
-        int tickDelay = (int) Math.floor(data.getPing() / 50.0);
-        if (tickDelay > MAX_BACKTRACK) tickDelay = MAX_BACKTRACK;
-        if (tickDelay < 0) tickDelay = 0;
+        CompensationTracker.EntitySnapshot latest = comp.getLatest();
+        if (latest == null) return;
 
-        // Full backtrack coverage (same as ReachA fix)
-        final int startTick = Math.max(0, tickDelay - MAX_BACKTRACK);
-        final int currentTick = org.bukkit.Bukkit.getCurrentTick();
+        SimpleHitbox box = latest.toHitbox();
+        double distToBox = box.distance(new Vector(data.getX(), data.getY() + 1.62, data.getZ()));
 
-        // Eye positions: current tick
-        final double eyeHeightCurrent = data.getEyeHeight(false, data.isSneaking(), data.isSwimming());
-        final Vector eyeCurrent = new Vector(data.getX(), data.getY() + eyeHeightCurrent, data.getZ());
+        if (distToBox > 4.5D) {
+            return;
+        }
 
-        // Eye positions: last tick (use last tick's eye height, not current)
-        final double lastX = data.getX() - data.getDeltaX();
-        final double lastY = data.getY() - data.getDeltaY();
-        final double lastZ = data.getZ() - data.getDeltaZ();
-        final double eyeHeightLast = data.getEyeHeight(false, data.isSneaking(), data.isSwimming());
-        final Vector eyeLast = new Vector(lastX, lastY + eyeHeightLast, lastZ);
+        long ping = data.getPing();
+        double pingTicks = Math.min(CompensationTracker.MAX_BACKTRACK_TICKS, Math.max(0.0, ping / 50.0));
+        int tickDelay = (int) Math.ceil(pingTicks);
+        int currentTick = tracker.getCurrentTick();
 
-        // Look vectors for current and last tick
-        final Vector[] lookVectors = {
-                direction(data.getYaw(), data.getPitch()),
-                direction(data.getLastYaw(), data.getLastPitch())
-        };
+        double currentEyeH = data.getEyeHeight(false, data.isSneaking(), data.isSwimming());
+        double[] possibleEyeHeights = { currentEyeH, 1.62D, 1.27D, 0.40D };
 
-        // Ping compensation: expand hitbox based on latency
-        double pingExpansion = Math.min(0.15, data.getPing() * 0.001);
-        double sprintExpansion = data.isSprinting() ? 0.05 : 0.0;
-        double velocityExpansion = data.hasVelocity() ? 0.10 : 0.0;
+        // Test actual recorded attacker locations rather than naive linear extrapolation
+        List<Vector> attackerEyePositions = new ArrayList<>();
+        attackerEyePositions.add(new Vector(data.getX(), data.getY(), data.getZ()));
+        attackerEyePositions.add(new Vector(data.getPositionTracker().getLastX(), data.getPositionTracker().getLastY(), data.getPositionTracker().getLastZ()));
 
-        double baseExpansion = (comp.isPlayer ? PLAYER_EXPANSION : NON_PLAYER_EXPANSION)
-                + pingExpansion + sprintExpansion + velocityExpansion;
+        List<Vector> lookDirs = new ArrayList<>();
+        lookDirs.add(getLookVector(data.getYaw(), data.getPitch()));
+        lookDirs.add(getLookVector(data.getLastYaw(), data.getPitch()));
+        lookDirs.add(getLookVector(data.getLastYaw(), data.getLastPitch()));
 
-        double minDist = Double.MAX_VALUE;
+        boolean cleanRayIntersection = false;
+        double minMissDistance = Double.MAX_VALUE;
 
-        // Full backtrack loop (0 to tickDelay, up to MAX_BACKTRACK ticks)
-        for (int t = startTick; t <= tickDelay; t++) {
-            final SimpleHitbox box = comp.getHitboxAt(t, currentTick);
+        for (int offset = -1; offset <= 1; offset++) {
+            int targetTickDelay = Math.max(0, tickDelay + offset);
+            SimpleHitbox box = comp.getHitboxAt(targetTickDelay, currentTick);
             if (box == null) continue;
 
-            box.expand(baseExpansion);
+            SimpleHitbox standardBox = new SimpleHitbox(box.minX, box.minY, box.minZ, 0.6, 1.8);
+            standardBox.expand(0.12D);
 
-            // Use closest-point distance (matches vanilla behavior, same as ReachA)
-            double d1 = box.distance(eyeCurrent);
-            double d2 = box.distance(eyeLast);
-
-            if (d1 >= 0) minDist = Math.min(minDist, d1);
-            if (d2 >= 0) minDist = Math.min(minDist, d2);
-
-            // Also check with look vectors (catches edge cases)
-            for (Vector look : lookVectors) {
-                double d3 = rayEntryDistance(box, eyeCurrent, look);
-                double d4 = rayEntryDistance(box, eyeLast, look);
-                if (d3 >= 0) minDist = Math.min(minDist, d3);
-                if (d4 >= 0) minDist = Math.min(minDist, d4);
+            for (Vector basePos : attackerEyePositions) {
+                for (Vector dir : lookDirs) {
+                    for (double eyeH : possibleEyeHeights) {
+                        Vector eyePos = new Vector(basePos.getX(), basePos.getY() + eyeH, basePos.getZ());
+                        if (standardBox.intersectsRay(eyePos, dir, 6.0D)) {
+                            cleanRayIntersection = true;
+                            break;
+                        }
+                        double miss = calculateRayMissDistance(standardBox, eyePos, dir);
+                        if (miss < minMissDistance) {
+                            minMissDistance = miss;
+                        }
+                    }
+                    if (cleanRayIntersection) break;
+                }
+                if (cleanRayIntersection) break;
             }
+            if (cleanRayIntersection) break;
         }
 
-        if (minDist == Double.MAX_VALUE) return;
+        if (cleanRayIntersection) {
+            buffer.decrease(player, 0.5);
+            return;
+        }
 
-        // Vanilla reach: 3.0 blocks base
-        double maxReach = Truthful.getInstance().getVersionManager().getAdapter().getEntityInteractionRange(player);
-        if (data.isSprinting()) maxReach += 0.05;
-        if (data.hasVelocity()) maxReach += 0.10;
-        if (data.getPing() > 50) maxReach += (data.getPing() * 0.001);
+        double proximityGrace = Math.max(0.0D, 1.5D - distToBox) * 0.35D;
+        double rotDelta = Math.abs(data.getDeltaYaw()) + Math.abs(data.getDeltaPitch());
+        double allowedMiss = 0.15D + proximityGrace + (rotDelta > 8.0f ? 0.15D : 0.0D);
 
-        // Non-player entities get slightly larger hitbox (matches vanilla mob reach changes 1.20.2)
-        if (!comp.isPlayer) maxReach += 0.25;
-
-        double trueReach = minDist;
-        double over = trueReach - maxReach;
-
-        if (over > 0.02) {
-            // Check for massive desync (e.g., entity died/teleported)
-            if (minDist > 10.0) return;
-
-            // Determine severity based on how far over
-            double severity = 1.0 + (over * 2.0);
-            if (severity > 5.0) severity = 5.0;
-
-            if (buffer.increase(player, severity) > 10.0) {
-                flag(data, String.format("Hitbox Miss. Reach=%.3f Max=%.3f Over=%.3f", trueReach, maxReach, over));
-                buffer.reset(player, 4.0);
+        if (minMissDistance > allowedMiss) {
+            double expansion = minMissDistance - allowedMiss;
+            if (buffer.increase(player, 1.0 + expansion * 3.0) > 6.0) {
+                flag(data, String.format("HitboxExpansion miss=%.3f allowed=%.3f (dist=%.2fm, rotDelta=%.1f deg)",
+                        minMissDistance, allowedMiss, distToBox, rotDelta));
+                buffer.reset(player, 3.0);
             }
         } else {
-            buffer.decrease(player, 0.5);
+            buffer.decrease(player, 0.25);
         }
     }
 
-    private Vector direction(final float yaw, final float pitch) {
-        final double ry = Math.toRadians(yaw);
-        final double rp = Math.toRadians(pitch);
-        final double cosP = Math.cos(rp);
-        return new Vector(-cosP * Math.sin(ry), -Math.sin(rp), cosP * Math.cos(ry));
+    private static double calculateRayMissDistance(SimpleHitbox box, Vector origin, Vector dir) {
+        double closestDist = Double.MAX_VALUE;
+        Vector boxCenter = new Vector(
+                (box.minX + box.maxX) * 0.5D,
+                (box.minY + box.maxY) * 0.5D,
+                (box.minZ + box.maxZ) * 0.5D
+        );
+        Vector vecToCenter = boxCenter.clone().subtract(origin);
+        double tCenter = vecToCenter.dot(dir);
+
+        double startT = Math.max(0.0D, tCenter - 1.5D);
+        double endT = Math.min(6.0D, tCenter + 1.5D);
+
+        for (double t = startT; t <= endT; t += 0.05D) {
+            Vector pointOnRay = origin.clone().add(dir.clone().multiply(t));
+            double distToBox = box.distance(pointOnRay);
+            if (distToBox < closestDist) {
+                closestDist = distToBox;
+            }
+        }
+        return closestDist == Double.MAX_VALUE ? 0.0D : closestDist;
     }
 
-    // Same rayEntryDistance as ReachA - closest point on box to ray origin
-    private double rayEntryDistance(final SimpleHitbox box, final Vector origin, final Vector dir) {
-        final double invX = 1.0 / dir.getX();
-        final double invY = 1.0 / dir.getY();
-        final double invZ = 1.0 / dir.getZ();
-
-        double tMin = Math.min((box.minX - origin.getX()) * invX, (box.maxX - origin.getX()) * invX);
-        double tMax = Math.max((box.minX - origin.getX()) * invX, (box.maxX - origin.getX()) * invX);
-
-        final double tyMin = Math.min((box.minY - origin.getY()) * invY, (box.maxY - origin.getY()) * invY);
-        final double tyMax = Math.max((box.minY - origin.getY()) * invY, (box.maxY - origin.getY()) * invY);
-
-        if (tMin > tyMax || tyMin > tMax) return -1;
-        tMin = Math.max(tMin, tyMin);
-        tMax = Math.min(tMax, tyMax);
-
-        final double tzMin = Math.min((box.minZ - origin.getZ()) * invZ, (box.maxZ - origin.getZ()) * invZ);
-        final double tzMax = Math.max((box.minZ - origin.getZ()) * invZ, (box.maxZ - origin.getZ()) * invZ);
-
-        if (tMin > tzMax || tzMin > tMax) return -1;
-        tMin = Math.max(tMin, tzMin);
-        tMax = Math.min(tMax, tzMax);
-
-        if (Double.isNaN(tMin)) tMin = Double.NEGATIVE_INFINITY;
-        if (Double.isNaN(tMax)) tMax = Double.POSITIVE_INFINITY;
-
-        if (tMax < 0) return -1;
-        if (tMin > 6.0) return -1;
-
-        return Math.max(0.0, tMin);
+    private static Vector getLookVector(float yaw, float pitch) {
+        double ry = Math.toRadians(yaw);
+        double rp = Math.toRadians(pitch);
+        double cosP = Math.cos(rp);
+        return new Vector(-cosP * Math.sin(ry), -Math.sin(rp), cosP * Math.cos(ry));
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         buffer.remove(event.getPlayer());
-        pendingAttacks.remove(event.getPlayer().getUniqueId());
     }
 }

@@ -37,8 +37,6 @@ public final class AimJ extends Check {
         if (data == null || data.isRotationExempt())
             return;
 
-        // FIX: Boat A/D steering creates alternating left-right camera movements
-        // that mimic synthetic jitter oscillation patterns.
         if (data.isInsideVehicle()) {
             dataMap.remove(player.getUniqueId());
             return;

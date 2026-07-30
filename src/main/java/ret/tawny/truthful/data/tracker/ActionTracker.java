@@ -8,7 +8,7 @@ public class ActionTracker {
     private boolean sprinting;
     private boolean sneaking;
     private boolean digging;
-    private long lastDigTime; // FIX: Prevent Digging Lock
+    private long lastDigTime;
 
     private boolean usingItem;
     private int lastUseItemTick;
@@ -50,7 +50,6 @@ public class ActionTracker {
 
     public boolean isDigging() { return digging; }
 
-    // FIX: Mark the time we started digging
     public void setDigging(boolean b) {
         this.digging = b;
         if (b) {
@@ -103,10 +102,16 @@ public class ActionTracker {
     public void setLastSlot(int s) { this.lastSlot = s; }
 
     public void handleTick() {
-        if (this.usingItem) this.usingItemTicks++;
-        else this.usingItemTicks = 0;
+        if (this.usingItem) {
+            this.usingItemTicks++;
+            if (this.usingItemTicks > 35) {
+                this.usingItem = false;
+                this.usingItemTicks = 0;
+            }
+        } else {
+            this.usingItemTicks = 0;
+        }
 
-        // FIX: If they haven't sent a dig packet in 1 second, unlock the digging state.
         if (this.digging && System.currentTimeMillis() - this.lastDigTime > 1000) {
             this.digging = false;
         }

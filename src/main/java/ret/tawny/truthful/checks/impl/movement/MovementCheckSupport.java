@@ -29,7 +29,7 @@ public final class MovementCheckSupport {
                 || data.isTeleportTick()
                 || data.isMovementExempt()
                 || data.isInsideVehicle()
-                || data.getTicksTracked() - data.getLastVehicleExitTick() < 10 // FIX: Vehicle exit false flag
+                || data.getTicksTracked() - data.getLastVehicleExitTick() < 10
                 || data.isRiptiding()
                 || data.isExempt(ExemptionType.RIPTIDE)
                 || data.isExempt(ExemptionType.WIND_CHARGE)
@@ -56,7 +56,7 @@ public final class MovementCheckSupport {
                 || data.isTeleportTick()
                 || data.isMovementExempt()
                 || data.isInsideVehicle()
-                || data.getTicksTracked() - data.getLastVehicleExitTick() < 10 // FIX: Vehicle exit false flag
+                || data.getTicksTracked() - data.getLastVehicleExitTick() < 10
                 || data.isRiptiding()
                 || data.isExempt(ExemptionType.RIPTIDE)
                 || data.isExempt(ExemptionType.WIND_CHARGE)
