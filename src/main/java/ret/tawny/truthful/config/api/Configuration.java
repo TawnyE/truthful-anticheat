@@ -31,7 +31,7 @@ public final class Configuration {
     private final Map<String, Boolean> punishmentEnabledCache = new ConcurrentHashMap<>();
     private final Map<String, Integer> punishmentVlCache = new ConcurrentHashMap<>();
     private final Map<String, String> punishmentCommandCache = new ConcurrentHashMap<>();
-    private final Map<String, Boolean> bandwaveQueueCache = new ConcurrentHashMap<>();
+    private final Map<String, Boolean> banwaveQueueCache = new ConcurrentHashMap<>();
 
     public Configuration(final TruthfulPlugin plugin) {
         this.plugin = plugin;
@@ -47,7 +47,7 @@ public final class Configuration {
         punishmentEnabledCache.clear();
         punishmentVlCache.clear();
         punishmentCommandCache.clear();
-        bandwaveQueueCache.clear();
+        banwaveQueueCache.clear();
     }
 
     public synchronized void save() {
@@ -143,10 +143,10 @@ public final class Configuration {
                 k -> this.config.getString("checks." + checkType + "." + checkOrder + ".punishment.command", "kick %player% Unfair Advantage"));
     }
 
-    public boolean shouldQueueBandwave(String checkType, String checkOrder) {
+    public boolean shouldQueueBanwave(String checkType, String checkOrder) {
         String key = checkType + "." + checkOrder;
-        return bandwaveQueueCache.computeIfAbsent(key,
-                k -> this.config.getBoolean("checks." + checkType + "." + checkOrder + ".punishment.bandwave", false));
+        return banwaveQueueCache.computeIfAbsent(key,
+                k -> this.config.getBoolean("checks." + checkType + "." + checkOrder + ".punishment.banwave", false));
     }
 
     // --- OPTIONS ---
@@ -237,30 +237,30 @@ public final class Configuration {
     public String getAlertsEnabledMessage() { return color(this.config.getString("messages.alerts-enabled", "&8[&bTruthful&8] &7Alerts have been &aenabled&7.")); }
     public String getAlertsDisabledMessage() { return color(this.config.getString("messages.alerts-disabled", "&8[&bTruthful&8] &7Alerts have been &cdisabled&7.")); }
 
-    public boolean isBandwaveEnabled() { return this.config.getBoolean("bandwave.enabled", true); }
-    public int getBandwaveIntervalSeconds() { return Math.max(1, this.config.getInt("bandwave.interval-seconds", 5)); }
-    public String getBandwaveSweepMessage() { return color(this.config.getString("messages.bandwave-sweep", "&8[&5&lBANDWAVE&8] &7#%position% swept by the band wave: &f%player%")); }
-    public String getBandwaveQueuedMessage() { return color(this.config.getString("messages.bandwave-queued", "&8[&5&lBANDWAVE&8] &f%player% &7was added to the BANDWAVE queue.")); }
-    public String getBandwaveDuplicateMessage() { return color(this.config.getString("messages.bandwave-duplicate", "&8[&5&lBANDWAVE&8] &f%player% &7is already queued.")); }
-    public String getBandwaveStartedMessage() { return color(this.config.getString("messages.bandwave-started", "&8[&5&lBANDWAVE&8] &7Execution started.")); }
-    public String getBandwaveStoppedMessage() { return color(this.config.getString("messages.bandwave-stopped", "&8[&5&lBANDWAVE&8] &7Execution stopped.")); }
-    public String getBandwaveEmptyMessage() { return color(this.config.getString("messages.bandwave-empty", "&8[&5&lBANDWAVE&8] &7Queue is empty.")); }
-    public String getBandwaveClearedMessage() { return color(this.config.getString("messages.bandwave-cleared", "&8[&5&lBANDWAVE&8] &7Queue cleared.")); }
-    public String getBandwaveStatusMessage() { return color(this.config.getString("messages.bandwave-status", "&8[&5&lBANDWAVE&8] &7Running: &f%running% &8| &7Queued: &f%queued%")); }
-    public String getBandwaveListHeader() { return color(this.config.getString("messages.bandwave-list-header", "&8[&5&lBANDWAVE&8] &7Queued players (&f%queued%&7):")); }
-    public String getBandwaveListEntry() { return color(this.config.getString("messages.bandwave-list-entry", "&8 - &f%position%. %player%")); }
-    public String getBandwaveUsageMessage() { return color(this.config.getString("messages.bandwave-usage", "&cUsage: /bandwave <add|remove|list|start|stop|clear|status> [player]")); }
-    public String getBandwaveNotEnabledMessage() { return color(this.config.getString("messages.bandwave-disabled", "&8[&5&lBANDWAVE&8] &cBANDWAVE is disabled in config.")); }
-    public String getBandwaveRemovedMessage() { return color(this.config.getString("messages.bandwave-removed", "&8[&5&lBANDWAVE&8] &f%player% &7was removed from the queue.")); }
-    public String getBandwaveScheduleMessage() { return color(this.config.getString("messages.bandwave-schedule", "&8[&5&lBANDWAVE&8] &7Auto-start: &f%enabled% &8| &7Day: &f%day% &8| &7Time: &f%time%")); }
+    public boolean isBanwaveEnabled() { return this.config.getBoolean("banwave.enabled", true); }
+    public int getBanwaveIntervalSeconds() { return Math.max(1, this.config.getInt("banwave.interval-seconds", 5)); }
+    public String getBanwaveSweepMessage() { return color(this.config.getString("messages.banwave-sweep", "&8[&5&lBANWAVE&8] &7#%position% swept by the band wave: &f%player%")); }
+    public String getBanwaveQueuedMessage() { return color(this.config.getString("messages.banwave-queued", "&8[&5&lBANWAVE&8] &f%player% &7was added to the BANWAVE queue.")); }
+    public String getBanwaveDuplicateMessage() { return color(this.config.getString("messages.banwave-duplicate", "&8[&5&lBANWAVE&8] &f%player% &7is already queued.")); }
+    public String getBanwaveStartedMessage() { return color(this.config.getString("messages.banwave-started", "&8[&5&lBANWAVE&8] &7Execution started.")); }
+    public String getBanwaveStoppedMessage() { return color(this.config.getString("messages.banwave-stopped", "&8[&5&lBANWAVE&8] &7Execution stopped.")); }
+    public String getBanwaveEmptyMessage() { return color(this.config.getString("messages.banwave-empty", "&8[&5&lBANWAVE&8] &7Queue is empty.")); }
+    public String getBanwaveClearedMessage() { return color(this.config.getString("messages.banwave-cleared", "&8[&5&lBANWAVE&8] &7Queue cleared.")); }
+    public String getBanwaveStatusMessage() { return color(this.config.getString("messages.banwave-status", "&8[&5&lBANWAVE&8] &7Running: &f%running% &8| &7Queued: &f%queued%")); }
+    public String getBanwaveListHeader() { return color(this.config.getString("messages.banwave-list-header", "&8[&5&lBANWAVE&8] &7Queued players (&f%queued%&7):")); }
+    public String getBanwaveListEntry() { return color(this.config.getString("messages.banwave-list-entry", "&8 - &f%position%. %player%")); }
+    public String getBanwaveUsageMessage() { return color(this.config.getString("messages.banwave-usage", "&cUsage: /banwave <add|remove|list|start|stop|clear|status> [player]")); }
+    public String getBanwaveNotEnabledMessage() { return color(this.config.getString("messages.banwave-disabled", "&8[&5&lBANWAVE&8] &cBANWAVE is disabled in config.")); }
+    public String getBanwaveRemovedMessage() { return color(this.config.getString("messages.banwave-removed", "&8[&5&lBANWAVE&8] &f%player% &7was removed from the queue.")); }
+    public String getBanwaveScheduleMessage() { return color(this.config.getString("messages.banwave-schedule", "&8[&5&lBANWAVE&8] &7Auto-start: &f%enabled% &8| &7Day: &f%day% &8| &7Time: &f%time%")); }
 
-    public boolean isBandwaveAutoStartEnabled() { return this.config.getBoolean("bandwave.auto-start.enabled", false); }
-    public DayOfWeek getBandwaveAutoStartDay() {
-        String raw = this.config.getString("bandwave.auto-start.day", "SUNDAY");
+    public boolean isBanwaveAutoStartEnabled() { return this.config.getBoolean("banwave.auto-start.enabled", false); }
+    public DayOfWeek getBanwaveAutoStartDay() {
+        String raw = this.config.getString("banwave.auto-start.day", "SUNDAY");
         try { return DayOfWeek.valueOf(raw.toUpperCase()); } catch (Exception ignored) { return DayOfWeek.SUNDAY; }
     }
-    public LocalTime getBandwaveAutoStartTime() {
-        String raw = this.config.getString("bandwave.auto-start.time", "18:00");
+    public LocalTime getBanwaveAutoStartTime() {
+        String raw = this.config.getString("banwave.auto-start.time", "18:00");
         try { return LocalTime.parse(raw); } catch (DateTimeParseException ignored) { return LocalTime.of(18, 0); }
     }
 

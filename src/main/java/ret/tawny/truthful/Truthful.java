@@ -11,7 +11,7 @@ import org.bukkit.plugin.Plugin;
 import ret.tawny.truthful.checks.registry.CheckRegistry;
 import ret.tawny.truthful.commands.impl.CommandAlerts;
 import ret.tawny.truthful.commands.impl.CommandManager;
-import ret.tawny.truthful.commands.impl.CommandBandwave;
+import ret.tawny.truthful.commands.impl.CommandBanwave;
 import ret.tawny.truthful.compensation.CompensationTracker;
 import ret.tawny.truthful.compensation.Scheduler;
 import ret.tawny.truthful.config.api.Configuration;
@@ -25,7 +25,7 @@ import ret.tawny.truthful.gui.GuiManager;
 import ret.tawny.truthful.listener.CheckListener;
 import ret.tawny.truthful.listener.PlayerListener;
 import ret.tawny.truthful.listener.TruthfulPacketListener;
-import ret.tawny.truthful.managers.BandwaveManager;
+import ret.tawny.truthful.managers.BanwaveManager;
 import ret.tawny.truthful.managers.DiscordManager;
 import ret.tawny.truthful.task.EnvironmentTask;
 import ret.tawny.truthful.utils.bedrock.BedrockUtils;
@@ -54,7 +54,7 @@ public final class Truthful {
     private DiscordManager discordManager;
     private DebugLoggingManager debugLoggingManager;
     private TelemetryManager telemetryManager;
-    private BandwaveManager bandwaveManager;
+    private BanwaveManager banwaveManager;
     private Plugin plugin;
     private EnvironmentTask environmentTask;
     private ret.tawny.truthful.utils.ServerScheduler serverScheduler;
@@ -76,7 +76,7 @@ public final class Truthful {
         this.discordManager = new DiscordManager();
         this.debugLoggingManager = new DebugLoggingManager();
         this.telemetryManager = new TelemetryManager();
-        this.bandwaveManager = new BandwaveManager();
+        this.banwaveManager = new BanwaveManager();
 
         this.versionManager.load();
         this.compensationTracker = new CompensationTracker();
@@ -85,7 +85,7 @@ public final class Truthful {
         plugin.getServer().getPluginCommand("truthful").setExecutor(commandManager);
         plugin.getServer().getPluginCommand("truthful").setTabCompleter(commandManager);
         plugin.getServer().getPluginCommand("alerts").setExecutor(new CommandAlerts());
-        plugin.getServer().getPluginCommand("bandwave").setExecutor(new CommandBandwave());
+        plugin.getServer().getPluginCommand("banwave").setExecutor(new CommandBanwave());
 
         this.checkManager = new CheckRegistry();
         this.playerListener = new PlayerListener();
@@ -121,7 +121,7 @@ public final class Truthful {
             if (compensationTracker != null) {
                 compensationTracker.tick();
             }
-            bandwaveManager.tickAutoStart();
+            banwaveManager.tickAutoStart();
         }, 1L, 1L);
 
         final long transactionInterval = getConfiguration().getTransactionPingIntervalTicks();
@@ -147,7 +147,7 @@ public final class Truthful {
 
     public void shutdown() {
         if (logManager != null) logManager.shutdown();
-        if (bandwaveManager != null) bandwaveManager.stop();
+        if (banwaveManager != null) banwaveManager.stop();
         if (dataManager != null) dataManager.teardownAll();
         if (serverScheduler != null) serverScheduler.cancelAll();
     }
@@ -187,7 +187,7 @@ public final class Truthful {
     public DiscordManager getDiscordManager() { return discordManager; }
     public DebugLoggingManager getDebugLoggingManager() { return debugLoggingManager; }
     public TelemetryManager getTelemetryManager() { return telemetryManager; }
-    public BandwaveManager getBandwaveManager() { return bandwaveManager; }
+    public BanwaveManager getBanwaveManager() { return banwaveManager; }
 
     public void reload() {
         if (this.plugin == null) return;

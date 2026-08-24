@@ -69,9 +69,9 @@ sync:
   max-entries: 50
   entry-ttl-millis: 5000
 
-# -- BANDWAVE (PUNISHMENT QUEUE) --
+# -- BANWAVE (PUNISHMENT QUEUE) --
 # Queue hackers to be banned in periodic waves rather than instantly.
-bandwave:
+banwave:
   enabled: false
   interval-seconds: 5
   auto-start:
@@ -111,20 +111,20 @@ messages:
       - '&7Debug:'
       - '&f%debug%'
 
-  bandwave-sweep: "&8[&5BANDWAVE&8] &7#%position% swept: &f%player%"
-  bandwave-queued: "&8[&5BANDWAVE&8] &f%player% &7queued for ban wave."
-  bandwave-duplicate: "&8[&5BANDWAVE&8] &f%player% &7is already queued."
-  bandwave-started: "&8[&5BANDWAVE&8] &7Execution started."
-  bandwave-stopped: "&8[&5BANDWAVE&8] &7Execution stopped."
-  bandwave-empty: "&8[&5BANDWAVE&8] &7Queue is empty."
-  bandwave-cleared: "&8[&5BANDWAVE&8] &7Queue cleared."
-  bandwave-status: "&8[&5BANDWAVE&8] &7Running: &f%running% &8| &7Queued: &f%queued%"
-  bandwave-list-header: "&8[&5BANDWAVE&8] &7Queued players (&f%queued%&7):"
-  bandwave-list-entry: "&8 - &f%position%. %player%"
-  bandwave-usage: "&cUsage: /bandwave <add|remove|list|start|stop|clear|status> [player]"
-  bandwave-disabled: "&8[&5BANDWAVE&8] &cBANDWAVE is disabled in config."
-  bandwave-removed: "&8[&5BANDWAVE&8] &f%player% &7removed from queue."
-  bandwave-schedule: "&8[&5BANDWAVE&8] &7Auto-start: &f%enabled% &8| &7Day: &f%day% &8| &7Time: &f%time%"
+  banwave-sweep: "&8[&5BANWAVE&8] &7#%position% swept: &f%player%"
+  banwave-queued: "&8[&5BANWAVE&8] &f%player% &7queued for ban wave."
+  banwave-duplicate: "&8[&5BANWAVE&8] &f%player% &7is already queued."
+  banwave-started: "&8[&5BANWAVE&8] &7Execution started."
+  banwave-stopped: "&8[&5BANWAVE&8] &7Execution stopped."
+  banwave-empty: "&8[&5BANWAVE&8] &7Queue is empty."
+  banwave-cleared: "&8[&5BANWAVE&8] &7Queue cleared."
+  banwave-status: "&8[&5BANWAVE&8] &7Running: &f%running% &8| &7Queued: &f%queued%"
+  banwave-list-header: "&8[&5BANWAVE&8] &7Queued players (&f%queued%&7):"
+  banwave-list-entry: "&8 - &f%position%. %player%"
+  banwave-usage: "&cUsage: /banwave <add|remove|list|start|stop|clear|status> [player]"
+  banwave-disabled: "&8[&5BANWAVE&8] &cBANWAVE is disabled in config."
+  banwave-removed: "&8[&5BANWAVE&8] &f%player% &7removed from queue."
+  banwave-schedule: "&8[&5BANWAVE&8] &7Auto-start: &f%enabled% &8| &7Day: &f%day% &8| &7Time: &f%time%"
 
   commands:
     only-players: "&cOnly players can use this command."
@@ -152,7 +152,7 @@ checks:
         enabled: true
         vl: 50
         command: "kick %player% [Truthful] Speed"
-        bandwave: false
+        banwave: false
     # BFly(A) - Bedrock fly detection (hover/rise beyond jump air-tick limits).
     B:
       enabled: true
@@ -163,7 +163,7 @@ checks:
         enabled: true
         vl: 50
         command: "kick %player% [Truthful] Fly"
-        bandwave: false
+        banwave: false
     # BReach(A) - Bedrock ping-compensated reach check (4.5 block limit).
     C:
       enabled: true
@@ -174,7 +174,7 @@ checks:
         enabled: true
         vl: 50
         command: "kick %player% [Truthful] Reach"
-        bandwave: false
+        banwave: false
 
   # ---------------------------------------------------------------------------- #
   # 🏃 SIMULATION & MOTION PHYSICS CHECKS                                         #
@@ -193,7 +193,7 @@ checks:
         enabled: true
         vl: 350
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Simulation(B) - Elytra Flight Physics. Detects speed caps, illegal hovering,
     # lift/dive thrust anomalies, and stall bypasses during elytra gliding.
     B:
@@ -205,7 +205,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Simulation(C) - Liquid Physics. Detects Jesus (WaterWalk), buoyancy caps,
     # Depth Strider III & Dolphin's Grace speed bounds in water and lava.
     C:
@@ -217,7 +217,7 @@ checks:
         enabled: true
         vl: 350
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Simulation(D) - Mounts & Vehicles. Detects Boat Fly, Blue Ice speed hacks,
     # 1.20+ Camel Dashes, Horse speed attributes, and unauthorized passenger control.
     D:
@@ -229,7 +229,7 @@ checks:
         enabled: true
         vl: 350
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Simulation(E) - NoSlow & Slowdown Bypasses. Detects moving at normal speed
     # while eating, drinking, blocking with a shield, in cobwebs, or on honey.
     E:
@@ -241,7 +241,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Simulation(F) - Vector-based experimental check (DISABLED in favor of Simulation A).
     F:
       enabled: false
@@ -251,7 +251,7 @@ checks:
         enabled: false
         vl: 100
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
 
   # ---------------------------------------------------------------------------- #
   # 🦘 VELOCITY & KNOCKBACK CHECKS                                                #
@@ -270,7 +270,7 @@ checks:
         enabled: true
         vl: 150
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Velocity(B) - Vertical Impulse Simulation. Detects 0% vertical lift,
     # anti-vertical knockback, and jump-reset velocity cheats.
     B:
@@ -282,7 +282,7 @@ checks:
         enabled: true
         vl: 150
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Velocity(C) - Multi-Tick Friction Decay. Detects cheats that accept KB on
     # tick 1 but instantly brake or cancel momentum on tick 2 or 3.
     C:
@@ -294,7 +294,7 @@ checks:
         enabled: true
         vl: 150
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Velocity(D) - Transaction ACK Withholding. Detects players moving while
     # holding onto velocity confirmation packets to delay knockback.
     D:
@@ -306,7 +306,7 @@ checks:
         enabled: true
         vl: 150
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
 
   # ---------------------------------------------------------------------------- #
   # 🪨 GROUND SPOOF & NOFALL CHECKS                                              #
@@ -322,7 +322,7 @@ checks:
         enabled: false
         vl: 100
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # GroundSpoof(C) - Falling Ground Claim. Detects claiming ground while falling fast.
     C:
       enabled: true
@@ -333,7 +333,7 @@ checks:
         enabled: true
         vl: 100
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # GroundSpoof(D) - Void Ground Claim. Detects ground claims below world min height.
     D:
       enabled: true
@@ -343,7 +343,7 @@ checks:
         enabled: true
         vl: 100
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # GroundSpoof(E) - Fall Distance Reset / NoFall spoofing.
     E:
       enabled: true
@@ -353,7 +353,7 @@ checks:
         enabled: true
         vl: 150
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # GroundSpoof(F) - Physical Collision Verification via thread-safe chunk cache.
     F:
       enabled: true
@@ -364,7 +364,7 @@ checks:
         enabled: true
         vl: 150
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # GroundSpoof(G) - Status Pulse Verification. Detects NoFall modules sending
     # Ground=True on rotation-only packets without moving.
     G:
@@ -376,7 +376,7 @@ checks:
         enabled: true
         vl: 150
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
 
   # ---------------------------------------------------------------------------- #
   # ⏱️ GAME SPEED & TIMER CHECKS                                                 #
@@ -393,7 +393,7 @@ checks:
         enabled: true
         vl: 20
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
 
   # ---------------------------------------------------------------------------- #
   # ⚔️ KILLAURA & COMBAT AUTOMATION CHECKS                                        #
@@ -410,7 +410,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # KillAura(C) - Snap & Stop Rotation Analysis (instant target lock/release).
     C:
       enabled: true
@@ -421,7 +421,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # KillAura(D) - Silent Packet Rotations & Pitch Locking.
     D:
       enabled: true
@@ -432,7 +432,7 @@ checks:
         enabled: true
         vl: 15
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # KillAura(E) - Wall Hit Detection via async block raytracing.
     E:
       enabled: true
@@ -443,7 +443,7 @@ checks:
         enabled: true
         vl: 15
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # KillAura(F) - Packet Criticals (mini-jump/0.0625 vertical hops mid-combat).
     F:
       enabled: true
@@ -454,7 +454,7 @@ checks:
         enabled: true
         vl: 15
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # KillAura(G) - Multi-Target Switching (< 500ms target changes).
     G:
       enabled: true
@@ -465,7 +465,7 @@ checks:
         enabled: true
         vl: 15
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # KillAura(H) - Attack Interval Quantization & Low Variance CPS.
     H:
       enabled: true
@@ -476,7 +476,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
 
   # ---------------------------------------------------------------------------- #
   # 🎯 AIM & ROTATION ANALYSIS CHECKS                                           #
@@ -493,7 +493,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Aim(B) - Head Snap & Cinematic Smooth Aim Analysis.
     B:
       enabled: true
@@ -503,7 +503,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Aim(D) - Perfect Angular Acceleration Detection.
     D:
       enabled: true
@@ -513,7 +513,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Aim(E) - Shannon Entropy & Z-Score Outlier Analysis.
     E:
       enabled: true
@@ -523,7 +523,7 @@ checks:
         enabled: true
         vl: 40
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Aim(F) - Temporal Consistency & Yaw/Pitch Coupling Ratio.
     F:
       enabled: true
@@ -533,7 +533,7 @@ checks:
         enabled: true
         vl: 65
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Aim(G) - Angular Velocity Jerk Analysis (2nd derivative of angle over time).
     G:
       enabled: true
@@ -543,7 +543,7 @@ checks:
         enabled: true
         vl: 65
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Aim(H) - Target Lock Oscillation & Convergence Scores.
     H:
       enabled: true
@@ -553,7 +553,7 @@ checks:
         enabled: true
         vl: 65
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Aim(I) - Bayesian Probability Evaluation for synthetic aim.
     I:
       enabled: true
@@ -563,7 +563,7 @@ checks:
         enabled: true
         vl: 65
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Aim(J) - Synthetic Jitter & Zero-Sum Stationary Rotation Analysis.
     J:
       enabled: true
@@ -573,7 +573,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Aim(K) - Sensitivity Step Grid Mismatch & Modulo Error.
     K:
       enabled: true
@@ -583,7 +583,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Aim(L) - Y-Axis Lock & Robotic Linearity Ratio.
     L:
       enabled: true
@@ -593,7 +593,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Aim(X) - Intelligence System / Dynamic Profile Matcher (DISABLED).
     X:
       enabled: false
@@ -603,7 +603,7 @@ checks:
         enabled: true
         vl: 30
         command: "kick %player% Unfair Advantage (Profile Match)"
-        bandwave: false
+        banwave: false
 
   # ---------------------------------------------------------------------------- #
   # 🖱️ AUTOCLICKER CHECKS                                                        #
@@ -622,7 +622,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # AutoClicker(B) - Identical Click Delay Streak Detection.
     B:
       enabled: true
@@ -632,7 +632,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # AutoClicker(C) - Dynamic Hard CPS Cap with TPS compensation.
     C:
       enabled: true
@@ -642,7 +642,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # AutoClicker(D) - Hardware Double-Click & Micro-Burst Detection (< 8ms).
     D:
       enabled: true
@@ -652,7 +652,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # AutoClicker(E) - Click Delay GCD Grid Locking.
     E:
       enabled: true
@@ -662,7 +662,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
 
   # ---------------------------------------------------------------------------- #
   # 📐 HITBOX & REACH CHECKS                                                     #
@@ -679,7 +679,7 @@ checks:
         enabled: true
         vl: 65
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
 
   REACH:
     # Reach(A) - 3D Ray-Intercept Reach Distance (backtracked attacker & target).
@@ -692,7 +692,7 @@ checks:
         enabled: true
         vl: 65
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
 
   # ---------------------------------------------------------------------------- #
   # 💣 CRYSTAL & ANCHOR AURA CHECKS                                              #
@@ -709,7 +709,7 @@ checks:
         enabled: true
         vl: 10
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
 
   ANCHOR:
     # AnchorAura(A) - Respawn Anchor charge-to-explode macro sequences (< 80ms).
@@ -722,7 +722,7 @@ checks:
         enabled: true
         vl: 10
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
 
   # ---------------------------------------------------------------------------- #
   # 🌐 LAG & LATENCY ABUSE CHECKS                                                 #
@@ -739,7 +739,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Lag(B) - Entity Position Desync / Interpolation Reach Exploitation.
     B:
       enabled: true
@@ -750,7 +750,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Lag(C) - Spearman Rank Correlation (detects chance-based reach via ping contrast).
     C:
       enabled: true
@@ -761,7 +761,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
 
   # ---------------------------------------------------------------------------- #
   # 🧱 SCAFFOLD & BRIDGING AUTOMATION CHECKS                                    #
@@ -778,7 +778,7 @@ checks:
         enabled: true
         vl: 150
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Scaffold(B) - Rapid Face Alternation (switching UP and side faces).
     B:
       enabled: true
@@ -788,7 +788,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Scaffold(C) - Towering Interval Consistency & Coefficient of Variation.
     C:
       enabled: true
@@ -798,7 +798,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Scaffold(D) - Placement Reach Limits (> 4.5 blocks backtracked).
     D:
       enabled: true
@@ -808,7 +808,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Scaffold(E) - Face Normal Alignment & Nudge Detection.
     E:
       enabled: true
@@ -818,7 +818,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Scaffold(F) - Placement Gap Delta Histograms (periodic concentration).
     F:
       enabled: true
@@ -828,7 +828,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Scaffold(G) - Quantized Rotation Deltas during active scaffolding.
     G:
       enabled: true
@@ -838,7 +838,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Scaffold(H) - Balance & Angle Hold while bridging.
     H:
       enabled: true
@@ -848,7 +848,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
 
   # ---------------------------------------------------------------------------- #
   # 🧱 WORLD, PHASE & FAST BREAK CHECKS                                          #
@@ -864,7 +864,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
 
   FAST_BREAK:
     # FastBreak(A) - Digging time validation (tool, Haste, Efficiency limits).
@@ -876,7 +876,7 @@ checks:
         enabled: true
         vl: 10
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
 
   RAYCAST:
     # Raycast(A) - Block Interaction Range & Line-of-Sight Raytracing.
@@ -888,7 +888,7 @@ checks:
         enabled: true
         vl: 15
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
 
   # ---------------------------------------------------------------------------- #
   # 📦 PACKET INTEGRITY & PROTOCOL EXPLOIT CHECKS                                 #
@@ -903,7 +903,7 @@ checks:
         enabled: false
         vl: 20
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # BadPacket(C) - FastBow Release Duration (< 60ms draw time).
     C:
       enabled: true
@@ -913,7 +913,7 @@ checks:
         enabled: false
         vl: 20
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # BadPacket(D) - Non-Existent Entity Interaction.
     D:
       enabled: false
@@ -923,7 +923,7 @@ checks:
         enabled: false
         vl: 20
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # BadPacket(E) - Self-Interaction (attacking own entity ID).
     E:
       enabled: true
@@ -933,7 +933,7 @@ checks:
         enabled: false
         vl: 20
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # BadPacket(G) - Invalid Position Coordinates (NaN, Infinity, Height Limits).
     G:
       enabled: true
@@ -944,7 +944,7 @@ checks:
         enabled: false
         vl: 20
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # BadPacket(H) - Hotbar Slot Bounds (< 0 or > 8).
     H:
       enabled: true
@@ -954,7 +954,7 @@ checks:
         enabled: false
         vl: 20
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # BadPacket(I) - Duplicate Position Packet Spam (> 5 duplicates in < 100ms).
     I:
       enabled: true
@@ -965,7 +965,7 @@ checks:
         enabled: false
         vl: 20
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # BadPacket(J) - Impossible State Persistence (Sneak + Sprint > 100ms on 1.9+).
     J:
       enabled: true
@@ -976,7 +976,7 @@ checks:
         enabled: false
         vl: 20
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # BadPacket(K) - Negative / Invalid Window Confirmation Transaction IDs.
     K:
       enabled: true
@@ -986,7 +986,7 @@ checks:
         enabled: false
         vl: 20
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
 
   PACKET_ORDER:
     # PacketOrder(A) - Block Placement without Swing Animation.
@@ -998,7 +998,7 @@ checks:
         enabled: true
         vl: 15
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # PacketOrder(B) - Attacking while actively using slow items (AutoBlock/NoSlow).
     B:
       enabled: true
@@ -1008,7 +1008,7 @@ checks:
         enabled: false
         vl: 20
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # PacketOrder(C) - Same-Tick Crystal Placement + Attack Automation.
     C:
       enabled: true
@@ -1018,7 +1018,7 @@ checks:
         enabled: true
         vl: 10
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # PacketOrder(D) - Entity Attack without Swing Animation (NoSwing).
     D:
       enabled: true
@@ -1028,7 +1028,7 @@ checks:
         enabled: true
         vl: 15
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # PacketOrder(E) - Inventory Aura (attacking while GUI is open).
     E:
       enabled: true
@@ -1038,7 +1038,7 @@ checks:
         enabled: true
         vl: 15
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
 
   INVALID:
     # Invalid(A) - Out-of-Bounds Pitch Angles (|Pitch| > 90 deg).
@@ -1050,7 +1050,7 @@ checks:
         enabled: true
         vl: 5
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
 
   CRASHER:
     # Crasher(A) - CustomPayload Size & Channel Name Exploits (Oversized books/NBT).
@@ -1062,7 +1062,7 @@ checks:
         enabled: true
         vl: 2
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
 
   INVENTORY:
     # Inventory(A) - Inventory Move Speed (moving rapidly while GUI is open).
@@ -1075,7 +1075,7 @@ checks:
         enabled: true
         vl: 15
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
 
   BARITONE:
     # Baritone(A) - 45-degree Directional Grid Snap Density.
@@ -1087,7 +1087,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Baritone(B) - Automated Mining Camera Rotations (zero pitch / locked yaw).
     B:
       enabled: true
@@ -1097,7 +1097,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Baritone(C) - Block Break Interval Consistency.
     C:
       enabled: true
@@ -1107,7 +1107,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
 
   SPRINT:
     # Sprint(A) - OmniSprint during Blindness or Starvation (<= 6 hunger).
@@ -1119,7 +1119,7 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
     # Sprint(B) - OmniSprint Directional Dot Product Violation.
     B:
       enabled: true
@@ -1129,4 +1129,4 @@ checks:
         enabled: false
         vl: 50
         command: "kick %player% Unfair Advantage"
-        bandwave: false
+        banwave: false
