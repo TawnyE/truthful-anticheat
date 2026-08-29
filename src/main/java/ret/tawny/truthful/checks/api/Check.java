@@ -205,9 +205,9 @@ public abstract class Check {
                         p.getWorld().strikeLightningEffect(p.getLocation());
                     }
 
-                    if (config.shouldQueueBandwave(checkType.name(), String.valueOf(order)) && config.isBandwaveEnabled()) {
-                        boolean added = Truthful.getInstance().getBandwaveManager().addPlayer(p.getName());
-                        String queueMessage = (added ? config.getBandwaveQueuedMessage() : config.getBandwaveDuplicateMessage())
+                    if (config.shouldQueueBanwave(checkType.name(), String.valueOf(order)) && config.isBanwaveEnabled()) {
+                        boolean added = Truthful.getInstance().getBanwaveManager().addPlayer(p.getName());
+                        String queueMessage = (added ? config.getBanwaveQueuedMessage() : config.getBanwaveDuplicateMessage())
                                 .replace("%player%", playerName);
                         Bukkit.getConsoleSender().sendMessage(queueMessage);
                     } else {

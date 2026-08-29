@@ -19,9 +19,9 @@ commands:
     description: Toggle anti-cheat alerts
     usage: /alerts
     permission: truthful.alerts
-  bandwave:
-    description: Manage BANDWAVE queue and execution
-    usage: /bandwave <add|remove|list|start|stop|clear|status>
+  banwave:
+    description: Manage BANWAVE queue and execution
+    usage: /banwave <add|remove|list|start|stop|clear|status>
     permission: truthful.admin
 permissions:
   truthful.admin:

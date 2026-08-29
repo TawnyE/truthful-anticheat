@@ -13,7 +13,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-public final class BandwaveManager {
+public final class BanwaveManager {
 
     private final Set<String> queuedPlayers = new LinkedHashSet<>();
     private WrappedTask executionTask;
@@ -47,11 +47,11 @@ public final class BandwaveManager {
         if (executionTask != null) return false;
 
         Configuration config = Truthful.getInstance().getConfiguration();
-        long intervalTicks = config.getBandwaveIntervalSeconds() * 20L;
+        long intervalTicks = config.getBanwaveIntervalSeconds() * 20L;
         executionTask = Truthful.getInstance().getServerScheduler().runGlobalTimer(() -> {
             String next;
             int position;
-            synchronized (BandwaveManager.this) {
+            synchronized (BanwaveManager.this) {
                 if (queuedPlayers.isEmpty()) {
                     stop();
                     return;
@@ -61,10 +61,10 @@ public final class BandwaveManager {
                 queuedPlayers.remove(next);
             }
 
-            final String command = "kick " + next + " [Truthful] BANDWAVE";
+            final String command = "kick " + next + " [Truthful] BANWAVE";
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
 
-            final String sweepMessage = config.getBandwaveSweepMessage()
+            final String sweepMessage = config.getBanwaveSweepMessage()
                     .replace("%position%", String.valueOf(position))
                     .replace("%player%", next);
             Bukkit.broadcastMessage(sweepMessage);
@@ -82,10 +82,10 @@ public final class BandwaveManager {
 
     public void tickAutoStart() {
         final Configuration config = Truthful.getInstance().getConfiguration();
-        if (!config.isBandwaveEnabled() || !config.isBandwaveAutoStartEnabled()) return;
+        if (!config.isBanwaveEnabled() || !config.isBanwaveAutoStartEnabled()) return;
 
-        final DayOfWeek scheduledDay = config.getBandwaveAutoStartDay();
-        final LocalTime scheduledTime = config.getBandwaveAutoStartTime();
+        final DayOfWeek scheduledDay = config.getBanwaveAutoStartDay();
+        final LocalTime scheduledTime = config.getBanwaveAutoStartTime();
         final LocalDateTime now = LocalDateTime.now();
 
         if (now.getDayOfWeek() != scheduledDay) return;
@@ -105,7 +105,7 @@ public final class BandwaveManager {
             lastAutoStartTrigger = now;
             if (!queuedPlayers.isEmpty() && executionTask == null) {
                 start();
-                Bukkit.broadcastMessage(config.getBandwaveStartedMessage());
+                Bukkit.broadcastMessage(config.getBanwaveStartedMessage());
             }
         }
     }
